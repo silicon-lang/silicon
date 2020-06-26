@@ -39,6 +39,7 @@ namespace silicon {
 
         BLOCK,
 
+        NULL_PTR,
         BOOLEAN_LIT,
         NUMBER_LIT,
         STRING_LIT,
@@ -53,6 +54,8 @@ namespace silicon {
 
         BINARY_OP,
         UNARY_OP,
+
+        IF,
     };
 
     enum class binary_operation_t {
@@ -90,6 +93,8 @@ namespace silicon {
     };
 
     std::string replace_all(std::string str, const std::string &from, const std::string &to);
+
+    llvm::Type *detect_type(llvm::Type *type);
 
     llvm::Type *detect_type(llvm::Value *value);
 

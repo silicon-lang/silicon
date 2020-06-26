@@ -38,6 +38,10 @@ void silicon::compiler::Context::statements(const std::vector<ast::Node *> &node
     block->setStatements(nodes);
 }
 
+llvm::Type *silicon::compiler::Context::void_type() {
+    return llvm_ir_builder.getVoidTy();
+}
+
 llvm::Type *silicon::compiler::Context::bool_type() {
     return llvm_ir_builder.getInt1Ty();
 }
@@ -57,6 +61,10 @@ llvm::Type *silicon::compiler::Context::float_type(unsigned int bits) {
         default:
             return nullptr;
     }
+}
+
+silicon::ast::Node *silicon::compiler::Context::null(llvm::Type *type) {
+    return ast::Null::create(this, type);
 }
 
 silicon::ast::Node *silicon::compiler::Context::bool_lit(bool value) {
@@ -108,6 +116,11 @@ silicon::ast::Node *silicon::compiler::Context::def_op(binary_operation_t op, as
 
 silicon::ast::Node *silicon::compiler::Context::def_op(unary_operation_t op, ast::Node *node, bool suffix) {
     return ast::UnaryOperation::create(this, op, node, suffix);
+}
+
+silicon::ast::If *
+silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<ast::Node *> then_statements, std::vector<ast::Node *> else_statements) {
+    return ast::If::create(this, condition, std::move(then_statements), std::move(else_statements));
 }
 
 /* ------------------------- CODEGEN ------------------------- */

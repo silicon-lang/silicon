@@ -17,6 +17,8 @@
 {
 
 #include "ast/Node.h"
+#include "ast/Function.h"
+#include "ast/If.h"
 
 
 namespace silicon::compiler {
@@ -67,6 +69,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // Tokens -> Literals
 // --------------------------------------------------
 
+%token NULL "null"
 %token <bool> BOOLEAN_LITERAL "Boolean Literal"
 %token <std::string> NUMBER_LITERAL "Number Literal"
 %token <std::string> STRING_LITERAL "String Literal"
@@ -76,13 +79,17 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // --------------------------------------------------
 
 %token LET "let"
-%token FUNCTION "function"
+%token FUNCTION "fn"
 %token RETURN "return"
+%token IF "if"
+%token ELSE "else"
+%token EXPORT "export"
 
 // --------------------------------------------------
 // Tokens -> Types
 // --------------------------------------------------
 
+%token VOID_TYPE "void"
 %token BOOLEAN_TYPE "bool"
 %token <unsigned int> INTEGER_TYPE "int"
 %token <unsigned int> FLOAT_TYPE "float"
@@ -144,7 +151,9 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // --------------------------------------------------
 
 %type<std::vector<silicon::ast::Node *>> statements scoped_statements function_body arguments
-%type<silicon::ast::Node *> statement scoped_statement expression operation binary_operation unary_operation variable_definiton function_definition literal
+%type<silicon::ast::Node *> statement scoped_statement export_statement if_statement expression operation binary_operation unary_operation variable_definiton literal
+%type<silicon::ast::Function *> function_definition
+%type<silicon::ast::If *> if_statement_
 %type<llvm::Type *> type
 %type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition
 
@@ -212,8 +221,8 @@ statements
 ;
 
 statement
-: function_definition { $$ = $1; }
-| scoped_statement { $$ = $1; }
+: export_statement { $$ = $1; }
+| function_definition { $$ = $1; }
 ;
 
 scoped_statements
@@ -223,7 +232,32 @@ scoped_statements
 
 scoped_statement
 : variable_definiton { $$ = $1; }
+| if_statement { $$ = $1; }
 | expression SEMICOLON { $$ = $1; }
+;
+
+// --------------------------------------------------
+// Grammar -> Export Statements
+// --------------------------------------------------
+
+export_statement
+: EXPORT function_definition { $$ = $2->externalLinkage(); }
+;
+
+// --------------------------------------------------
+// Grammar -> If Statements
+// --------------------------------------------------
+
+if_statement
+: if_statement_ { $$ = $1; }
+| if_statement_ ELSE expression SEMICOLON { $$ = $1->setElse({ $3, ctx.null() }); }
+| if_statement_ ELSE OPEN_CURLY scoped_statements CLOSE_CURLY { $4.push_back(ctx.null()); $$ = $1->setElse($4); }
+| if_statement_ ELSE if_statement { $$ = $1->setElse({ $3, ctx.null() }); }
+;
+
+if_statement_
+: IF OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_if($3, { $5, ctx.null() }); }
+| IF OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $6.push_back(ctx.null()); $$ = ctx.def_if($3, $6); }
 ;
 
 // --------------------------------------------------
@@ -236,6 +270,7 @@ expression
 | IDENTIFIER { $$ = ctx.var($1); }
 | IDENTIFIER OPEN_PAREN arguments CLOSE_PAREN { $$ = ctx.call_func($1, $3); }
 | OPEN_PAREN expression CLOSE_PAREN { $$ = $2; }
+| expression QUESTION_MARK expression COLON expression { $$ = ctx.def_if($1, { $3 }, { $5 }); }
 ;
 
 // --------------------------------------------------
@@ -318,6 +353,7 @@ function_definition
 function_body
 : RETURN expression SEMICOLON { $$ = { ctx.def_ret($2) }; }
 | scoped_statements RETURN expression SEMICOLON { $1.push_back(ctx.def_ret($3)); $$ = $1; }
+| scoped_statements { $1.push_back(ctx.def_ret(ctx.null())); $$ = $1; }
 ;
 
 // --------------------------------------------------
@@ -341,7 +377,8 @@ arguments
 // --------------------------------------------------
 
 literal
-: BOOLEAN_LITERAL { $$ = ctx.bool_lit($1); }
+: NULL { $$ = ctx.null(); }
+| BOOLEAN_LITERAL { $$ = ctx.bool_lit($1); }
 | NUMBER_LITERAL { $$ = ctx.num_lit($1); }
 | STRING_LITERAL { $$ = ctx.string_lit($1); }
 ;
@@ -351,7 +388,8 @@ literal
 // --------------------------------------------------
 
 type
-: BOOLEAN_TYPE { $$ = ctx.bool_type(); }
+: VOID_TYPE { $$ = ctx.void_type(); }
+| BOOLEAN_TYPE { $$ = ctx.bool_type(); }
 | INTEGER_TYPE { $$ = ctx.int_type($1); }
 | FLOAT_TYPE { $$ = ctx.float_type($1); }
 ;
@@ -392,21 +430,26 @@ re2c:define:YYMARKER = "ctx.cursor";
 
 // Tokens -> Literals
 
-"\"" ("\\".|[^"\\])* "\"" { return s(Parser::make_STRING_LITERAL, std::string(anchor + 1, ctx.cursor - 1)); }
+"null" { return s(Parser::make_NULL); }
+"false" { return s(Parser::make_BOOLEAN_LITERAL, false); }
+"true" { return s(Parser::make_BOOLEAN_LITERAL, true); }
 [0-9]* [\.] [0-9]+ ("_" [0-9]+)* { return s(Parser::make_NUMBER_LITERAL, std::string(anchor, ctx.cursor)); }
 [0-9]+ ("_" [0-9]+)* [\.] [0-9]+ ("_" [0-9]+)* { return s(Parser::make_NUMBER_LITERAL, std::string(anchor, ctx.cursor)); }
 [0-9]+ ("_" [0-9]+)* { return s(Parser::make_NUMBER_LITERAL, std::string(anchor, ctx.cursor)); }
-"true" { return s(Parser::make_BOOLEAN_LITERAL, true); }
-"false" { return s(Parser::make_BOOLEAN_LITERAL, false); }
+"\"" ("\\".|[^"\\])* "\"" { return s(Parser::make_STRING_LITERAL, std::string(anchor + 1, ctx.cursor - 1)); }
 
 // Tokens -> Keywords
 
 "let" { return s(Parser::make_LET); }
-"function" { return s(Parser::make_FUNCTION); }
+"fn" { return s(Parser::make_FUNCTION); }
 "return" { return s(Parser::make_RETURN); }
+"if" { return s(Parser::make_IF); }
+"else" { return s(Parser::make_ELSE); }
+"export" { return s(Parser::make_EXPORT); }
 
 // Tokens -> Types
 
+"void" { return s(Parser::make_VOID_TYPE); }
 "bool" { return s(Parser::make_BOOLEAN_TYPE); }
 "i8" { return s(Parser::make_INTEGER_TYPE, 8); }
 "i16" { return s(Parser::make_INTEGER_TYPE, 16); }

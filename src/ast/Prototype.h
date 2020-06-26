@@ -32,6 +32,8 @@ namespace silicon::ast {
         std::vector<std::pair<std::string, llvm::Type *>> args;
         llvm::Type *return_type;
 
+        llvm::Function::LinkageTypes linkage = llvm::Function::InternalLinkage;
+
         Prototype(std::string name, std::vector<std::pair<std::string, llvm::Type *>> args,
                   llvm::Type *return_type = nullptr);
 
@@ -49,6 +51,8 @@ namespace silicon::ast {
         llvm::Type *getReturnType();
 
         Prototype *setReturnType(llvm::Type *type);
+
+        Prototype *externalLinkage();
 
     };
 

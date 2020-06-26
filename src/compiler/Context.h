@@ -19,7 +19,13 @@
 #define SILICON_CONTEXT_H
 
 
+#include <string>
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/IRBuilder.h"
 #include "ast/Node.h"
+#include "ast/Block.h"
+#include "ast/Null.h"
 #include "ast/BooleanLiteral.h"
 #include "ast/NumberLiteral.h"
 #include "ast/StringLiteral.h"
@@ -31,12 +37,8 @@
 #include "ast/FunctionCall.h"
 #include "ast/BinaryOperation.h"
 #include "ast/UnaryOperation.h"
+#include "ast/If.h"
 #include "parser/parser.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/IRBuilder.h"
-#include <string>
-#include <ast/Block.h>
 
 
 namespace silicon::compiler {
@@ -65,11 +67,15 @@ namespace silicon::compiler {
 
         void statements(const std::vector<ast::Node *> &nodes);
 
+        llvm::Type *void_type();
+
         llvm::Type *bool_type();
 
         llvm::Type *int_type(unsigned int bits);
 
         llvm::Type *float_type(unsigned int bits);
+
+        ast::Node *null(llvm::Type *type = nullptr);
 
         ast::Node *bool_lit(bool value);
 
@@ -84,7 +90,7 @@ namespace silicon::compiler {
         static std::pair<std::string, llvm::Type *> def_arg(const std::string &name, llvm::Type *type);
 
         ast::Prototype *def_proto(const std::string &name, std::vector<std::pair<std::string, llvm::Type *>> args,
-                            llvm::Type *return_type = nullptr);
+                                  llvm::Type *return_type = nullptr);
 
         ast::Function *def_func(ast::Prototype *prototype, std::vector<ast::Node *> body);
 
@@ -95,6 +101,9 @@ namespace silicon::compiler {
         ast::Node *def_op(binary_operation_t op, ast::Node *left, ast::Node *right);
 
         ast::Node *def_op(unary_operation_t op, ast::Node *node, bool suffix = false);
+
+        ast::If *def_if(ast::Node *condition, std::vector<ast::Node *> then_statements,
+                        std::vector<ast::Node *> else_statements = {});
 
         /* ------------------------- CODEGEN ------------------------- */
 

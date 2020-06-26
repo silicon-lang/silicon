@@ -86,6 +86,7 @@ add_executable(silicon
         src/compiler/Context.cpp src/compiler/Context.h
         src/ast/Node.cpp src/ast/Node.h
         src/ast/Block.cpp src/ast/Block.h
+        src/ast/Null.cpp src/ast/Null.h
         src/ast/BooleanLiteral.cpp src/ast/BooleanLiteral.h
         src/ast/NumberLiteral.cpp src/ast/NumberLiteral.h
         src/ast/StringLiteral.cpp src/ast/StringLiteral.h
@@ -97,6 +98,7 @@ add_executable(silicon
         src/ast/FunctionCall.cpp src/ast/FunctionCall.h
         src/ast/BinaryOperation.cpp src/ast/BinaryOperation.h
         src/ast/UnaryOperation.cpp src/ast/UnaryOperation.h
+        src/ast/If.cpp src/ast/If.h
         )
 
 llvm_map_components_to_libnames(llvm_libs ${LLVM_ALL_LIBS})

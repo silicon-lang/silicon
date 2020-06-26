@@ -15,37 +15,31 @@
 //
 
 
-#ifndef SILICON_FUNCTION_H
-#define SILICON_FUNCTION_H
+#ifndef SILICON_NULL_H
+#define SILICON_NULL_H
 
 
-#include <vector>
-#include "llvm/IR/Function.h"
 #include "Node.h"
-#include "Prototype.h"
 
 
 namespace silicon::ast {
 
-    class Function : public Node {
+    class Null : public Node {
     private:
-        Prototype *prototype;
-        std::vector<Node *> body;
+        llvm::Type *llvm_type;
 
-        Function(Prototype *prototype, std::vector<Node *> body);
+        Null(llvm::Type *llvm_type = nullptr);
 
     public:
-        static Function *
-        create(compiler::Context *ctx, Prototype *prototype, std::vector<Node *> body);
+        static Node *create(compiler::Context *ctx, llvm::Type *llvm_type = nullptr);
 
-        llvm::Function *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
 
-        Function *externalLinkage();
     };
 
 }
 
 
-#endif //SILICON_FUNCTION_H
+#endif //SILICON_NULL_H

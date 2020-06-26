@@ -102,3 +102,9 @@ llvm::Function *silicon::ast::Function::codegen(silicon::compiler::Context *ctx)
 silicon::node_t silicon::ast::Function::type() {
     return node_t::FUNCTION;
 }
+
+silicon::ast::Function *silicon::ast::Function::externalLinkage() {
+    prototype->externalLinkage();
+
+    return this;
+}

@@ -83,11 +83,11 @@ silicon::value_pair_t *silicon::ast::BinaryOperation::parse_pair(compiler::Conte
     llvm::Type *expected_type = ctx->expected_type;
 
     if (!expected_type) {
-        bool isLeftNum = left->type(node_t::NUMBER_LIT);
-        bool isRightNum = right->type(node_t::NUMBER_LIT);
+        bool isLeftDynamic = left->type(node_t::NUMBER_LIT) || left->type(node_t::NULL_PTR);
+        bool isRightDynamic = right->type(node_t::NUMBER_LIT) || right->type(node_t::NULL_PTR);
 
-        if (isLeftNum) {
-            if (isRightNum) left->codegen(ctx);
+        if (isLeftDynamic) {
+            if (isRightDynamic) left->codegen(ctx);
             else {
                 pair->right = right->codegen(ctx);
 
@@ -97,7 +97,7 @@ silicon::value_pair_t *silicon::ast::BinaryOperation::parse_pair(compiler::Conte
 
                 ctx->expected_type = expected_type;
             }
-        } else if (isRightNum) {
+        } else if (isRightDynamic) {
             pair->left = left->codegen(ctx);
 
             ctx->expected_type = pair->left->getType();
@@ -110,6 +110,9 @@ silicon::value_pair_t *silicon::ast::BinaryOperation::parse_pair(compiler::Conte
 
     if (!pair->left) pair->left = left->codegen(ctx);
     if (!pair->right) pair->right = right->codegen(ctx);
+
+    if (pair->left->getType()->isPointerTy()) pair->left = ctx->llvm_ir_builder.CreateLoad(pair->left);
+    if (pair->right->getType()->isPointerTy()) pair->right = ctx->llvm_ir_builder.CreateLoad(pair->right);
 
     return pair;
 }
@@ -404,6 +407,8 @@ llvm::Value *silicon::ast::BinaryOperation::eq(compiler::Context *ctx) {
 
     llvm::Type *type = detect_type(l);
 
+    if (type->isVoidTy()) return ctx->bool_lit(true)->codegen(ctx);
+
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateICmpEQ(l, r);
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpOEQ(l, r);
@@ -421,6 +426,8 @@ llvm::Value *silicon::ast::BinaryOperation::ne(compiler::Context *ctx) {
         fail_codegen("Expected both sides of operation to have the same type");
 
     llvm::Type *type = detect_type(l);
+
+    if (type->isVoidTy()) return ctx->bool_lit(false)->codegen(ctx);
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateICmpNE(l, r);
 

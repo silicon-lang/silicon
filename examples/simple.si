@@ -1,9 +1,9 @@
-function test(num: i32) {
+fn test(num: i32) {
     num %= 2;
 
     return num;
 }
 
-function main(): i32 {
+fn main(): i32 {
     return test(40 / 2 + 1 * 2);
 }

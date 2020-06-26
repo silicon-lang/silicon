@@ -33,19 +33,25 @@ std::string silicon::replace_all(std::string str, const std::string &from, const
     return str;
 }
 
+llvm::Type *silicon::detect_type(llvm::Type *type) {
+    if (type->isPointerTy()) type = type->getPointerElementType();
+
+    if (type->isFunctionTy()) type = ((llvm::FunctionType *) type)->getReturnType();
+
+    return type;
+}
+
 llvm::Type *silicon::detect_type(llvm::Value *value) {
     llvm::Type *type = value->getType();
 
-    if (type->isPointerTy()) type = type->getPointerElementType();
-
-    if (type->isFunctionTy()) type = ((llvm::Function *) value)->getReturnType();
-
-    return type;
+    return detect_type(type);
 }
 
 bool silicon::compare_types(llvm::Value *value1, llvm::Value *value2) {
     llvm::Type *type1 = detect_type(value1);
     llvm::Type *type2 = detect_type(value2);
+
+    if (type1->isVoidTy()) return type2->isVoidTy();
 
     if (type1->isIntegerTy()) return type2->isIntegerTy(type1->getIntegerBitWidth());
 
