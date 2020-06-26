@@ -34,3 +34,11 @@
 .idea/
 
 cmake-build-debug/
+
+src/parser/parser.re
+src/parser/parser.h
+src/parser/parser.cpp
+src/parser/location.hh
+
+examples/*
+!examples/*.si
