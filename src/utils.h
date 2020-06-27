@@ -98,7 +98,11 @@ namespace silicon {
 
     llvm::Type *detect_type(llvm::Value *value);
 
+    bool compare_types(llvm::Type *type1, llvm::Type *type2);
+
     bool compare_types(llvm::Value *value1, llvm::Value *value2);
+
+    std::string parse_type(llvm::Type *type);
 
     std::string parse_location(yy::location location);
 

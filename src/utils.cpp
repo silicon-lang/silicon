@@ -47,10 +47,7 @@ llvm::Type *silicon::detect_type(llvm::Value *value) {
     return detect_type(type);
 }
 
-bool silicon::compare_types(llvm::Value *value1, llvm::Value *value2) {
-    llvm::Type *type1 = detect_type(value1);
-    llvm::Type *type2 = detect_type(value2);
-
+bool silicon::compare_types(llvm::Type *type1, llvm::Type *type2) {
     if (type1->isVoidTy()) return type2->isVoidTy();
 
     if (type1->isIntegerTy()) return type2->isIntegerTy(type1->getIntegerBitWidth());
@@ -62,6 +59,33 @@ bool silicon::compare_types(llvm::Value *value1, llvm::Value *value2) {
     if (type1->isDoubleTy()) return type2->isDoubleTy();
 
     return false;
+}
+
+bool silicon::compare_types(llvm::Value *value1, llvm::Value *value2) {
+    llvm::Type *type1 = detect_type(value1);
+    llvm::Type *type2 = detect_type(value2);
+
+    return compare_types(type1, type2);
+}
+
+std::string silicon::parse_type(llvm::Type *type) {
+    if (type->isVoidTy()) return "void";
+
+    if (type->isIntegerTy()) {
+        unsigned bits = type->getIntegerBitWidth();
+
+        if (bits == 1) return "bool";
+
+        return "i" + std::to_string(bits);
+    }
+
+    if (type->isHalfTy()) return "f16";
+
+    if (type->isFloatTy()) return "f32";
+
+    if (type->isDoubleTy()) return "f64";
+
+    return "unknown";
 }
 
 std::string silicon::parse_location(yy::location location) {

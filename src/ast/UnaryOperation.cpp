@@ -130,8 +130,6 @@ llvm::Value *silicon::ast::UnaryOperation::negate(compiler::Context *ctx) {
 llvm::Value *silicon::ast::UnaryOperation::not_op(compiler::Context *ctx) {
     llvm::Value *value = node->codegen(ctx);
 
-    if (value->getType()->isPointerTy()) value = ctx->llvm_ir_builder.CreateLoad(value);
-
     llvm::Type *type = detect_type(value);
 
     if (type->isVoidTy()) return ctx->bool_lit(true)->codegen(ctx);

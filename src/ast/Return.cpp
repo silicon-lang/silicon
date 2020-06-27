@@ -31,7 +31,19 @@ silicon::ast::Node *silicon::ast::Return::create(compiler::Context *ctx, Node *v
 }
 
 llvm::Value *silicon::ast::Return::codegen(compiler::Context *ctx) {
-    return ctx->llvm_ir_builder.CreateRet(value->codegen(ctx));
+    llvm::Value *ret = value->codegen(ctx);
+
+    if (ctx->expected_type && !compare_types(ret->getType(), ctx->expected_type)) {
+        fail_codegen(
+                "TypeError: Expected function to return <"
+                + parse_type(ctx->expected_type)
+                + ">, got <"
+                + parse_type(ret->getType())
+                + "> instead."
+        );
+    }
+
+    return ctx->llvm_ir_builder.CreateRet(ret);
 }
 
 silicon::node_t silicon::ast::Return::type() {

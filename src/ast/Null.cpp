@@ -35,7 +35,8 @@ llvm::Value *silicon::ast::Null::codegen(compiler::Context *ctx) {
 
     if (!llvm_type) llvm_type = ctx->llvm_ir_builder.getVoidTy();
 
-    return llvm::ConstantPointerNull::get(llvm_type->getPointerTo());
+    return ctx->llvm_ir_builder
+            .CreateLoad(llvm::ConstantPointerNull::get(llvm_type->getPointerTo()));
 }
 
 silicon::node_t silicon::ast::Null::type() {

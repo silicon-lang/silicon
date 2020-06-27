@@ -111,9 +111,6 @@ silicon::value_pair_t *silicon::ast::BinaryOperation::parse_pair(compiler::Conte
     if (!pair->left) pair->left = left->codegen(ctx);
     if (!pair->right) pair->right = right->codegen(ctx);
 
-    if (pair->left->getType()->isPointerTy()) pair->left = ctx->llvm_ir_builder.CreateLoad(pair->left);
-    if (pair->right->getType()->isPointerTy()) pair->right = ctx->llvm_ir_builder.CreateLoad(pair->right);
-
     return pair;
 }
 
@@ -155,6 +152,16 @@ llvm::Value *silicon::ast::BinaryOperation::assign(compiler::Context *ctx) {
 
     llvm::Value *r = right->codegen(ctx);
 
+    if (llvm_type && !compare_types(r->getType(), ctx->expected_type)) {
+        fail_codegen(
+                "TypeError: Expected the right side of the operation to be <"
+                + parse_type(llvm_type)
+                + ">, got <"
+                + parse_type(r->getType())
+                + "> instead."
+        );
+    }
+
     ctx->expected_type = expected_type;
 
     ctx->store(name, r);
@@ -169,7 +176,7 @@ llvm::Value *silicon::ast::BinaryOperation::multiply(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -187,7 +194,7 @@ llvm::Value *silicon::ast::BinaryOperation::divide(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -208,7 +215,7 @@ llvm::Value *silicon::ast::BinaryOperation::remainder(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -229,7 +236,7 @@ llvm::Value *silicon::ast::BinaryOperation::add(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -247,7 +254,7 @@ llvm::Value *silicon::ast::BinaryOperation::sub(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -265,7 +272,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_xor(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -281,7 +288,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_and(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -297,7 +304,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_or(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -313,7 +320,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_left_shift(compiler::Context *ctx
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -329,7 +336,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_right_shift(compiler::Context *ct
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -345,7 +352,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_u_right_shift(compiler::Context *
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -361,7 +368,7 @@ llvm::Value *silicon::ast::BinaryOperation::lt(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -382,7 +389,7 @@ llvm::Value *silicon::ast::BinaryOperation::lte(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -403,7 +410,7 @@ llvm::Value *silicon::ast::BinaryOperation::eq(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -423,7 +430,7 @@ llvm::Value *silicon::ast::BinaryOperation::ne(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -443,7 +450,7 @@ llvm::Value *silicon::ast::BinaryOperation::gte(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
@@ -464,7 +471,7 @@ llvm::Value *silicon::ast::BinaryOperation::gt(compiler::Context *ctx) {
     llvm::Value *r = pair->right;
 
     if (!compare_types(l, r))
-        fail_codegen("Expected both sides of operation to have the same type");
+        fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
     llvm::Type *type = detect_type(l);
 
