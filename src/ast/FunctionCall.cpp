@@ -36,19 +36,36 @@ silicon::ast::FunctionCall::create(compiler::Context *ctx, std::string callee, s
 llvm::Value *silicon::ast::FunctionCall::codegen(compiler::Context *ctx) {
     llvm::Function *calleeFunc = ctx->llvm_module->getFunction(callee);
 
-    if (!calleeFunc) fail_codegen("Undefined function <" + callee + ">");
+    if (!calleeFunc) fail_codegen("Error: Undefined function <" + callee + ">");
 
     llvm::FunctionType *calleeType = calleeFunc->getFunctionType();
     std::vector<llvm::Value *> argsV;
 
     llvm::Type *expected_type = ctx->expected_type;
 
+    std::vector<std::string> argNames;
+    for (auto &arg : calleeFunc->args()) argNames.push_back(arg.getName());
+
     for (unsigned i = 0, e = args.size(); i != e; ++i) {
         ctx->expected_type = calleeType->getFunctionParamType(i);
 
         Node *arg = args[i];
 
-        argsV.push_back(arg->codegen(ctx));
+        llvm::Value *value = arg->codegen(ctx);
+
+        if (ctx->expected_type && !compare_types(value->getType(), ctx->expected_type)) {
+            arg->fail_codegen(
+                    "TypeError: Expected parameter \""
+                    + (std::string) argNames[i]
+                    + "\" to be <"
+                    + parse_type(ctx->expected_type)
+                    + ">, got <"
+                    + parse_type(value->getType())
+                    + "> instead."
+            );
+        }
+
+        argsV.push_back(value);
 
         ctx->expected_type = expected_type;
 

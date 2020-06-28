@@ -34,10 +34,10 @@ namespace silicon::ast {
     protected:
         std::string loc;
 
-        void fail_codegen(const std::string &error);
-
     public:
         virtual ~Node() = default;
+
+        void fail_codegen(const std::string &error);
 
         virtual llvm::Value *codegen(compiler::Context *ctx) = 0;
 

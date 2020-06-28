@@ -36,7 +36,11 @@ silicon::ast::Node *silicon::ast::NumberLiteral::create(compiler::Context *ctx, 
 llvm::Value *silicon::ast::NumberLiteral::codegen(compiler::Context *ctx) {
     llvm::Type *llvm_type = ctx->expected_type;
 
-    if (!llvm_type) {
+    if (!llvm_type
+        || (
+                llvm_type->isIntegerTy()
+                && llvm_type->getIntegerBitWidth() == 1
+        )) {
         if (std::string::npos == value.find('.'))
             return ctx->llvm_ir_builder.getInt32(stoi(value));
 
