@@ -1,5 +1,7 @@
 # Silicon
 
+Silicon Programming Language
+
 ## Table of Contents
 
 - [Authors](#authors)

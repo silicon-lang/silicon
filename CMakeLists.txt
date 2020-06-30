@@ -74,15 +74,23 @@ set(SILICON_VERSION_MINOR 1)
 set(SILICON_VERSION_PATCH 0)
 set(SILICON_VERSION "${SILICON_VERSION_MAJOR}.${SILICON_VERSION_MINOR}.${SILICON_VERSION_PATCH}")
 
+configure_file(
+        "${PROJECT_SOURCE_DIR}/src/config.h.in"
+        "${PROJECT_BINARY_DIR}/config.h"
+)
+
 include_directories(
         src
+        "${PROJECT_BINARY_DIR}"
 )
 
 add_executable(silicon
         src/main.cpp
         ${SILICON_RE2C_OUTPUT}
         ${BISON_silicon_bison_OUTPUT_HEADER}
+        src/utils/CLI11.hpp
         src/utils.cpp src/utils.h
+        src/compiler/codegen.cpp src/compiler/codegen.h
         src/compiler/Context.cpp src/compiler/Context.h
         src/ast/Node.cpp src/ast/Node.h
         src/ast/Block.cpp src/ast/Block.h

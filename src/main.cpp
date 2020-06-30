@@ -15,93 +15,49 @@
 //
 
 
-#include <llvm/IR/Verifier.h>
-#include <llvm/IR/LegacyPassManager.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/TargetRegistry.h>
-#include <llvm/Support/FileSystem.h>
-#include <llvm/Target/TargetOptions.h>
-#include <llvm/Target/TargetMachine.h>
 #include <iostream>
-#include <fstream>
-#include "compiler/Context.h"
-#include "parser/parser.h"
+#include <string>
+#include "config.h"
+#include "utils/CLI11.hpp"
+#include "compiler/codegen.h"
 
+
+void print_version() {
+    std::cout << "silicon " << SILICON_VERSION << std::endl;
+
+    exit(0);
+}
 
 int main(int argc, char **argv) {
-    std::string input = argv[1];
-    std::string output = argv[2];
+    CLI::App app{"Silicon Programming Language"};
 
-    std::ifstream f(input);
-    std::string buffer(std::istreambuf_iterator<char>(f), {});
+    app.add_flag_callback(
+            "-v,--version",
+            print_version,
+            "Print version info and exit"
+    );
 
-    silicon::compiler::Context ctx(input);
+    std::string output = "output";
+    app.add_option(
+                    "-o,--output",
+                    output,
+                    "Write output to <filename>",
+                    true
+            )
+            ->type_name("filename");
 
-    ctx.cursor = buffer.c_str();
-    ctx.loc.begin.filename = &input;
-    ctx.loc.end.filename = &input;
+    std::string input;
+    app.add_option(
+                    "input",
+                    input
+            )
+            ->type_name("file")
+            ->check(CLI::ExistingFile)
+            ->required();
 
-    yy::Parser parser(ctx);
+    CLI11_PARSE(app, argc, argv);
 
-    parser.parse();
-
-    ctx.codegen();
-
-    verifyModule(*ctx.llvm_module);
-
-    // TODO: remove this (keeping it for debugging)
-//    ctx.llvm_module->print(llvm::outs(), nullptr);
-
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmParsers();
-    llvm::InitializeAllAsmPrinters();
-
-    auto TargetTriple = llvm::sys::getDefaultTargetTriple();
-    ctx.llvm_module->setTargetTriple(TargetTriple);
-
-    std::string Error;
-    auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
-
-    if (!Target) {
-        llvm::errs() << Error;
-
-        return 1;
-    }
-
-    auto CPU = llvm::sys::getHostCPUName();
-    // TODO:
-    auto Features = "";
-
-    llvm::TargetOptions opt;
-    auto RM = llvm::Optional<llvm::Reloc::Model>();
-    auto TheTargetMachine =
-            Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
-
-    ctx.llvm_module->setDataLayout(TheTargetMachine->createDataLayout());
-    std::error_code EC;
-    llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::F_None);
-
-    if (EC) {
-        llvm::errs() << "Could not open file: " << EC.message();
-
-        return 1;
-    }
-
-    llvm::legacy::PassManager pass;
-    auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
-
-    if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
-        llvm::errs() << "TheTargetMachine can't emit a file of this type";
-
-        return 1;
-    }
-
-    pass.run(*ctx.llvm_module);
-    dest.flush();
-
-    std::cout << "Wrote " << output << std::endl;
+    silicon::compiler::codegen(input, output);
 
     return 0;
 }
