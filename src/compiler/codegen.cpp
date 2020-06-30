@@ -24,15 +24,14 @@
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Target/TargetMachine.h>
+#include <llvm/ADT/Triple.h>
 #include "codegen.h"
 #include "Context.h"
 #include "parser/parser.h"
 
 
-void silicon::compiler::codegen(std::string input, std::string output) {
+void silicon::compiler::codegen(std::string input, std::string output, bool emit_llvm) {
     const clock_t begin_time = clock();
-
-    output += ".o";
 
     std::ifstream f(input);
     std::string buffer(std::istreambuf_iterator<char>(f), {});
@@ -51,57 +50,77 @@ void silicon::compiler::codegen(std::string input, std::string output) {
 
     verifyModule(*ctx.llvm_module);
 
-    // TODO: remove this (keeping it for debugging)
-//    ctx.llvm_module->print(llvm::outs(), nullptr);
+    if (emit_llvm) {
+        output += ".ll";
 
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmParsers();
-    llvm::InitializeAllAsmPrinters();
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::F_None);
 
-    auto TargetTriple = llvm::sys::getDefaultTargetTriple();
-    ctx.llvm_module->setTargetTriple(TargetTriple);
+        if (EC) {
+            llvm::errs() << "Could not open file: " << EC.message();
 
-    std::string Error;
-    auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
+            exit(1);
+        }
 
-    if (!Target) {
-        llvm::errs() << Error;
+        ctx.llvm_module->print(dest, nullptr);
+    } else {
+        llvm::InitializeAllTargetInfos();
+        llvm::InitializeAllTargets();
+        llvm::InitializeAllTargetMCs();
+        llvm::InitializeAllAsmParsers();
+        llvm::InitializeAllAsmPrinters();
 
-        exit(1);
+        auto TargetTriple = llvm::sys::getDefaultTargetTriple();
+        ctx.llvm_module->setTargetTriple(TargetTriple);
+        auto TheTriple = llvm::Triple(TargetTriple);
+
+        if (TheTriple.getOS() == llvm::Triple::Win32) {
+            output += ".obj";
+        } else {
+            output += ".o";
+        }
+
+        std::string Error;
+        auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
+
+        if (!Target) {
+            llvm::errs() << Error;
+
+            exit(1);
+        }
+
+        auto CPU = llvm::sys::getHostCPUName();
+        // TODO:
+        std::string FeaturesStr;
+
+        llvm::TargetOptions opt;
+        auto RM = llvm::Optional<llvm::Reloc::Model>();
+        auto TheTargetMachine =
+                Target->createTargetMachine(TargetTriple, CPU, FeaturesStr, opt, RM);
+
+        ctx.llvm_module->setDataLayout(TheTargetMachine->createDataLayout());
+
+        llvm::legacy::PassManager pass;
+        auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
+
+        std::error_code EC;
+        llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::F_None);
+
+        if (EC) {
+            llvm::errs() << "Could not open file: " << EC.message();
+
+            exit(1);
+        }
+
+        if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
+            llvm::errs() << "TheTargetMachine can't emit a file of this type";
+
+            exit(1);
+        }
+
+        pass.run(*ctx.llvm_module);
+        dest.flush();
     }
-
-    auto CPU = llvm::sys::getHostCPUName();
-    // TODO:
-    auto Features = "";
-
-    llvm::TargetOptions opt;
-    auto RM = llvm::Optional<llvm::Reloc::Model>();
-    auto TheTargetMachine =
-            Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
-
-    ctx.llvm_module->setDataLayout(TheTargetMachine->createDataLayout());
-    std::error_code EC;
-    llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::F_None);
-
-    if (EC) {
-        llvm::errs() << "Could not open file: " << EC.message();
-
-        exit(1);
-    }
-
-    llvm::legacy::PassManager pass;
-    auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
-
-    if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
-        llvm::errs() << "TheTargetMachine can't emit a file of this type";
-
-        exit(1);
-    }
-
-    pass.run(*ctx.llvm_module);
-    dest.flush();
 
     const clock_t end_time = clock();
 

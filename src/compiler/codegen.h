@@ -24,7 +24,7 @@
 
 namespace silicon::compiler {
 
-    void codegen(std::string input, std::string output);
+    void codegen(std::string input, std::string output, bool emit_llvm = false);
 
 }
 

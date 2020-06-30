@@ -37,15 +37,6 @@ int main(int argc, char **argv) {
             "Print version info and exit"
     );
 
-    std::string output = "output";
-    app.add_option(
-                    "-o,--output",
-                    output,
-                    "Write output to <filename>",
-                    true
-            )
-            ->type_name("filename");
-
     std::string input;
     app.add_option(
                     "input",
@@ -55,9 +46,25 @@ int main(int argc, char **argv) {
             ->check(CLI::ExistingFile)
             ->required();
 
+    std::string output = "output";
+    app.add_option(
+                    "-o,--output",
+                    output,
+                    "Write output to <filename>",
+                    true
+            )
+            ->type_name("filename");
+
+    bool emit_llvm = false;
+    app.add_flag(
+            "--emit-llvm",
+            emit_llvm,
+            "Emit LLVM IR"
+    );
+
     CLI11_PARSE(app, argc, argv);
 
-    silicon::compiler::codegen(input, output);
+    silicon::compiler::codegen(input, output, emit_llvm);
 
     return 0;
 }
