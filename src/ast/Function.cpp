@@ -17,7 +17,6 @@
 
 #include <utility>
 #include "llvm/IR/Verifier.h"
-#include "llvm/Transforms/Utils/Cloning.h"
 #include "Function.h"
 #include "compiler/Context.h"
 

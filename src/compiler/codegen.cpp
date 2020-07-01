@@ -50,7 +50,41 @@ void silicon::compiler::codegen(std::string input, std::string output, bool emit
 
     verifyModule(*ctx.llvm_module);
 
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+
+    auto TargetTriple = llvm::sys::getDefaultTargetTriple();
+    ctx.llvm_module->setTargetTriple(TargetTriple);
+    auto TheTriple = llvm::Triple(TargetTriple);
+
+    std::string Error;
+    auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
+
+    if (!Target) {
+        llvm::errs() << Error;
+
+        exit(1);
+    }
+
+    auto CPU = llvm::sys::getHostCPUName();
+    // TODO:
+    std::string FeaturesStr;
+
+    llvm::TargetOptions opt;
+    auto RM = llvm::Optional<llvm::Reloc::Model>();
+    auto TheTargetMachine =
+            Target->createTargetMachine(TargetTriple, CPU, FeaturesStr, opt, RM);
+
+    ctx.llvm_module->setDataLayout(TheTargetMachine->createDataLayout());
+
+    llvm::legacy::PassManager pass;
+
     if (emit_llvm) {
+        pass.run(*ctx.llvm_module);
+
         output += ".ll";
 
         std::error_code EC;
@@ -64,43 +98,12 @@ void silicon::compiler::codegen(std::string input, std::string output, bool emit
 
         ctx.llvm_module->print(dest, nullptr);
     } else {
-        llvm::InitializeAllTargetInfos();
-        llvm::InitializeAllTargets();
-        llvm::InitializeAllTargetMCs();
-        llvm::InitializeAllAsmParsers();
-        llvm::InitializeAllAsmPrinters();
-
-        auto TargetTriple = llvm::sys::getDefaultTargetTriple();
-        ctx.llvm_module->setTargetTriple(TargetTriple);
-        auto TheTriple = llvm::Triple(TargetTriple);
-
         if (TheTriple.getOS() == llvm::Triple::Win32) {
             output += ".obj";
         } else {
             output += ".o";
         }
 
-        std::string Error;
-        auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
-
-        if (!Target) {
-            llvm::errs() << Error;
-
-            exit(1);
-        }
-
-        auto CPU = llvm::sys::getHostCPUName();
-        // TODO:
-        std::string FeaturesStr;
-
-        llvm::TargetOptions opt;
-        auto RM = llvm::Optional<llvm::Reloc::Model>();
-        auto TheTargetMachine =
-                Target->createTargetMachine(TargetTriple, CPU, FeaturesStr, opt, RM);
-
-        ctx.llvm_module->setDataLayout(TheTargetMachine->createDataLayout());
-
-        llvm::legacy::PassManager pass;
         auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
 
         std::error_code EC;

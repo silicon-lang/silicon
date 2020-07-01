@@ -44,7 +44,11 @@ silicon::ast::Node *silicon::ast::StringLiteral::create(compiler::Context *ctx, 
 }
 
 llvm::Value *silicon::ast::StringLiteral::codegen(compiler::Context *ctx) {
-    llvm::GlobalVariable *gs = ctx->llvm_ir_builder.CreateGlobalString(value);
+    std::string name = "string." + value;
+
+    llvm::GlobalVariable *gs = ctx->llvm_module->getNamedGlobal(name);
+
+    if (!gs) gs = ctx->llvm_ir_builder.CreateGlobalString(value, name);
 
     return ctx->llvm_ir_builder.CreateConstGEP2_64(gs->getValueType(), gs, 0, 0);
 }
