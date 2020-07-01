@@ -92,7 +92,7 @@ silicon::node_t silicon::ast::If::type() {
 llvm::Value *silicon::ast::If::conditionCodegen(compiler::Context *ctx) {
     llvm::Value *value = condition->codegen(ctx);
 
-    llvm::Type *type = detect_type(value);
+    llvm::Type *type = value->getType();
 
     if (type->isVoidTy()) return ctx->bool_lit(false)->codegen(ctx);
 

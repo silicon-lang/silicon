@@ -178,7 +178,7 @@ llvm::Value *silicon::ast::BinaryOperation::multiply(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateMul(l, r);
 
@@ -196,7 +196,7 @@ llvm::Value *silicon::ast::BinaryOperation::divide(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) {
         // TODO: unsigned: ctx->llvm_ir_builder.CreateUDiv(l, r)
@@ -217,7 +217,7 @@ llvm::Value *silicon::ast::BinaryOperation::remainder(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) {
         // TODO: unsigned: ctx->llvm_ir_builder.CreateURem(l, r)
@@ -238,7 +238,7 @@ llvm::Value *silicon::ast::BinaryOperation::add(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateAdd(l, r);
 
@@ -256,7 +256,7 @@ llvm::Value *silicon::ast::BinaryOperation::sub(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateSub(l, r);
 
@@ -274,7 +274,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_xor(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateXor(l, r);
 
@@ -290,7 +290,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_and(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateAnd(l, r);
 
@@ -306,7 +306,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_or(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateOr(l, r);
 
@@ -322,7 +322,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_left_shift(compiler::Context *ctx
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateShl(l, r);
 
@@ -338,7 +338,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_right_shift(compiler::Context *ct
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateAShr(l, r);
 
@@ -354,7 +354,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_u_right_shift(compiler::Context *
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateLShr(l, r);
 
@@ -370,7 +370,7 @@ llvm::Value *silicon::ast::BinaryOperation::lt(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) {
         // TODO: unsigned: ctx->llvm_ir_builder.CreateICmpULT(l, r)
@@ -391,7 +391,7 @@ llvm::Value *silicon::ast::BinaryOperation::lte(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) {
         // TODO: unsigned: ctx->llvm_ir_builder.CreateICmpULE(l, r)
@@ -412,7 +412,7 @@ llvm::Value *silicon::ast::BinaryOperation::eq(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isVoidTy()) return ctx->bool_lit(true)->codegen(ctx);
 
@@ -432,7 +432,7 @@ llvm::Value *silicon::ast::BinaryOperation::ne(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isVoidTy()) return ctx->bool_lit(false)->codegen(ctx);
 
@@ -452,7 +452,7 @@ llvm::Value *silicon::ast::BinaryOperation::gte(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) {
         // TODO: unsigned: ctx->llvm_ir_builder.CreateICmpUGE(l, r)
@@ -473,7 +473,7 @@ llvm::Value *silicon::ast::BinaryOperation::gt(compiler::Context *ctx) {
     if (!compare_types(l, r))
         fail_codegen("TypeError: Expected both sides of the operation to have the same type.");
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     if (type->isIntegerTy()) {
         // TODO: unsigned: ctx->llvm_ir_builder.CreateICmpUGT(l, r)

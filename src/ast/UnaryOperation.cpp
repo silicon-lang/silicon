@@ -65,7 +65,7 @@ llvm::Value *silicon::ast::UnaryOperation::increment(compiler::Context *ctx) {
 
     ctx->expected_type = expected_type;
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     llvm::Value *operation = nullptr;
 
@@ -98,7 +98,7 @@ llvm::Value *silicon::ast::UnaryOperation::decrement(compiler::Context *ctx) {
 
     ctx->expected_type = expected_type;
 
-    llvm::Type *type = detect_type(l);
+    llvm::Type *type = l->getType();
 
     llvm::Value *operation = nullptr;
 
@@ -118,7 +118,7 @@ llvm::Value *silicon::ast::UnaryOperation::decrement(compiler::Context *ctx) {
 llvm::Value *silicon::ast::UnaryOperation::negate(compiler::Context *ctx) {
     llvm::Value *n = node->codegen(ctx);
 
-    llvm::Type *type = detect_type(n);
+    llvm::Type *type = n->getType();
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateNSWNeg(n);
 
@@ -130,7 +130,7 @@ llvm::Value *silicon::ast::UnaryOperation::negate(compiler::Context *ctx) {
 llvm::Value *silicon::ast::UnaryOperation::not_op(compiler::Context *ctx) {
     llvm::Value *value = node->codegen(ctx);
 
-    llvm::Type *type = detect_type(value);
+    llvm::Type *type = value->getType();
 
     if (type->isVoidTy()) return ctx->bool_lit(true)->codegen(ctx);
 
