@@ -29,7 +29,7 @@ void print_version() {
 }
 
 int main(int argc, char **argv) {
-    CLI::App app{"Silicon Programming Language"};
+    CLI::App app{"The Silicon Programming Language"};
 
     app.add_flag_callback(
             "-v,--version",

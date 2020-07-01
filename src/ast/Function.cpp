@@ -27,7 +27,7 @@ silicon::ast::Function::Function(Prototype *prototype, std::vector<Node *> body)
 }
 
 silicon::ast::Function *
-silicon::ast::Function::create(silicon::compiler::Context *ctx, Prototype *prototype, std::vector<Node *> body) {
+silicon::ast::Function::create(compiler::Context *ctx, Prototype *prototype, std::vector<Node *> body) {
     auto *node = new Function(prototype, std::move(body));
 
     node->loc = parse_location(ctx->loc);
@@ -35,7 +35,7 @@ silicon::ast::Function::create(silicon::compiler::Context *ctx, Prototype *proto
     return node;
 }
 
-llvm::Function *silicon::ast::Function::codegen(silicon::compiler::Context *ctx) {
+llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
     std::string name = prototype->getName();
 
     llvm::Function *function = ctx->llvm_module->getFunction(name);
