@@ -51,7 +51,10 @@ llvm::Value *silicon::ast::NumberLiteral::codegen(compiler::Context *ctx) {
 
     if (llvm_type->isFloatingPointTy()) return llvm::ConstantFP::get(llvm_type, value);
 
-    fail_codegen("Can't determine expected type for this number literal");
+    if (std::string::npos == value.find('.'))
+        return ctx->llvm_ir_builder.getInt32(stoi(value));
+
+    return llvm::ConstantFP::get(ctx->float_type(64), value);
 }
 
 silicon::node_t silicon::ast::NumberLiteral::type() {

@@ -18,6 +18,7 @@
 
 #include "ast/Node.h"
 #include "ast/Function.h"
+#include "ast/Prototype.h"
 #include "ast/If.h"
 
 
@@ -91,6 +92,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 
 %token VOID_TYPE "void"
 %token BOOLEAN_TYPE "bool"
+%token STRING_TYPE "string"
 %token <unsigned int> INTEGER_TYPE "int"
 %token <unsigned int> FLOAT_TYPE "float"
 
@@ -151,8 +153,10 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // --------------------------------------------------
 
 %type<std::vector<silicon::ast::Node *>> statements scoped_statements function_body arguments
-%type<silicon::ast::Node *> statement scoped_statement export_statement if_statement expression operation binary_operation unary_operation variable_definiton literal
+%type<silicon::ast::Node *> statement scoped_statement export_statement if_statement expression
+%type<silicon::ast::Node *> operation binary_operation unary_operation variable_definition literal
 %type<silicon::ast::Function *> function_definition
+%type<silicon::ast::Prototype *> function_declaration
 %type<silicon::ast::If *> if_statement_
 %type<llvm::Type *> type
 %type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition
@@ -231,7 +235,7 @@ scoped_statements
 ;
 
 scoped_statement
-: variable_definiton { $$ = $1; }
+: variable_definition { $$ = $1; }
 | if_statement { $$ = $1; }
 | expression SEMICOLON { $$ = $1; }
 ;
@@ -334,7 +338,7 @@ unary_operation
 // Grammar -> Variables
 // --------------------------------------------------
 
-variable_definiton
+variable_definition
 : LET IDENTIFIER COLON type ASSIGN expression SEMICOLON { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($2, $4), $6); }
 | LET IDENTIFIER ASSIGN expression SEMICOLON { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($2), $4); }
 //| LET IDENTIFIER QUESTION_MARK COLON type SEMICOLON
@@ -346,8 +350,12 @@ variable_definiton
 // --------------------------------------------------
 
 function_definition
-: FUNCTION IDENTIFIER OPEN_PAREN arguments_definition CLOSE_PAREN COLON type OPEN_CURLY function_body CLOSE_CURLY { $$ = ctx.def_func(ctx.def_proto($2, $4, $7), $9); }
-| FUNCTION IDENTIFIER OPEN_PAREN arguments_definition CLOSE_PAREN OPEN_CURLY function_body CLOSE_CURLY { $$ = ctx.def_func(ctx.def_proto($2, $4), $7); }
+: function_declaration OPEN_CURLY function_body CLOSE_CURLY { $$ = ctx.def_func($1, $3); }
+;
+
+function_declaration
+: FUNCTION IDENTIFIER OPEN_PAREN arguments_definition CLOSE_PAREN COLON type { $$ = ctx.def_proto($2, $4, $7); }
+| FUNCTION IDENTIFIER OPEN_PAREN arguments_definition CLOSE_PAREN { $$ = ctx.def_proto($2, $4); }
 ;
 
 function_body
@@ -390,6 +398,7 @@ literal
 type
 : VOID_TYPE { $$ = ctx.void_type(); }
 | BOOLEAN_TYPE { $$ = ctx.bool_type(); }
+| STRING_TYPE { $$ = ctx.string_type(); }
 | INTEGER_TYPE { $$ = ctx.int_type($1); }
 | FLOAT_TYPE { $$ = ctx.float_type($1); }
 ;
@@ -451,6 +460,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 
 "void" { return s(Parser::make_VOID_TYPE); }
 "bool" { return s(Parser::make_BOOLEAN_TYPE); }
+"string" { return s(Parser::make_STRING_TYPE); }
 "i8" { return s(Parser::make_INTEGER_TYPE, 8); }
 "i16" { return s(Parser::make_INTEGER_TYPE, 16); }
 "i32" { return s(Parser::make_INTEGER_TYPE, 32); }

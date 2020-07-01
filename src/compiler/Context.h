@@ -75,6 +75,8 @@ namespace silicon::compiler {
 
         llvm::Type *float_type(unsigned int bits);
 
+        llvm::Type *string_type();
+
         ast::Node *null(llvm::Type *type = nullptr);
 
         ast::Node *bool_lit(bool value);

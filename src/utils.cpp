@@ -48,6 +48,17 @@ llvm::Type *silicon::detect_type(llvm::Value *value) {
 }
 
 bool silicon::compare_types(llvm::Type *type1, llvm::Type *type2) {
+    if (type1->isPointerTy()) {
+        return type2->isPointerTy()
+               && compare_types(type1->getPointerElementType(), type2->getPointerElementType());
+    }
+
+    if (type1->isArrayTy()) {
+        return type2->isArrayTy()
+               && type1->getArrayNumElements() == type2->getArrayNumElements()
+               && compare_types(type1->getArrayElementType(), type2->getArrayElementType());
+    }
+
     if (type1->isVoidTy()) return type2->isVoidTy();
 
     if (type1->isIntegerTy()) return type2->isIntegerTy(type1->getIntegerBitWidth());
@@ -84,6 +95,9 @@ std::string silicon::parse_type(llvm::Type *type) {
     if (type->isFloatTy()) return "f32";
 
     if (type->isDoubleTy()) return "f64";
+
+    if (type->isPointerTy() && type->getPointerElementType()->isIntegerTy(8))
+        return "string";
 
     return "unknown";
 }

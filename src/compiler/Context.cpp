@@ -63,6 +63,10 @@ llvm::Type *silicon::compiler::Context::float_type(unsigned int bits) {
     }
 }
 
+llvm::Type *silicon::compiler::Context::string_type() {
+    return llvm_ir_builder.getInt8PtrTy();
+}
+
 silicon::ast::Node *silicon::compiler::Context::null(llvm::Type *type) {
     return ast::Null::create(this, type);
 }
@@ -119,7 +123,8 @@ silicon::ast::Node *silicon::compiler::Context::def_op(unary_operation_t op, ast
 }
 
 silicon::ast::If *
-silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<ast::Node *> then_statements, std::vector<ast::Node *> else_statements) {
+silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<ast::Node *> then_statements,
+                                   std::vector<ast::Node *> else_statements) {
     return ast::If::create(this, condition, std::move(then_statements), std::move(else_statements));
 }
 
