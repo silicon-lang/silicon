@@ -1,13 +1,13 @@
 extern fn printf(format: string, ...): i32;
 
-fn test(num: i32) {
-    num %= 2;
-
-    return num;
+fn fibonacci(x: i64): i64 {
+  return x <= 2
+    ? 1
+    : fibonacci(x - 1) + fibonacci(x - 2);
 }
 
-fn main(): i32 {
-    printf("%i\n", test(40 / 2 + 1 * 2));
+fn main() {
+  printf("%lli\n", fibonacci(40));
 
-    return 0;
+  return 0;
 }

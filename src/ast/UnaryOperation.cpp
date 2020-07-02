@@ -72,8 +72,20 @@ llvm::Value *silicon::ast::UnaryOperation::increment(compiler::Context *ctx) {
     if (type->isIntegerTy()) operation = ctx->llvm_ir_builder.CreateAdd(l, r);
     else if (type->isFloatingPointTy()) operation = ctx->llvm_ir_builder.CreateFAdd(l, r);
 
-    if (!operation)
-        fail_codegen("Unsupported operation");
+    if (!operation) {
+        if (suffix)
+            fail_codegen(
+                    "Error: Unsupported operation: <"
+                    + parse_type(type)
+                    + ">++"
+            );
+        else
+            fail_codegen(
+                    "Error: Unsupported operation: ++<"
+                    + parse_type(type)
+                    + ">"
+            );
+    }
 
     ctx->store(var->getName(), operation);
 
@@ -105,8 +117,20 @@ llvm::Value *silicon::ast::UnaryOperation::decrement(compiler::Context *ctx) {
     if (type->isIntegerTy()) operation = ctx->llvm_ir_builder.CreateSub(l, r);
     else if (type->isFloatingPointTy()) operation = ctx->llvm_ir_builder.CreateFSub(l, r);
 
-    if (!operation)
-        fail_codegen("Unsupported operation");
+    if (!operation) {
+        if (suffix)
+            fail_codegen(
+                    "Error: Unsupported operation: <"
+                    + parse_type(type)
+                    + ">--"
+            );
+        else
+            fail_codegen(
+                    "Error: Unsupported operation: --<"
+                    + parse_type(type)
+                    + ">"
+            );
+    }
 
     ctx->store(var->getName(), operation);
 
@@ -124,7 +148,11 @@ llvm::Value *silicon::ast::UnaryOperation::negate(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFNeg(n);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: -<"
+            + parse_type(type)
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::UnaryOperation::not_op(compiler::Context *ctx) {
@@ -150,5 +178,9 @@ llvm::Value *silicon::ast::UnaryOperation::not_op(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpOEQ(value, v);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: !<"
+            + parse_type(type)
+            + ">"
+    );
 }

@@ -184,7 +184,13 @@ llvm::Value *silicon::ast::BinaryOperation::multiply(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFMul(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> * <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::divide(compiler::Context *ctx) {
@@ -205,7 +211,13 @@ llvm::Value *silicon::ast::BinaryOperation::divide(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFDiv(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> / <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::remainder(compiler::Context *ctx) {
@@ -226,7 +238,13 @@ llvm::Value *silicon::ast::BinaryOperation::remainder(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFRem(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> % <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::add(compiler::Context *ctx) {
@@ -244,7 +262,13 @@ llvm::Value *silicon::ast::BinaryOperation::add(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFAdd(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> + <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::sub(compiler::Context *ctx) {
@@ -262,7 +286,13 @@ llvm::Value *silicon::ast::BinaryOperation::sub(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFSub(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> - <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::bw_xor(compiler::Context *ctx) {
@@ -278,7 +308,13 @@ llvm::Value *silicon::ast::BinaryOperation::bw_xor(compiler::Context *ctx) {
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateXor(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> ^ <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::bw_and(compiler::Context *ctx) {
@@ -294,7 +330,13 @@ llvm::Value *silicon::ast::BinaryOperation::bw_and(compiler::Context *ctx) {
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateAnd(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> & <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::bw_or(compiler::Context *ctx) {
@@ -310,7 +352,13 @@ llvm::Value *silicon::ast::BinaryOperation::bw_or(compiler::Context *ctx) {
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateOr(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> | <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::bw_left_shift(compiler::Context *ctx) {
@@ -326,7 +374,13 @@ llvm::Value *silicon::ast::BinaryOperation::bw_left_shift(compiler::Context *ctx
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateShl(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> << <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::bw_right_shift(compiler::Context *ctx) {
@@ -342,7 +396,13 @@ llvm::Value *silicon::ast::BinaryOperation::bw_right_shift(compiler::Context *ct
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateAShr(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> >> <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::bw_u_right_shift(compiler::Context *ctx) {
@@ -358,7 +418,13 @@ llvm::Value *silicon::ast::BinaryOperation::bw_u_right_shift(compiler::Context *
 
     if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateLShr(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> >>> <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::lt(compiler::Context *ctx) {
@@ -379,7 +445,13 @@ llvm::Value *silicon::ast::BinaryOperation::lt(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpOLT(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> < <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::lte(compiler::Context *ctx) {
@@ -400,7 +472,13 @@ llvm::Value *silicon::ast::BinaryOperation::lte(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpOLE(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> <= <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::eq(compiler::Context *ctx) {
@@ -420,7 +498,13 @@ llvm::Value *silicon::ast::BinaryOperation::eq(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpOEQ(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> == <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::ne(compiler::Context *ctx) {
@@ -440,7 +524,13 @@ llvm::Value *silicon::ast::BinaryOperation::ne(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpONE(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> != <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::gte(compiler::Context *ctx) {
@@ -461,7 +551,13 @@ llvm::Value *silicon::ast::BinaryOperation::gte(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpOGE(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> >= <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }
 
 llvm::Value *silicon::ast::BinaryOperation::gt(compiler::Context *ctx) {
@@ -482,5 +578,11 @@ llvm::Value *silicon::ast::BinaryOperation::gt(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpOGT(l, r);
 
-    fail_codegen("Unsupported operation");
+    fail_codegen(
+            "Error: Unsupported operation: <"
+            + parse_type(type)
+            + "> > <"
+            + parse_type(r->getType())
+            + ">"
+    );
 }

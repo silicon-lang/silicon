@@ -35,19 +35,20 @@ silicon::ast::Block *silicon::ast::Block::create(compiler::Context *ctx, ast::Bl
 llvm::Value *silicon::ast::Block::codegen(compiler::Context *ctx) {
     llvm::Value *value = nullptr;
 
-//    ctx->block = this;
-
     llvm::Type *expected_type = ctx->expected_type;
 
+    size_t size = statements.size();
+    size_t idx = 0;
+
     for (auto &statement : statements) {
-        if (!statement->type(node_t::RETURN)) ctx->expected_type = nullptr;
+        if (idx++ != size - 1
+            && !statement->type(node_t::RETURN))
+            ctx->expected_type = nullptr;
 
         value = statement->codegen(ctx);
 
         ctx->expected_type = expected_type;
     }
-
-//    ctx->block = parent;
 
     // TODO: return expression
     return value;
