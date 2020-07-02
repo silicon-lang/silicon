@@ -51,7 +51,7 @@ llvm::Function *silicon::ast::Prototype::codegen(compiler::Context *ctx) {
     llvm::FunctionType *function_type =
             llvm::FunctionType::get(result_type, types, false);
 
-    if (name == "main") linkage = llvm::Function::ExternalLinkage;
+    if (name == "main" || is_extern) linkage = llvm::Function::ExternalLinkage;
 
     llvm::Function *function =
             llvm::Function::Create(function_type, linkage, name, ctx->llvm_module.get());
@@ -83,6 +83,12 @@ silicon::ast::Prototype *silicon::ast::Prototype::setReturnType(llvm::Type *type
 
 silicon::ast::Prototype *silicon::ast::Prototype::externalLinkage() {
     linkage = llvm::Function::ExternalLinkage;
+
+    return this;
+}
+
+silicon::ast::Prototype *silicon::ast::Prototype::makeExtern() {
+    is_extern = true;
 
     return this;
 }

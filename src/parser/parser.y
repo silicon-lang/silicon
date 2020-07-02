@@ -85,6 +85,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token IF "if"
 %token ELSE "else"
 %token EXPORT "export"
+%token EXTERN "extern"
 
 // --------------------------------------------------
 // Tokens -> Types
@@ -154,7 +155,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 
 %type<std::vector<silicon::ast::Node *>> statements scoped_statements function_body arguments
 %type<std::vector<silicon::ast::Node *>> arguments_
-%type<silicon::ast::Node *> statement scoped_statement export_statement if_statement expression
+%type<silicon::ast::Node *> statement scoped_statement export_statement extern_statement if_statement expression
 %type<silicon::ast::Node *> operation binary_operation unary_operation variable_definition literal
 %type<silicon::ast::Function *> function_definition
 %type<silicon::ast::Prototype *> function_declaration
@@ -227,6 +228,7 @@ statements
 
 statement
 : export_statement { $$ = $1; }
+| extern_statement { $$ = $1; }
 | function_definition { $$ = $1; }
 ;
 
@@ -247,6 +249,14 @@ scoped_statement
 
 export_statement
 : EXPORT function_definition { $$ = $2->externalLinkage(); }
+;
+
+// --------------------------------------------------
+// Grammar -> Extern Statements
+// --------------------------------------------------
+
+extern_statement
+: EXTERN function_declaration SEMICOLON { $$ = $2->makeExtern(); }
 ;
 
 // --------------------------------------------------
@@ -464,6 +474,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 "if" { return s(Parser::make_IF); }
 "else" { return s(Parser::make_ELSE); }
 "export" { return s(Parser::make_EXPORT); }
+"extern" { return s(Parser::make_EXTERN); }
 
 // Tokens -> Types
 
