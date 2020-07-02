@@ -49,7 +49,7 @@ llvm::Function *silicon::ast::Prototype::codegen(compiler::Context *ctx) {
     if (!result_type) result_type = ctx->llvm_ir_builder.getVoidTy();
 
     llvm::FunctionType *function_type =
-            llvm::FunctionType::get(result_type, types, false);
+            llvm::FunctionType::get(result_type, types, is_variadic);
 
     if (name == "main" || is_extern) linkage = llvm::Function::ExternalLinkage;
 
@@ -89,6 +89,12 @@ silicon::ast::Prototype *silicon::ast::Prototype::externalLinkage() {
 
 silicon::ast::Prototype *silicon::ast::Prototype::makeExtern() {
     is_extern = true;
+
+    return this;
+}
+
+silicon::ast::Prototype *silicon::ast::Prototype::makeVariadic() {
+    is_variadic = true;
 
     return this;
 }

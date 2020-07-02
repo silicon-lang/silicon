@@ -32,7 +32,8 @@ namespace silicon::ast {
         std::vector<std::pair<std::string, llvm::Type *>> args;
         llvm::Type *return_type;
 
-        bool is_extern;
+        bool is_extern = false;
+        bool is_variadic = false;
 
         llvm::Function::LinkageTypes linkage = llvm::Function::InternalLinkage;
 
@@ -57,6 +58,8 @@ namespace silicon::ast {
         Prototype *externalLinkage();
 
         Prototype *makeExtern();
+
+        Prototype *makeVariadic();
 
     };
 

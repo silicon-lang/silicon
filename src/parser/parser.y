@@ -158,10 +158,10 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %type<silicon::ast::Node *> statement scoped_statement export_statement extern_statement if_statement expression
 %type<silicon::ast::Node *> operation binary_operation unary_operation variable_definition literal
 %type<silicon::ast::Function *> function_definition
-%type<silicon::ast::Prototype *> function_declaration
+%type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
 %type<silicon::ast::If *> if_statement_
 %type<llvm::Type *> type
-%type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_
+%type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_ variadic_arguments_declaration
 
 // --------------------------------------------------
 // Precedences
@@ -257,6 +257,7 @@ export_statement
 
 extern_statement
 : EXTERN function_declaration SEMICOLON { $$ = $2->makeExtern(); }
+| EXTERN variadic_function_declaration SEMICOLON { $$ = $2->makeExtern(); }
 ;
 
 // --------------------------------------------------
@@ -369,6 +370,11 @@ function_declaration
 | FUNCTION IDENTIFIER OPEN_PAREN arguments_definition CLOSE_PAREN { $$ = ctx.def_proto($2, $4); }
 ;
 
+variadic_function_declaration
+: FUNCTION IDENTIFIER OPEN_PAREN variadic_arguments_declaration CLOSE_PAREN COLON type { $$ = ctx.def_proto($2, $4, $7)->makeVariadic(); }
+| FUNCTION IDENTIFIER OPEN_PAREN variadic_arguments_declaration CLOSE_PAREN { $$ = ctx.def_proto($2, $4)->makeVariadic(); }
+;
+
 function_body
 : RETURN expression SEMICOLON { $$ = { ctx.def_ret($2) }; }
 | scoped_statements RETURN expression SEMICOLON { $1.push_back(ctx.def_ret($3)); $$ = $1; }
@@ -387,6 +393,11 @@ arguments_definition
 arguments_definition_
 : IDENTIFIER COLON type { $$ = { ctx.def_arg($1, $3) }; }
 | arguments_definition_ COMMA IDENTIFIER COLON type { $1.push_back(ctx.def_arg($3, $5)); $$ = $1; }
+;
+
+variadic_arguments_declaration
+: TRIPLE_DOT { $$ = { }; }
+| arguments_definition_ COMMA TRIPLE_DOT { $$ = $1; }
 ;
 
 arguments
