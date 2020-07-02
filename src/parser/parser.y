@@ -153,13 +153,14 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // --------------------------------------------------
 
 %type<std::vector<silicon::ast::Node *>> statements scoped_statements function_body arguments
+%type<std::vector<silicon::ast::Node *>> arguments_
 %type<silicon::ast::Node *> statement scoped_statement export_statement if_statement expression
 %type<silicon::ast::Node *> operation binary_operation unary_operation variable_definition literal
 %type<silicon::ast::Function *> function_definition
 %type<silicon::ast::Prototype *> function_declaration
 %type<silicon::ast::If *> if_statement_
 %type<llvm::Type *> type
-%type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition
+%type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_
 
 // --------------------------------------------------
 // Precedences
@@ -370,14 +371,22 @@ function_body
 
 arguments_definition
 : %empty { $$ = { }; }
-| IDENTIFIER COLON type { $$ = { ctx.def_arg($1, $3) }; }
-| arguments_definition COMMA IDENTIFIER COLON type { $1.push_back(ctx.def_arg($3, $5)); $$ = $1; }
+| arguments_definition_ { $$ = $1; }
+;
+
+arguments_definition_
+: IDENTIFIER COLON type { $$ = { ctx.def_arg($1, $3) }; }
+| arguments_definition_ COMMA IDENTIFIER COLON type { $1.push_back(ctx.def_arg($3, $5)); $$ = $1; }
 ;
 
 arguments
 : %empty { $$ = { }; }
-| expression { $$ = { $1 }; }
-| arguments COMMA expression { $1.push_back($3); $$ = $1; }
+| arguments_ { $$ = $1; }
+;
+
+arguments_
+: expression { $$ = { $1 }; }
+| arguments_ COMMA expression { $1.push_back($3); $$ = $1; }
 ;
 
 // --------------------------------------------------
