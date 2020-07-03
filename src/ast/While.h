@@ -30,7 +30,11 @@ namespace silicon::ast {
         Node *condition;
         std::vector<Node *> body;
 
+        bool is_do_while = false;
+
         While(Node *condition, std::vector<Node *> body);
+
+        llvm::Value *doWhileCodegen(compiler::Context *ctx);
 
         llvm::Value *conditionCodegen(compiler::Context *ctx);
 
@@ -39,11 +43,13 @@ namespace silicon::ast {
         bool hasBody();
 
     public:
-        static While *create(compiler::Context*ctx, Node *condition, std::vector<Node *> body);
+        static While *create(compiler::Context *ctx, Node *condition, std::vector<Node *> body);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
+
+        While *makeDoWhile();
 
     };
 

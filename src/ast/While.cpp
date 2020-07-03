@@ -31,13 +31,15 @@ silicon::ast::While *silicon::ast::While::create(compiler::Context *ctx, Node *c
 }
 
 llvm::Value *silicon::ast::While::codegen(silicon::compiler::Context *ctx) {
-    if (!hasBody()) return nullptr;
+    // TODO: can cause problem if the condition is something like "i--"
+//    if (!hasBody()) return nullptr;
+
+    if (is_do_while) return doWhileCodegen(ctx);
 
     llvm::Value *conditionV = conditionCodegen(ctx);
 
     llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
 
-    llvm::BasicBlock *entryBB = ctx->llvm_ir_builder.GetInsertBlock();
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop");
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "after_loop");
 
@@ -62,6 +64,31 @@ llvm::Value *silicon::ast::While::codegen(silicon::compiler::Context *ctx) {
 
 silicon::node_t silicon::ast::While::type() {
     return node_t::WHILE;
+}
+
+llvm::Value *silicon::ast::While::doWhileCodegen(compiler::Context *ctx) {
+    llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
+
+    llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop");
+    llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "after_loop");
+
+    ctx->llvm_ir_builder.CreateBr(loopBB);
+
+    function->getBasicBlockList().push_back(loopBB);
+
+    ctx->llvm_ir_builder.SetInsertPoint(loopBB);
+    llvm::Value *thenV = bodyCodegen(ctx);
+    if (!thenV) {
+        llvm::Value *conditionV = conditionCodegen(ctx);
+
+        ctx->llvm_ir_builder.CreateCondBr(conditionV, loopBB, afterBB);
+    }
+
+    function->getBasicBlockList().push_back(afterBB);
+
+    ctx->llvm_ir_builder.SetInsertPoint(afterBB);
+
+    return nullptr;
 }
 
 llvm::Value *silicon::ast::While::conditionCodegen(compiler::Context *ctx) {
@@ -100,6 +127,12 @@ llvm::ReturnInst *silicon::ast::While::bodyCodegen(compiler::Context *ctx) {
     ctx->operator--();
 
     return value;
+}
+
+silicon::ast::While *silicon::ast::While::makeDoWhile() {
+    is_do_while = true;
+
+    return this;
 }
 
 bool silicon::ast::While::hasBody() {

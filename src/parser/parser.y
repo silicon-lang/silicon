@@ -86,6 +86,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token IF "if"
 %token ELSE "else"
 %token WHILE "while"
+%token DO "do"
 %token EXPORT "export"
 %token EXTERN "extern"
 
@@ -162,7 +163,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %type<silicon::ast::Function *> function_definition
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
 %type<silicon::ast::If *> if_statement_
-%type<silicon::ast::While *> while_statement
+%type<silicon::ast::While *> while_statement do_while_statement
 %type<llvm::Type *> type
 %type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_ variadic_arguments_declaration
 
@@ -244,6 +245,7 @@ scoped_statement
 : variable_definition { $$ = $1; }
 | if_statement { $$ = $1; }
 | while_statement { $$ = $1; }
+| do_while_statement { $$ = $1; }
 | expression SEMICOLON { $$ = $1; }
 | return_statement { $$ = $1; }
 ;
@@ -282,6 +284,12 @@ while_statement
 : WHILE OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_while($3, { $5 }); }
 | WHILE OPEN_PAREN expression CLOSE_PAREN return_statement { $$ = ctx.def_while($3, { $5 }); }
 | WHILE OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_while($3, $6); }
+;
+
+do_while_statement
+: DO expression SEMICOLON WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($6, { $2 })->makeDoWhile(); }
+| DO return_statement WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($5, { $2 })->makeDoWhile(); }
+| DO OPEN_CURLY scoped_statements CLOSE_CURLY WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($7, $3)->makeDoWhile(); }
 ;
 
 // --------------------------------------------------
@@ -505,6 +513,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 "if" { return s(Parser::make_IF); }
 "else" { return s(Parser::make_ELSE); }
 "while" { return s(Parser::make_WHILE); }
+"do" { return s(Parser::make_DO); }
 "export" { return s(Parser::make_EXPORT); }
 "extern" { return s(Parser::make_EXTERN); }
 
