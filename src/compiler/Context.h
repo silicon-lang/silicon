@@ -39,6 +39,7 @@
 #include "ast/UnaryOperation.h"
 #include "ast/If.h"
 #include "ast/While.h"
+#include "ast/For.h"
 #include "parser/parser.h"
 
 
@@ -109,6 +110,8 @@ namespace silicon::compiler {
                         std::vector<ast::Node *> else_statements = {});
 
         ast::While *def_while(ast::Node *condition, std::vector<ast::Node *> body);
+
+        ast::For *def_for(ast::Node *definition, ast::Node *condition, ast::Node *stepper, std::vector<ast::Node *> body);
 
         /* ------------------------- CODEGEN ------------------------- */
 

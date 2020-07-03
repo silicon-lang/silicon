@@ -108,6 +108,7 @@ add_executable(silicon
         src/ast/UnaryOperation.cpp src/ast/UnaryOperation.h
         src/ast/If.cpp src/ast/If.h
         src/ast/While.cpp src/ast/While.h
+        src/ast/For.cpp src/ast/For.h
         )
 
 llvm_map_components_to_libnames(llvm_libs ${LLVM_ALL_LIBS})

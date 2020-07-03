@@ -57,6 +57,7 @@ namespace silicon {
 
         IF,
         WHILE,
+        FOR,
     };
 
     enum class binary_operation_t {

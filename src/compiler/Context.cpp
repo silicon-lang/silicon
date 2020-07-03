@@ -133,6 +133,12 @@ silicon::compiler::Context::def_while(ast::Node *condition, std::vector<ast::Nod
     return ast::While::create(this, condition, body);
 }
 
+silicon::ast::For *
+silicon::compiler::Context::def_for(ast::Node *definition, ast::Node *condition, ast::Node *stepper,
+                                    std::vector<ast::Node *> body) {
+    return ast::For::create(this, definition, condition, stepper, body);
+}
+
 /* ------------------------- CODEGEN ------------------------- */
 
 llvm::ReturnInst *silicon::compiler::Context::codegen() {

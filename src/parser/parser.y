@@ -21,6 +21,7 @@
 #include "ast/Prototype.h"
 #include "ast/If.h"
 #include "ast/While.h"
+#include "ast/For.h"
 
 
 namespace silicon::compiler {
@@ -87,6 +88,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token ELSE "else"
 %token WHILE "while"
 %token DO "do"
+%token FOR "for"
 %token EXPORT "export"
 %token EXTERN "extern"
 
@@ -164,6 +166,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
 %type<silicon::ast::If *> if_statement_
 %type<silicon::ast::While *> while_statement do_while_statement
+%type<silicon::ast::For *> for_statement
 %type<llvm::Type *> type
 %type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_ variadic_arguments_declaration
 
@@ -246,6 +249,7 @@ scoped_statement
 | if_statement { $$ = $1; }
 | while_statement { $$ = $1; }
 | do_while_statement { $$ = $1; }
+| for_statement { $$ = $1; }
 | expression SEMICOLON { $$ = $1; }
 | return_statement { $$ = $1; }
 ;
@@ -290,6 +294,16 @@ do_while_statement
 : DO expression SEMICOLON WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($6, { $2 })->makeDoWhile(); }
 | DO return_statement WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($5, { $2 })->makeDoWhile(); }
 | DO OPEN_CURLY scoped_statements CLOSE_CURLY WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($7, $3)->makeDoWhile(); }
+;
+
+// --------------------------------------------------
+// Grammar -> For Statements
+// --------------------------------------------------
+
+for_statement
+: FOR OPEN_PAREN variable_definition expression SEMICOLON expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_for($3, $4, $6, { $8 }); }
+| FOR OPEN_PAREN variable_definition expression SEMICOLON expression CLOSE_PAREN return_statement { $$ = ctx.def_for($3, $4, $6, { $8 }); }
+| FOR OPEN_PAREN variable_definition expression SEMICOLON expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_for($3, $4, $6, $9); }
 ;
 
 // --------------------------------------------------
@@ -514,6 +528,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 "else" { return s(Parser::make_ELSE); }
 "while" { return s(Parser::make_WHILE); }
 "do" { return s(Parser::make_DO); }
+"for" { return s(Parser::make_FOR); }
 "export" { return s(Parser::make_EXPORT); }
 "extern" { return s(Parser::make_EXTERN); }
 
