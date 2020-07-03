@@ -96,7 +96,7 @@ namespace silicon::compiler {
 
         ast::Function *def_func(ast::Prototype *prototype, std::vector<ast::Node *> body);
 
-        ast::Node *def_ret(ast::Node *value);
+        ast::Return *def_ret(ast::Node *value = nullptr);
 
         ast::Node *call_func(std::string callee, std::vector<ast::Node *> args = {});
 
@@ -109,7 +109,7 @@ namespace silicon::compiler {
 
         /* ------------------------- CODEGEN ------------------------- */
 
-        llvm::Value *codegen();
+        llvm::ReturnInst *codegen();
 
         llvm::AllocaInst *get_alloca(const std::string &name);
 

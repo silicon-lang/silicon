@@ -267,6 +267,7 @@ extern_statement
 
 return_statement
 : RETURN expression SEMICOLON { $$ = ctx.def_ret($2); }
+| RETURN SEMICOLON { $$ = ctx.def_ret(); }
 ;
 
 // --------------------------------------------------
@@ -373,7 +374,7 @@ variable_definition
 // --------------------------------------------------
 
 function_definition
-: function_declaration OPEN_CURLY scoped_statements CLOSE_CURLY { $3.push_back(ctx.def_ret(ctx.null())); $$ = ctx.def_func($1, $3); }
+: function_declaration OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_func($1, $3); }
 ;
 
 function_declaration

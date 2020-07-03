@@ -106,7 +106,7 @@ silicon::compiler::Context::def_func(ast::Prototype *prototype, std::vector<ast:
     return ast::Function::create(this, prototype, std::move(body));
 }
 
-silicon::ast::Node *silicon::compiler::Context::def_ret(ast::Node *value) {
+silicon::ast::Return *silicon::compiler::Context::def_ret(ast::Node *value) {
     return ast::Return::create(this, value);
 }
 
@@ -130,7 +130,7 @@ silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<as
 
 /* ------------------------- CODEGEN ------------------------- */
 
-llvm::Value *silicon::compiler::Context::codegen() {
+llvm::ReturnInst *silicon::compiler::Context::codegen() {
     return block->codegen(this);
 }
 

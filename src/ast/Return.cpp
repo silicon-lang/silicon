@@ -22,7 +22,7 @@
 silicon::ast::Return::Return(Node *value) : value(value) {
 }
 
-silicon::ast::Node *silicon::ast::Return::create(compiler::Context *ctx, Node *value) {
+silicon::ast::Return *silicon::ast::Return::create(compiler::Context *ctx, Node *value) {
     auto *node = new Return(value);
 
     node->loc = parse_location(ctx->loc);
@@ -30,7 +30,19 @@ silicon::ast::Node *silicon::ast::Return::create(compiler::Context *ctx, Node *v
     return node;
 }
 
-llvm::Value *silicon::ast::Return::codegen(compiler::Context *ctx) {
+llvm::ReturnInst *silicon::ast::Return::codegen(compiler::Context *ctx) {
+    if (!value) {
+        if (ctx->expected_type && !compare_types(ctx->void_type(), ctx->expected_type)) {
+            fail_codegen(
+                    "TypeError: Expected function to return <"
+                    + parse_type(ctx->expected_type)
+                    + ">, got <void> instead."
+            );
+        }
+
+        return ctx->llvm_ir_builder.CreateRetVoid();
+    }
+
     llvm::Value *ret = value->codegen(ctx);
 
     if (ctx->expected_type && !compare_types(ret->getType(), ctx->expected_type)) {

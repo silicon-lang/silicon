@@ -46,7 +46,7 @@ llvm::Function *silicon::ast::Prototype::codegen(compiler::Context *ctx) {
 
     llvm::Type *result_type = return_type;
 
-    if (!result_type) result_type = ctx->llvm_ir_builder.getVoidTy();
+    if (!result_type) result_type = ctx->void_type();
 
     llvm::FunctionType *function_type =
             llvm::FunctionType::get(result_type, types, is_variadic);

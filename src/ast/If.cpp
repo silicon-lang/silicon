@@ -58,7 +58,7 @@ llvm::Value *silicon::ast::If::codegen(compiler::Context *ctx) {
 
         ctx->llvm_ir_builder.SetInsertPoint(thenBB);
         llvm::Value *thenV = thenCodegen(ctx);
-        if (!((llvm::ReturnInst *) thenV)->getReturnValue()) ctx->llvm_ir_builder.CreateBr(mergeBB);
+        if (!thenV) ctx->llvm_ir_builder.CreateBr(mergeBB);
     }
 
     if (hasElse()) {
@@ -66,7 +66,7 @@ llvm::Value *silicon::ast::If::codegen(compiler::Context *ctx) {
 
         ctx->llvm_ir_builder.SetInsertPoint(elseBB);
         llvm::Value *elseV = elseCodegen(ctx);
-        if (!((llvm::ReturnInst *) elseV)->getReturnValue()) ctx->llvm_ir_builder.CreateBr(mergeBB);
+        if (!elseV) ctx->llvm_ir_builder.CreateBr(mergeBB);
     }
 
     function->getBasicBlockList().push_back(mergeBB);
@@ -85,32 +85,48 @@ llvm::Value *silicon::ast::If::inlineCodegen(compiler::Context *ctx) {
 
     llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
 
-    llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "then", function);
-    llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "else");
+    ast::Node *Then = then_statements[0];
+    ast::Node *Else = else_statements[0];
+
+    bool should_keep_then = !Then->type(node_t::BOOLEAN_LIT) && !Then->type(node_t::NUMBER_LIT);
+    bool should_keep_else = !should_keep_then || (!Else->type(node_t::BOOLEAN_LIT) && !Else->type(node_t::NUMBER_LIT));
+
     llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "after_if");
+    llvm::BasicBlock *thenBB = mergeBB;
+    if (should_keep_then) thenBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "then");
+    llvm::BasicBlock *elseBB = mergeBB;
+    if (should_keep_else) elseBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "else");
 
     ctx->llvm_ir_builder.CreateCondBr(conditionV, thenBB, elseBB);
 
-    ctx->llvm_ir_builder.SetInsertPoint(thenBB);
-    llvm::Value *ThenV = thenCodegen(ctx);
+    if (should_keep_then) {
+        function->getBasicBlockList().push_back(thenBB);
+
+        ctx->llvm_ir_builder.SetInsertPoint(thenBB);
+    }
+    llvm::Value *ThenV = Then->codegen(ctx);
     if (!ThenV) fail_codegen("Error: Unrecognized <then> expression");
-    ctx->llvm_ir_builder.CreateBr(mergeBB);
+    if (should_keep_then) ctx->llvm_ir_builder.CreateBr(mergeBB);
     thenBB = ctx->llvm_ir_builder.GetInsertBlock();
 
     llvm::Type *expected_type = ctx->expected_type;
 
     ctx->expected_type = ThenV->getType();
 
-    function->getBasicBlockList().push_back(elseBB);
-    ctx->llvm_ir_builder.SetInsertPoint(elseBB);
-    llvm::Value *ElseV = elseCodegen(ctx);
+    if (should_keep_else) {
+        function->getBasicBlockList().push_back(elseBB);
+
+        ctx->llvm_ir_builder.SetInsertPoint(elseBB);
+    }
+    llvm::Value *ElseV = Else->codegen(ctx);
     if (!ElseV) fail_codegen("Error: Unrecognized <else> expression");
-    ctx->llvm_ir_builder.CreateBr(mergeBB);
+    if (should_keep_else) ctx->llvm_ir_builder.CreateBr(mergeBB);
     elseBB = ctx->llvm_ir_builder.GetInsertBlock();
 
     ctx->expected_type = expected_type;
 
     function->getBasicBlockList().push_back(mergeBB);
+
     ctx->llvm_ir_builder.SetInsertPoint(mergeBB);
 
     llvm::PHINode *PN =
@@ -147,28 +163,24 @@ llvm::Value *silicon::ast::If::conditionCodegen(compiler::Context *ctx) {
     fail_codegen("Error: Unsupported condition");
 }
 
-llvm::Value *silicon::ast::If::thenCodegen(compiler::Context *ctx) {
-    if (is_inline) return then_statements[0]->codegen(ctx);
-
+llvm::ReturnInst *silicon::ast::If::thenCodegen(compiler::Context *ctx) {
     ctx->operator++();
 
     ctx->statements(then_statements);
 
-    llvm::Value *value = ctx->codegen();
+    llvm::ReturnInst *value = ctx->codegen();
 
     ctx->operator--();
 
     return value;
 }
 
-llvm::Value *silicon::ast::If::elseCodegen(compiler::Context *ctx) {
-    if (is_inline) return else_statements[0]->codegen(ctx);
-
+llvm::ReturnInst *silicon::ast::If::elseCodegen(compiler::Context *ctx) {
     ctx->operator++();
 
     ctx->statements(else_statements);
 
-    llvm::Value *value = ctx->codegen();
+    llvm::ReturnInst *value = ctx->codegen();
 
     ctx->operator--();
 

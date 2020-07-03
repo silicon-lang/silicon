@@ -82,30 +82,28 @@ silicon::value_pair_t *silicon::ast::BinaryOperation::parse_pair(compiler::Conte
 
     llvm::Type *expected_type = ctx->expected_type;
 
-    if (!expected_type) {
-        bool isLeftDynamic = left->type(node_t::NUMBER_LIT) || left->type(node_t::NULL_PTR);
-        bool isRightDynamic = right->type(node_t::NUMBER_LIT) || right->type(node_t::NULL_PTR);
+    bool isLeftDynamic = left->type(node_t::NUMBER_LIT) || left->type(node_t::NULL_PTR);
+    bool isRightDynamic = right->type(node_t::NUMBER_LIT) || right->type(node_t::NULL_PTR);
 
-        if (isLeftDynamic) {
-            if (isRightDynamic) left->codegen(ctx);
-            else {
-                pair->right = right->codegen(ctx);
-
-                ctx->expected_type = pair->right->getType();
-
-                pair->left = left->codegen(ctx);
-
-                ctx->expected_type = expected_type;
-            }
-        } else if (isRightDynamic) {
-            pair->left = left->codegen(ctx);
-
-            ctx->expected_type = pair->left->getType();
-
+    if (isLeftDynamic) {
+        if (isRightDynamic) left->codegen(ctx);
+        else {
             pair->right = right->codegen(ctx);
+
+            ctx->expected_type = pair->right->getType();
+
+            pair->left = left->codegen(ctx);
 
             ctx->expected_type = expected_type;
         }
+    } else if (isRightDynamic) {
+        pair->left = left->codegen(ctx);
+
+        ctx->expected_type = pair->left->getType();
+
+        pair->right = right->codegen(ctx);
+
+        ctx->expected_type = expected_type;
     }
 
     if (!pair->left) pair->left = left->codegen(ctx);

@@ -40,7 +40,7 @@ namespace silicon::ast {
     public:
         static Block *create(compiler::Context *ctx, Block *parent = nullptr);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::ReturnInst *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
 

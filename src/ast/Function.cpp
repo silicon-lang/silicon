@@ -65,37 +65,40 @@ llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
 
     ctx->expected_type = return_type;
 
-    if (auto *result = (llvm::ReturnInst *) ctx->codegen()) {
-        // Finish off the function.
+    auto *result = ctx->codegen();
 
-        ctx->expected_type = expected_type;
+    if (!result) {
+        llvm::Type *fnReturnT = function->getReturnType();
+        ast::Node *node = nullptr; // default: fnReturnT->isVoidTy()
 
-        ctx->operator--();
+        if (fnReturnT->isIntegerTy(1)) node = ctx->bool_lit(false);
+        else if (fnReturnT->isIntegerTy() || fnReturnT->isFloatingPointTy()) node = ctx->num_lit("0");
 
-        if (!return_type) {
-            function->removeFromParent();
-
-            return ctx->def_func(
-                            prototype->setReturnType(result->getReturnValue()->getType()),
-                            body
-                    )
-                    ->codegen(ctx);
-        }
-
-        // Validate the generated code, checking for consistency.
-        verifyFunction(*function);
-
-        return function;
+        result = ctx->def_ret(node)->codegen(ctx);
     }
+
+    // Finish off the function.
 
     ctx->expected_type = expected_type;
 
     ctx->operator--();
 
-    // Error reading body, remove function.
-    function->eraseFromParent();
+    if (!return_type
+        && result->getReturnValue()
+        && !result->getReturnValue()->getType()->isVoidTy()) {
+        function->removeFromParent();
 
-    return nullptr;
+        return ctx->def_func(
+                        prototype->setReturnType(result->getReturnValue()->getType()),
+                        body
+                )
+                ->codegen(ctx);
+    }
+
+    // Validate the generated code, checking for consistency.
+    verifyFunction(*function);
+
+    return function;
 }
 
 silicon::node_t silicon::ast::Function::type() {

@@ -19,6 +19,7 @@
 #define SILICON_RETURN_H
 
 
+#include <llvm/IR/Instructions.h>
 #include "Node.h"
 
 
@@ -28,12 +29,12 @@ namespace silicon::ast {
     private:
         Node *value;
 
-        explicit Return(Node *value);
+        explicit Return(Node *value = nullptr);
 
     public:
-        static Node *create(compiler::Context *ctx, Node *value);
+        static Return *create(compiler::Context *ctx, Node *value = nullptr);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::ReturnInst *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
 

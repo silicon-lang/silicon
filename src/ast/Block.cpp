@@ -32,25 +32,23 @@ silicon::ast::Block *silicon::ast::Block::create(compiler::Context *ctx, ast::Bl
     return node;
 }
 
-llvm::Value *silicon::ast::Block::codegen(compiler::Context *ctx) {
-    llvm::Value *value = nullptr;
-
+llvm::ReturnInst *silicon::ast::Block::codegen(compiler::Context *ctx) {
     llvm::Type *expected_type = ctx->expected_type;
 
     for (auto &statement : statements) {
-        bool is_return = statement->type(node_t::RETURN);
+        if (statement->type(node_t::RETURN)) {
+            // TODO: maybe throw a warning if there's more statements after the return statement?
+            return (llvm::ReturnInst *)statement->codegen(ctx);
+        }
 
-        if (!is_return) ctx->expected_type = nullptr;
+        ctx->expected_type = nullptr;
 
-        value = statement->codegen(ctx);
+        statement->codegen(ctx);
 
         ctx->expected_type = expected_type;
-
-        // TODO: maybe throw a warning if there's more statements after the return statement?
-        if (is_return) break;
     }
 
-    return value;
+    return nullptr;
 }
 
 silicon::node_t silicon::ast::Block::type() {

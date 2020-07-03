@@ -8,6 +8,4 @@ fn fibonacci(x: i64): i64 {
 
 fn main() {
   printf("%lli\n", fibonacci(40));
-
-  return 0;
 }
