@@ -20,6 +20,7 @@
 #include "ast/Function.h"
 #include "ast/Prototype.h"
 #include "ast/If.h"
+#include "ast/While.h"
 
 
 namespace silicon::compiler {
@@ -84,6 +85,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token RETURN "return"
 %token IF "if"
 %token ELSE "else"
+%token WHILE "while"
 %token EXPORT "export"
 %token EXTERN "extern"
 
@@ -160,6 +162,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %type<silicon::ast::Function *> function_definition
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
 %type<silicon::ast::If *> if_statement_
+%type<silicon::ast::While *> while_statement
 %type<llvm::Type *> type
 %type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_ variadic_arguments_declaration
 
@@ -240,6 +243,7 @@ scoped_statements
 scoped_statement
 : variable_definition { $$ = $1; }
 | if_statement { $$ = $1; }
+| while_statement { $$ = $1; }
 | expression SEMICOLON { $$ = $1; }
 | return_statement { $$ = $1; }
 ;
@@ -268,6 +272,16 @@ extern_statement
 return_statement
 : RETURN expression SEMICOLON { $$ = ctx.def_ret($2); }
 | RETURN SEMICOLON { $$ = ctx.def_ret(); }
+;
+
+// --------------------------------------------------
+// Grammar -> While Statements
+// --------------------------------------------------
+
+while_statement
+: WHILE OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_while($3, { $5 }); }
+| WHILE OPEN_PAREN expression CLOSE_PAREN return_statement { $$ = ctx.def_while($3, { $5 }); }
+| WHILE OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_while($3, $6); }
 ;
 
 // --------------------------------------------------
@@ -490,6 +504,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 "return" { return s(Parser::make_RETURN); }
 "if" { return s(Parser::make_IF); }
 "else" { return s(Parser::make_ELSE); }
+"while" { return s(Parser::make_WHILE); }
 "export" { return s(Parser::make_EXPORT); }
 "extern" { return s(Parser::make_EXTERN); }
 

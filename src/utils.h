@@ -56,6 +56,7 @@ namespace silicon {
         UNARY_OP,
 
         IF,
+        WHILE,
     };
 
     enum class binary_operation_t {

@@ -38,6 +38,7 @@
 #include "ast/BinaryOperation.h"
 #include "ast/UnaryOperation.h"
 #include "ast/If.h"
+#include "ast/While.h"
 #include "parser/parser.h"
 
 
@@ -106,6 +107,8 @@ namespace silicon::compiler {
 
         ast::If *def_if(ast::Node *condition, std::vector<ast::Node *> then_statements,
                         std::vector<ast::Node *> else_statements = {});
+
+        ast::While *def_while(ast::Node *condition, std::vector<ast::Node *> body);
 
         /* ------------------------- CODEGEN ------------------------- */
 
