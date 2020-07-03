@@ -30,13 +30,21 @@ namespace silicon::ast {
         std::vector<Node *> then_statements;
         std::vector<Node *> else_statements;
 
+        bool is_inline = false;
+
         If(Node *condition, std::vector<Node *> then_statements, std::vector<Node *> else_statements);
+
+        llvm::Value *inlineCodegen(compiler::Context *ctx);
 
         llvm::Value *conditionCodegen(compiler::Context *ctx);
 
         llvm::Value *thenCodegen(compiler::Context *ctx);
 
         llvm::Value *elseCodegen(compiler::Context *ctx);
+
+        bool hasThen();
+
+        bool hasElse();
 
     public:
         static If *create(compiler::Context *ctx, Node *condition, std::vector<Node *> then_statements,
@@ -47,6 +55,8 @@ namespace silicon::ast {
         node_t type() override;
 
         If *setElse(std::vector<Node *> statements);
+
+        If *makeInline();
 
     };
 

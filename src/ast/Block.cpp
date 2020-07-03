@@ -37,20 +37,19 @@ llvm::Value *silicon::ast::Block::codegen(compiler::Context *ctx) {
 
     llvm::Type *expected_type = ctx->expected_type;
 
-    size_t size = statements.size();
-    size_t idx = 0;
-
     for (auto &statement : statements) {
-        if (idx++ != size - 1
-            && !statement->type(node_t::RETURN))
-            ctx->expected_type = nullptr;
+        bool is_return = statement->type(node_t::RETURN);
+
+        if (!is_return) ctx->expected_type = nullptr;
 
         value = statement->codegen(ctx);
 
         ctx->expected_type = expected_type;
+
+        // TODO: maybe throw a warning if there's more statements after the return statement?
+        if (is_return) break;
     }
 
-    // TODO: return expression
     return value;
 }
 

@@ -29,10 +29,6 @@ silicon::ast::If::If(Node *condition, std::vector<Node *> then_statements, std::
 silicon::ast::If *
 silicon::ast::If::create(compiler::Context *ctx, Node *condition, std::vector<Node *> then_statements,
                          std::vector<Node *> else_statements) {
-    if (then_statements.empty()) then_statements = {ctx->null()};
-
-    if (else_statements.empty()) else_statements = {ctx->null()};
-
     auto *node = new If(condition, std::move(then_statements), std::move(else_statements));
 
     node->loc = parse_location(ctx->loc);
@@ -41,23 +37,63 @@ silicon::ast::If::create(compiler::Context *ctx, Node *condition, std::vector<No
 }
 
 llvm::Value *silicon::ast::If::codegen(compiler::Context *ctx) {
+    if (is_inline) return inlineCodegen(ctx);
+
+    if (!hasThen() && !hasElse()) return nullptr;
+
     llvm::Value *conditionV = conditionCodegen(ctx);
 
-    if (!conditionV)
-        return nullptr;
+    llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
+
+    llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "after_if");
+    llvm::BasicBlock *thenBB = mergeBB;
+    if (hasThen()) thenBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "then");
+    llvm::BasicBlock *elseBB = mergeBB;
+    if (hasElse()) elseBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "else");
+
+    ctx->llvm_ir_builder.CreateCondBr(conditionV, thenBB, elseBB);
+
+    if (hasThen()) {
+        function->getBasicBlockList().push_back(thenBB);
+
+        ctx->llvm_ir_builder.SetInsertPoint(thenBB);
+        llvm::Value *thenV = thenCodegen(ctx);
+        if (!((llvm::ReturnInst *) thenV)->getReturnValue()) ctx->llvm_ir_builder.CreateBr(mergeBB);
+    }
+
+    if (hasElse()) {
+        function->getBasicBlockList().push_back(elseBB);
+
+        ctx->llvm_ir_builder.SetInsertPoint(elseBB);
+        llvm::Value *elseV = elseCodegen(ctx);
+        if (!((llvm::ReturnInst *) elseV)->getReturnValue()) ctx->llvm_ir_builder.CreateBr(mergeBB);
+    }
+
+    function->getBasicBlockList().push_back(mergeBB);
+
+    ctx->llvm_ir_builder.SetInsertPoint(mergeBB);
+
+    return nullptr;
+}
+
+silicon::node_t silicon::ast::If::type() {
+    return node_t::IF;
+}
+
+llvm::Value *silicon::ast::If::inlineCodegen(compiler::Context *ctx) {
+    llvm::Value *conditionV = conditionCodegen(ctx);
 
     llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
 
     llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "then", function);
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "else");
-    llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "ifcont");
+    llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "after_if");
 
     ctx->llvm_ir_builder.CreateCondBr(conditionV, thenBB, elseBB);
 
     ctx->llvm_ir_builder.SetInsertPoint(thenBB);
     llvm::Value *ThenV = thenCodegen(ctx);
-    if (!ThenV)
-        return nullptr;
+    if (!ThenV) fail_codegen("Error: Unrecognized <then> expression");
     ctx->llvm_ir_builder.CreateBr(mergeBB);
     thenBB = ctx->llvm_ir_builder.GetInsertBlock();
 
@@ -68,8 +104,7 @@ llvm::Value *silicon::ast::If::codegen(compiler::Context *ctx) {
     function->getBasicBlockList().push_back(elseBB);
     ctx->llvm_ir_builder.SetInsertPoint(elseBB);
     llvm::Value *ElseV = elseCodegen(ctx);
-    if (!ElseV)
-        return nullptr;
+    if (!ElseV) fail_codegen("Error: Unrecognized <else> expression");
     ctx->llvm_ir_builder.CreateBr(mergeBB);
     elseBB = ctx->llvm_ir_builder.GetInsertBlock();
 
@@ -77,16 +112,13 @@ llvm::Value *silicon::ast::If::codegen(compiler::Context *ctx) {
 
     function->getBasicBlockList().push_back(mergeBB);
     ctx->llvm_ir_builder.SetInsertPoint(mergeBB);
+
     llvm::PHINode *PN =
-            ctx->llvm_ir_builder.CreatePHI(ThenV->getType(), 2, "iftmp");
+            ctx->llvm_ir_builder.CreatePHI(ThenV->getType(), 2, "if_result");
     PN->addIncoming(ThenV, thenBB);
     PN->addIncoming(ElseV, elseBB);
 
     return PN;
-}
-
-silicon::node_t silicon::ast::If::type() {
-    return node_t::IF;
 }
 
 llvm::Value *silicon::ast::If::conditionCodegen(compiler::Context *ctx) {
@@ -94,12 +126,11 @@ llvm::Value *silicon::ast::If::conditionCodegen(compiler::Context *ctx) {
 
     llvm::Type *type = value->getType();
 
+    if (type->isIntegerTy(1)) return value;
+
     if (type->isVoidTy()) return ctx->bool_lit(false)->codegen(ctx);
 
     if (type->isArrayTy()) return ctx->bool_lit(true)->codegen(ctx);
-
-    if (type->isIntegerTy(1))
-        return ctx->llvm_ir_builder.CreateICmpEQ(value, ctx->bool_lit(true)->codegen(ctx));
 
     llvm::Type *expected_type = ctx->expected_type;
 
@@ -113,10 +144,12 @@ llvm::Value *silicon::ast::If::conditionCodegen(compiler::Context *ctx) {
 
     if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpONE(value, v);
 
-    fail_codegen("Unsupported condition");
+    fail_codegen("Error: Unsupported condition");
 }
 
 llvm::Value *silicon::ast::If::thenCodegen(compiler::Context *ctx) {
+    if (is_inline) return then_statements[0]->codegen(ctx);
+
     ctx->operator++();
 
     ctx->statements(then_statements);
@@ -129,6 +162,8 @@ llvm::Value *silicon::ast::If::thenCodegen(compiler::Context *ctx) {
 }
 
 llvm::Value *silicon::ast::If::elseCodegen(compiler::Context *ctx) {
+    if (is_inline) return else_statements[0]->codegen(ctx);
+
     ctx->operator++();
 
     ctx->statements(else_statements);
@@ -144,4 +179,18 @@ silicon::ast::If *silicon::ast::If::setElse(std::vector<Node *> statements) {
     else_statements = std::move(statements);
 
     return this;
+}
+
+silicon::ast::If *silicon::ast::If::makeInline() {
+    is_inline = true;
+
+    return this;
+}
+
+bool silicon::ast::If::hasThen() {
+    return then_statements.size() > 0;
+}
+
+bool silicon::ast::If::hasElse() {
+    return else_statements.size() > 0;
 }

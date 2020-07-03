@@ -153,10 +153,10 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // Types
 // --------------------------------------------------
 
-%type<std::vector<silicon::ast::Node *>> statements scoped_statements function_body arguments
+%type<std::vector<silicon::ast::Node *>> statements scoped_statements arguments
 %type<std::vector<silicon::ast::Node *>> arguments_
-%type<silicon::ast::Node *> statement scoped_statement export_statement extern_statement if_statement expression
-%type<silicon::ast::Node *> operation binary_operation unary_operation variable_definition literal
+%type<silicon::ast::Node *> statement scoped_statement export_statement extern_statement return_statement if_statement
+%type<silicon::ast::Node *> expression operation binary_operation unary_operation variable_definition literal
 %type<silicon::ast::Function *> function_definition
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
 %type<silicon::ast::If *> if_statement_
@@ -233,7 +233,7 @@ statement
 ;
 
 scoped_statements
-: scoped_statement { $$ = { $1 }; }
+: %empty { $$ = { }; }
 | scoped_statements scoped_statement { $1.push_back($2); $$ = $1; }
 ;
 
@@ -241,6 +241,7 @@ scoped_statement
 : variable_definition { $$ = $1; }
 | if_statement { $$ = $1; }
 | expression SEMICOLON { $$ = $1; }
+| return_statement { $$ = $1; }
 ;
 
 // --------------------------------------------------
@@ -261,19 +262,29 @@ extern_statement
 ;
 
 // --------------------------------------------------
+// Grammar -> Return Statement
+// --------------------------------------------------
+
+return_statement
+: RETURN expression SEMICOLON { $$ = ctx.def_ret($2); }
+;
+
+// --------------------------------------------------
 // Grammar -> If Statements
 // --------------------------------------------------
 
 if_statement
 : if_statement_ { $$ = $1; }
-| if_statement_ ELSE expression SEMICOLON { $$ = $1->setElse({ $3, ctx.null() }); }
-| if_statement_ ELSE OPEN_CURLY scoped_statements CLOSE_CURLY { $4.push_back(ctx.null()); $$ = $1->setElse($4); }
-| if_statement_ ELSE if_statement { $$ = $1->setElse({ $3, ctx.null() }); }
+| if_statement_ ELSE expression SEMICOLON { $$ = $1->setElse({ $3 }); }
+| if_statement_ ELSE return_statement { $$ = $1->setElse({ $3 }); }
+| if_statement_ ELSE OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = $1->setElse($4); }
+| if_statement_ ELSE if_statement { $$ = $1->setElse({ $3 }); }
 ;
 
 if_statement_
-: IF OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_if($3, { $5, ctx.null() }); }
-| IF OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $6.push_back(ctx.null()); $$ = ctx.def_if($3, $6); }
+: IF OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_if($3, { $5 }); }
+| IF OPEN_PAREN expression CLOSE_PAREN return_statement { $$ = ctx.def_if($3, { $5 }); }
+| IF OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_if($3, $6); }
 ;
 
 // --------------------------------------------------
@@ -286,7 +297,7 @@ expression
 | IDENTIFIER { $$ = ctx.var($1); }
 | IDENTIFIER OPEN_PAREN arguments CLOSE_PAREN { $$ = ctx.call_func($1, $3); }
 | OPEN_PAREN expression CLOSE_PAREN { $$ = $2; }
-| expression QUESTION_MARK expression COLON expression { $$ = ctx.def_if($1, { $3 }, { $5 }); }
+| expression QUESTION_MARK expression COLON expression { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
 ;
 
 // --------------------------------------------------
@@ -362,7 +373,7 @@ variable_definition
 // --------------------------------------------------
 
 function_definition
-: function_declaration OPEN_CURLY function_body CLOSE_CURLY { $$ = ctx.def_func($1, $3); }
+: function_declaration OPEN_CURLY scoped_statements CLOSE_CURLY { $3.push_back(ctx.def_ret(ctx.null())); $$ = ctx.def_func($1, $3); }
 ;
 
 function_declaration
@@ -373,12 +384,6 @@ function_declaration
 variadic_function_declaration
 : FUNCTION IDENTIFIER OPEN_PAREN variadic_arguments_declaration CLOSE_PAREN COLON type { $$ = ctx.def_proto($2, $4, $7)->makeVariadic(); }
 | FUNCTION IDENTIFIER OPEN_PAREN variadic_arguments_declaration CLOSE_PAREN { $$ = ctx.def_proto($2, $4)->makeVariadic(); }
-;
-
-function_body
-: RETURN expression SEMICOLON { $$ = { ctx.def_ret($2) }; }
-| scoped_statements RETURN expression SEMICOLON { $1.push_back(ctx.def_ret($3)); $$ = $1; }
-| scoped_statements { $1.push_back(ctx.def_ret(ctx.null())); $$ = $1; }
 ;
 
 // --------------------------------------------------

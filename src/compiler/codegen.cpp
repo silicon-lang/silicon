@@ -125,6 +125,8 @@ void silicon::compiler::codegen(std::string input, std::string output, bool emit
         dest.flush();
     }
 
+    llvm::llvm_shutdown();
+
     const clock_t end_time = clock();
 
     std::cout << "Wrote \""
