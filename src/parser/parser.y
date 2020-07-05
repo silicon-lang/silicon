@@ -158,10 +158,11 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // Types
 // --------------------------------------------------
 
-%type<std::vector<silicon::ast::Node *>> statements scoped_statements arguments
-%type<std::vector<silicon::ast::Node *>> arguments_
-%type<silicon::ast::Node *> statement scoped_statement export_statement extern_statement return_statement if_statement
-%type<silicon::ast::Node *> expression operation binary_operation unary_operation variable_definition literal
+%type<std::vector<silicon::ast::Node *>> statements scoped_statements scoped_statements_ arguments
+%type<std::vector<silicon::ast::Node *>> arguments_ variable_definitions
+%type<silicon::ast::Node *> statement export_statement extern_statement return_statement if_statement
+%type<silicon::ast::Node *> expression operation binary_operation unary_operation variable_definition variable_definition_
+%type<silicon::ast::Node *> literal
 %type<silicon::ast::Function *> function_definition
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
 %type<silicon::ast::If *> if_statement_
@@ -241,17 +242,17 @@ statement
 
 scoped_statements
 : %empty { $$ = { }; }
-| scoped_statements scoped_statement { $1.push_back($2); $$ = $1; }
+| scoped_statements scoped_statements_ { $1.insert($1.end(), $2.begin(), $2.end()); $$ = $1; }
 ;
 
-scoped_statement
-: variable_definition { $$ = $1; }
-| if_statement { $$ = $1; }
-| while_statement { $$ = $1; }
-| do_while_statement { $$ = $1; }
-| for_statement { $$ = $1; }
-| expression SEMICOLON { $$ = $1; }
-| return_statement { $$ = $1; }
+scoped_statements_
+: variable_definitions SEMICOLON { $$ = $1; }
+| if_statement { $$ = { $1 }; }
+| while_statement { $$ = { $1 }; }
+| do_while_statement { $$ = { $1 }; }
+| for_statement { $$ = { $1 }; }
+| expression SEMICOLON { $$ = { $1 }; }
+| return_statement { $$ = { $1 }; }
 ;
 
 // --------------------------------------------------
@@ -301,9 +302,9 @@ do_while_statement
 // --------------------------------------------------
 
 for_statement
-: FOR OPEN_PAREN variable_definition expression SEMICOLON expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_for($3, $4, $6, { $8 }); }
-| FOR OPEN_PAREN variable_definition expression SEMICOLON expression CLOSE_PAREN return_statement { $$ = ctx.def_for($3, $4, $6, { $8 }); }
-| FOR OPEN_PAREN variable_definition expression SEMICOLON expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_for($3, $4, $6, $9); }
+: FOR OPEN_PAREN variable_definition SEMICOLON expression SEMICOLON expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_for($3, $5, $7, { $9 }); }
+| FOR OPEN_PAREN variable_definition SEMICOLON expression SEMICOLON expression CLOSE_PAREN return_statement { $$ = ctx.def_for($3, $5, $7, { $9 }); }
+| FOR OPEN_PAREN variable_definition SEMICOLON expression SEMICOLON expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_for($3, $5, $7, $10); }
 ;
 
 // --------------------------------------------------
@@ -398,11 +399,20 @@ unary_operation
 // Grammar -> Variables
 // --------------------------------------------------
 
+variable_definitions
+: variable_definition { $$ = { $1 }; }
+| variable_definitions COMMA variable_definition_ { $1.push_back($3); $$ = $1; }
+;
+
 variable_definition
-: LET IDENTIFIER COLON type ASSIGN expression SEMICOLON { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($2, $4), $6); }
-| LET IDENTIFIER ASSIGN expression SEMICOLON { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($2), $4); }
-//| LET IDENTIFIER QUESTION_MARK COLON type SEMICOLON
-//| LET IDENTIFIER QUESTION_MARK COLON type ASSIGN expression SEMICOLON
+: LET variable_definition_ { $$ = $2; }
+;
+
+variable_definition_
+: IDENTIFIER ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
+| IDENTIFIER COLON type ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
+//| IDENTIFIER QUESTION_MARK COLON type
+//| IDENTIFIER QUESTION_MARK COLON type ASSIGN expression
 ;
 
 // --------------------------------------------------
