@@ -46,8 +46,25 @@ llvm::Value *silicon::ast::FunctionCall::codegen(compiler::Context *ctx) {
     std::vector<std::string> argNames;
     for (auto &arg : calleeFunc->args()) argNames.push_back(arg.getName());
 
-    for (unsigned i = 0, e = args.size(); i != e; ++i) {
-        ctx->expected_type = calleeType->getFunctionParamType(i);
+    bool is_variadic = calleeType->isVarArg();
+    unsigned expected_args_count = calleeType->getNumParams();
+    size_t args_count = args.size();
+
+    if (args_count < expected_args_count || (!is_variadic && args_count > expected_args_count)) {
+        fail_codegen(
+                "Error: Function \""
+                + callee
+                + "\" expected <"
+                + std::to_string(expected_args_count)
+                + "> parameter(s), got <"
+                + std::to_string(args_count)
+                + "> parameter(s) instead."
+        );
+    }
+
+    for (unsigned i = 0; i != args_count; ++i) {
+        if (i < expected_args_count) ctx->expected_type = calleeType->getFunctionParamType(i);
+        else ctx->expected_type = nullptr; // variadic
 
         Node *arg = args[i];
 

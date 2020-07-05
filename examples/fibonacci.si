@@ -23,7 +23,7 @@ fn fibonacci_recursive(x: i64): i64 {
 }
 
 fn main() {
-  printf("%lli\n", fibonacci_loop(40));
+  printf("%s: %lli\n", "loop", fibonacci_loop(40));
 
-  printf("%lli\n", fibonacci_recursive(40));
+  printf("%s: %lli\n", "recursive", fibonacci_recursive(40));
 }
