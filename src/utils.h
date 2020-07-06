@@ -64,6 +64,7 @@ namespace silicon {
         UNARY_OP,
 
         IF,
+        LOOP,
         WHILE,
         FOR,
         BREAK,

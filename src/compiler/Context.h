@@ -41,6 +41,7 @@
 #include "ast/If.h"
 #include "ast/Break.h"
 #include "ast/Continue.h"
+#include "ast/Loop.h"
 #include "ast/While.h"
 #include "ast/For.h"
 #include "parser/parser.h"
@@ -119,6 +120,8 @@ namespace silicon::compiler {
         ast::Break *def_break();
 
         ast::Continue *def_continue();
+
+        ast::Loop *def_loop(std::vector<ast::Node *> body);
 
         ast::While *def_while(ast::Node *condition, std::vector<ast::Node *> body);
 

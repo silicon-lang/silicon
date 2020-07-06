@@ -140,6 +140,10 @@ silicon::ast::Continue *silicon::compiler::Context::def_continue() {
     return ast::Continue::create(this);
 }
 
+silicon::ast::Loop *silicon::compiler::Context::def_loop(std::vector<ast::Node *> body) {
+    return ast::Loop::create(this, body);
+}
+
 silicon::ast::While *
 silicon::compiler::Context::def_while(ast::Node *condition, std::vector<ast::Node *> body) {
     return ast::While::create(this, condition, std::move(body));

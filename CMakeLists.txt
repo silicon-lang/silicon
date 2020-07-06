@@ -107,6 +107,7 @@ add_executable(silicon
         src/ast/BinaryOperation.cpp src/ast/BinaryOperation.h
         src/ast/UnaryOperation.cpp src/ast/UnaryOperation.h
         src/ast/If.cpp src/ast/If.h
+        src/ast/Loop.cpp src/ast/Loop.h
         src/ast/While.cpp src/ast/While.h
         src/ast/For.cpp src/ast/For.h
         src/ast/Break.cpp src/ast/Break.h

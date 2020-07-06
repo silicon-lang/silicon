@@ -20,6 +20,7 @@
 #include "ast/Function.h"
 #include "ast/Prototype.h"
 #include "ast/If.h"
+#include "ast/Loop.h"
 #include "ast/While.h"
 #include "ast/For.h"
 
@@ -86,6 +87,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token RETURN "return"
 %token IF "if"
 %token ELSE "else"
+%token LOOP "loop"
 %token WHILE "while"
 %token DO "do"
 %token FOR "for"
@@ -168,6 +170,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %type<silicon::ast::Function *> function_definition
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
 %type<silicon::ast::If *> if_statement_
+%type<silicon::ast::Loop *> loop_statement
 %type<silicon::ast::While *> while_statement do_while_statement
 %type<silicon::ast::For *> for_statement
 %type<llvm::Type *> type
@@ -252,6 +255,7 @@ scoped_statements
 scoped_statements_
 : variable_definitions SEMICOLON { $$ = $1; }
 | if_statement { $$ = { $1 }; }
+| loop_statement { $$ = { $1 }; }
 | while_statement { $$ = { $1 }; }
 | do_while_statement { $$ = { $1 }; }
 | for_statement { $$ = { $1 }; }
@@ -273,6 +277,15 @@ export_statement
 extern_statement
 : EXTERN function_declaration SEMICOLON { $$ = $2->makeExtern(); }
 | EXTERN variadic_function_declaration SEMICOLON { $$ = $2->makeExtern(); }
+;
+
+// --------------------------------------------------
+// Grammar -> Loop Statements
+// --------------------------------------------------
+
+loop_statement
+: LOOP expression SEMICOLON { $$ = ctx.def_loop({ $2 }); }
+| LOOP OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_loop($3); }
 ;
 
 // --------------------------------------------------
@@ -530,6 +543,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 "return" { return s(Parser::make_RETURN); }
 "if" { return s(Parser::make_IF); }
 "else" { return s(Parser::make_ELSE); }
+"loop" { return s(Parser::make_LOOP); }
 "while" { return s(Parser::make_WHILE); }
 "do" { return s(Parser::make_DO); }
 "for" { return s(Parser::make_FOR); }
