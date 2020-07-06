@@ -54,6 +54,12 @@ llvm::Value *silicon::ast::Cast::codegen(compiler::Context *ctx) {
 
     if (compare_types(t, llvm_type)) return v;
 
+    if (llvm_type->isIntegerTy(1)) {
+        if (t->isVoidTy()) return ctx->bool_lit(false)->codegen(ctx);
+
+        if (t->isArrayTy()) return ctx->bool_lit(true)->codegen(ctx);
+    }
+
     if (!llvm::CastInst::isCastable(t, llvm_type)) {
         fail_codegen(
                 "Error: Unsupported cast: <"

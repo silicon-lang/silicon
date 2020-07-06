@@ -84,29 +84,7 @@ llvm::Value *silicon::ast::For::definitionCodegen(compiler::Context *ctx) {
 }
 
 llvm::Value *silicon::ast::For::conditionCodegen(compiler::Context *ctx) {
-    llvm::Value *value = condition->codegen(ctx);
-
-    llvm::Type *type = value->getType();
-
-    if (type->isIntegerTy(1)) return value;
-
-    if (type->isVoidTy()) return ctx->bool_lit(false)->codegen(ctx);
-
-    if (type->isArrayTy()) return ctx->bool_lit(true)->codegen(ctx);
-
-    llvm::Type *expected_type = ctx->expected_type;
-
-    ctx->expected_type = type;
-
-    llvm::Value *v = ctx->num_lit("0")->codegen(ctx);
-
-    ctx->expected_type = expected_type;
-
-    if (type->isIntegerTy()) return ctx->llvm_ir_builder.CreateICmpNE(value, v);
-
-    if (type->isFloatingPointTy()) return ctx->llvm_ir_builder.CreateFCmpONE(value, v);
-
-    fail_codegen("Error: Unsupported condition");
+    return ctx->def_cast(condition, ctx->bool_type())->codegen(ctx);
 }
 
 llvm::Value *silicon::ast::For::stepperCodegen(compiler::Context *ctx) {
