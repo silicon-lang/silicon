@@ -52,6 +52,7 @@ namespace silicon {
         RETURN,
         FUNCTION_CALL,
 
+        CAST,
         BINARY_OP,
         UNARY_OP,
 

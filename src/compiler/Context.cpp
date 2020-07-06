@@ -122,6 +122,10 @@ silicon::ast::Node *silicon::compiler::Context::def_op(unary_operation_t op, ast
     return ast::UnaryOperation::create(this, op, node, suffix);
 }
 
+silicon::ast::Node *silicon::compiler::Context::def_cast(ast::Node *node, llvm::Type *type) {
+    return ast::Cast::create(this, node, type);
+}
+
 silicon::ast::If *
 silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<ast::Node *> then_statements,
                                    std::vector<ast::Node *> else_statements) {

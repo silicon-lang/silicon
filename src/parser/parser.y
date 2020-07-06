@@ -336,6 +336,7 @@ expression
 | IDENTIFIER OPEN_PAREN arguments CLOSE_PAREN { $$ = ctx.call_func($1, $3); }
 | OPEN_PAREN expression CLOSE_PAREN { $$ = $2; }
 | expression QUESTION_MARK expression COLON expression { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| expression AS type { $$ = ctx.def_cast($1, $3); }
 ;
 
 // --------------------------------------------------
