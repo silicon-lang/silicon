@@ -32,13 +32,15 @@ silicon::ast::Block *silicon::ast::Block::create(compiler::Context *ctx, ast::Bl
     return node;
 }
 
-llvm::ReturnInst *silicon::ast::Block::codegen(compiler::Context *ctx) {
+llvm::Value *silicon::ast::Block::codegen(compiler::Context *ctx) {
     llvm::Type *expected_type = ctx->expected_type;
 
     for (auto &statement : statements) {
-        if (statement->type(node_t::RETURN)) {
+        if (statement->type(node_t::RETURN)
+            || statement->type(node_t::BREAK)
+            || statement->type(node_t::CONTINUE)) {
             // TODO: maybe throw a warning if there's more statements after the return statement?
-            return (llvm::ReturnInst *)statement->codegen(ctx);
+            return statement->codegen(ctx);
         }
 
         ctx->expected_type = nullptr;

@@ -65,7 +65,7 @@ llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
 
     ctx->expected_type = return_type;
 
-    auto *result = ctx->codegen();
+    auto *result = (llvm::ReturnInst *) ctx->codegen();
 
     if (!result) {
         llvm::Type *fnReturnT = function->getReturnType();

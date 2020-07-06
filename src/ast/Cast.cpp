@@ -84,5 +84,5 @@ llvm::Value *silicon::ast::Cast::codegen(compiler::Context *ctx) {
 }
 
 silicon::node_t silicon::ast::Cast::type() {
-    return silicon::node_t::CAST;
+    return node_t::CAST;
 }

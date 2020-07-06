@@ -109,6 +109,8 @@ add_executable(silicon
         src/ast/If.cpp src/ast/If.h
         src/ast/While.cpp src/ast/While.h
         src/ast/For.cpp src/ast/For.h
+        src/ast/Break.cpp src/ast/Break.h
+        src/ast/Continue.cpp src/ast/Continue.h
         src/ast/Cast.cpp src/ast/Cast.h
         )
 

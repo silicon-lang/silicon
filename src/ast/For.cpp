@@ -61,17 +61,22 @@ llvm::Value *silicon::ast::For::codegen(compiler::Context *ctx) {
     function->getBasicBlockList().push_back(loopBB);
     ctx->llvm_ir_builder.SetInsertPoint(loopBB);
 
+    loop_points_t *loop_points = ctx->loop_points;
+    ctx->loop_points = new loop_points_t();
+    ctx->loop_points->break_point = afterBB;
+    ctx->loop_points->continue_point = stepperBB;
+
     llvm::Value *thenV = bodyCodegen(ctx);
-    if (!thenV) {
-        ctx->llvm_ir_builder.CreateBr(stepperBB);
+    if (!thenV) ctx->llvm_ir_builder.CreateBr(stepperBB);
 
-        function->getBasicBlockList().push_back(stepperBB);
-        ctx->llvm_ir_builder.SetInsertPoint(stepperBB);
+    ctx->loop_points = loop_points;
 
-        stepperCodegen(ctx);
+    function->getBasicBlockList().push_back(stepperBB);
+    ctx->llvm_ir_builder.SetInsertPoint(stepperBB);
 
-        ctx->llvm_ir_builder.CreateBr(conditionBB);
-    }
+    stepperCodegen(ctx);
+
+    ctx->llvm_ir_builder.CreateBr(conditionBB);
 
     ctx->operator--();
 
@@ -97,12 +102,12 @@ llvm::Value *silicon::ast::For::stepperCodegen(compiler::Context *ctx) {
     return stepper->codegen(ctx);
 }
 
-llvm::ReturnInst *silicon::ast::For::bodyCodegen(compiler::Context *ctx) {
+llvm::Value *silicon::ast::For::bodyCodegen(compiler::Context *ctx) {
     ctx->operator++();
 
     ctx->statements(body);
 
-    llvm::ReturnInst *value = ctx->codegen();
+    llvm::Value *value = ctx->codegen();
 
     ctx->operator--();
 

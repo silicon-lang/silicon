@@ -132,6 +132,14 @@ silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<as
     return ast::If::create(this, condition, std::move(then_statements), std::move(else_statements));
 }
 
+silicon::ast::Break *silicon::compiler::Context::def_break() {
+    return ast::Break::create(this);
+}
+
+silicon::ast::Continue *silicon::compiler::Context::def_continue() {
+    return ast::Continue::create(this);
+}
+
 silicon::ast::While *
 silicon::compiler::Context::def_while(ast::Node *condition, std::vector<ast::Node *> body) {
     return ast::While::create(this, condition, std::move(body));
@@ -145,7 +153,7 @@ silicon::compiler::Context::def_for(ast::Node *definition, ast::Node *condition,
 
 /* ------------------------- CODEGEN ------------------------- */
 
-llvm::ReturnInst *silicon::compiler::Context::codegen() {
+llvm::Value *silicon::compiler::Context::codegen() {
     return block->codegen(this);
 }
 

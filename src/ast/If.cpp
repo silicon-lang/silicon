@@ -141,24 +141,24 @@ llvm::Value *silicon::ast::If::conditionCodegen(compiler::Context *ctx) {
     return ctx->def_cast(condition, ctx->bool_type())->codegen(ctx);
 }
 
-llvm::ReturnInst *silicon::ast::If::thenCodegen(compiler::Context *ctx) {
+llvm::Value *silicon::ast::If::thenCodegen(compiler::Context *ctx) {
     ctx->operator++();
 
     ctx->statements(then_statements);
 
-    llvm::ReturnInst *value = ctx->codegen();
+    llvm::Value *value = ctx->codegen();
 
     ctx->operator--();
 
     return value;
 }
 
-llvm::ReturnInst *silicon::ast::If::elseCodegen(compiler::Context *ctx) {
+llvm::Value *silicon::ast::If::elseCodegen(compiler::Context *ctx) {
     ctx->operator++();
 
     ctx->statements(else_statements);
 
-    llvm::ReturnInst *value = ctx->codegen();
+    llvm::Value *value = ctx->codegen();
 
     ctx->operator--();
 

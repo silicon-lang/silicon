@@ -54,8 +54,15 @@ llvm::Value *silicon::ast::While::codegen(silicon::compiler::Context *ctx) {
     function->getBasicBlockList().push_back(loopBB);
     ctx->llvm_ir_builder.SetInsertPoint(loopBB);
 
+    loop_points_t *loop_points = ctx->loop_points;
+    ctx->loop_points = new loop_points_t();
+    ctx->loop_points->break_point = afterBB;
+    ctx->loop_points->continue_point = conditionBB;
+
     llvm::Value *thenV = bodyCodegen(ctx);
     if (!thenV) ctx->llvm_ir_builder.CreateBr(conditionBB);
+
+    ctx->loop_points = loop_points;
 
     function->getBasicBlockList().push_back(afterBB);
     ctx->llvm_ir_builder.SetInsertPoint(afterBB);
@@ -71,12 +78,12 @@ llvm::Value *silicon::ast::While::conditionCodegen(compiler::Context *ctx) {
     return ctx->def_cast(condition, ctx->bool_type())->codegen(ctx);
 }
 
-llvm::ReturnInst *silicon::ast::While::bodyCodegen(compiler::Context *ctx) {
+llvm::Value *silicon::ast::While::bodyCodegen(compiler::Context *ctx) {
     ctx->operator++();
 
     ctx->statements(body);
 
-    llvm::ReturnInst *value = ctx->codegen();
+    llvm::Value *value = ctx->codegen();
 
     ctx->operator--();
 

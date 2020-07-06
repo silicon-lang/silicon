@@ -28,10 +28,17 @@
 namespace silicon {
 
     struct value_pair_t {
-        value_pair_t();
+        value_pair_t() = default;
 
         llvm::Value *left = nullptr;
         llvm::Value *right = nullptr;
+    };
+
+    struct loop_points_t {
+        loop_points_t() = default;
+
+        llvm::BasicBlock *break_point = nullptr;
+        llvm::BasicBlock *continue_point = nullptr;
     };
 
     enum class node_t {
@@ -59,6 +66,8 @@ namespace silicon {
         IF,
         WHILE,
         FOR,
+        BREAK,
+        CONTINUE,
     };
 
     enum class binary_operation_t {

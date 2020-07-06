@@ -89,6 +89,8 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token WHILE "while"
 %token DO "do"
 %token FOR "for"
+%token BREAK "break"
+%token CONTINUE "continue"
 %token EXPORT "export"
 %token EXTERN "extern"
 
@@ -160,7 +162,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 
 %type<std::vector<silicon::ast::Node *>> statements scoped_statements scoped_statements_ arguments
 %type<std::vector<silicon::ast::Node *>> arguments_ variable_definitions
-%type<silicon::ast::Node *> statement export_statement extern_statement return_statement if_statement
+%type<silicon::ast::Node *> statement export_statement extern_statement if_statement
 %type<silicon::ast::Node *> expression operation binary_operation unary_operation variable_definition variable_definition_
 %type<silicon::ast::Node *> literal
 %type<silicon::ast::Function *> function_definition
@@ -176,6 +178,8 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // --------------------------------------------------
 
 %expect 0
+
+%precedence RETURN
 
 %left COMMA
 
@@ -252,7 +256,6 @@ scoped_statements_
 | do_while_statement { $$ = { $1 }; }
 | for_statement { $$ = { $1 }; }
 | expression SEMICOLON { $$ = { $1 }; }
-| return_statement { $$ = { $1 }; }
 ;
 
 // --------------------------------------------------
@@ -273,27 +276,16 @@ extern_statement
 ;
 
 // --------------------------------------------------
-// Grammar -> Return Statement
-// --------------------------------------------------
-
-return_statement
-: RETURN expression SEMICOLON { $$ = ctx.def_ret($2); }
-| RETURN SEMICOLON { $$ = ctx.def_ret(); }
-;
-
-// --------------------------------------------------
 // Grammar -> While Statements
 // --------------------------------------------------
 
 while_statement
 : WHILE OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_while($3, { $5 }); }
-| WHILE OPEN_PAREN expression CLOSE_PAREN return_statement { $$ = ctx.def_while($3, { $5 }); }
 | WHILE OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_while($3, $6); }
 ;
 
 do_while_statement
 : DO expression SEMICOLON WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($6, { $2 })->makeDoWhile(); }
-| DO return_statement WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($5, { $2 })->makeDoWhile(); }
 | DO OPEN_CURLY scoped_statements CLOSE_CURLY WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($7, $3)->makeDoWhile(); }
 ;
 
@@ -303,7 +295,6 @@ do_while_statement
 
 for_statement
 : FOR OPEN_PAREN variable_definition SEMICOLON expression SEMICOLON expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_for($3, $5, $7, { $9 }); }
-| FOR OPEN_PAREN variable_definition SEMICOLON expression SEMICOLON expression CLOSE_PAREN return_statement { $$ = ctx.def_for($3, $5, $7, { $9 }); }
 | FOR OPEN_PAREN variable_definition SEMICOLON expression SEMICOLON expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_for($3, $5, $7, $10); }
 ;
 
@@ -314,14 +305,12 @@ for_statement
 if_statement
 : if_statement_ { $$ = $1; }
 | if_statement_ ELSE expression SEMICOLON { $$ = $1->setElse({ $3 }); }
-| if_statement_ ELSE return_statement { $$ = $1->setElse({ $3 }); }
 | if_statement_ ELSE OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = $1->setElse($4); }
 | if_statement_ ELSE if_statement { $$ = $1->setElse({ $3 }); }
 ;
 
 if_statement_
 : IF OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_if($3, { $5 }); }
-| IF OPEN_PAREN expression CLOSE_PAREN return_statement { $$ = ctx.def_if($3, { $5 }); }
 | IF OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_if($3, $6); }
 ;
 
@@ -337,6 +326,10 @@ expression
 | OPEN_PAREN expression CLOSE_PAREN { $$ = $2; }
 | expression QUESTION_MARK expression COLON expression { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
 | expression AS type { $$ = ctx.def_cast($1, $3); }
+| RETURN expression { $$ = ctx.def_ret($2); }
+| RETURN { $$ = ctx.def_ret(); }
+| BREAK { $$ = { ctx.def_break() }; }
+| CONTINUE { $$ = { ctx.def_continue() }; }
 ;
 
 // --------------------------------------------------
@@ -540,6 +533,8 @@ re2c:define:YYMARKER = "ctx.cursor";
 "while" { return s(Parser::make_WHILE); }
 "do" { return s(Parser::make_DO); }
 "for" { return s(Parser::make_FOR); }
+"break" { return s(Parser::make_BREAK); }
+"continue" { return s(Parser::make_CONTINUE); }
 "export" { return s(Parser::make_EXPORT); }
 "extern" { return s(Parser::make_EXTERN); }
 

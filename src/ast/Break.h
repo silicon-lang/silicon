@@ -15,43 +15,29 @@
 //
 
 
-#ifndef SILICON_WHILE_H
-#define SILICON_WHILE_H
+#ifndef SILICON_BREAK_H
+#define SILICON_BREAK_H
 
 
-#include <llvm/IR/Instructions.h>
 #include "Node.h"
 
 
 namespace silicon::ast {
 
-    class While : public Node {
+    class Break : public Node {
     private:
-        Node *condition;
-        std::vector<Node *> body;
-
-        bool is_do_while = false;
-
-        While(Node *condition, std::vector<Node *> body);
-
-        llvm::Value *conditionCodegen(compiler::Context *ctx);
-
-        llvm::Value *bodyCodegen(compiler::Context *ctx);
-
-        bool hasBody();
+        Break();
 
     public:
-        static While *create(compiler::Context *ctx, Node *condition, std::vector<Node *> body);
+        static Break *create(compiler::Context *ctx);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
-
-        While *makeDoWhile();
 
     };
 
 }
 
 
-#endif //SILICON_WHILE_H
+#endif //SILICON_BREAK_H

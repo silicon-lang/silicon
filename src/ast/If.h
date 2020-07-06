@@ -39,9 +39,9 @@ namespace silicon::ast {
 
         llvm::Value *conditionCodegen(compiler::Context *ctx);
 
-        llvm::ReturnInst *thenCodegen(compiler::Context *ctx);
+        llvm::Value *thenCodegen(compiler::Context *ctx);
 
-        llvm::ReturnInst *elseCodegen(compiler::Context *ctx);
+        llvm::Value *elseCodegen(compiler::Context *ctx);
 
         bool hasThen();
 

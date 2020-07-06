@@ -40,7 +40,7 @@ namespace silicon::ast {
 
         llvm::Value *stepperCodegen(compiler::Context *ctx);
 
-        llvm::ReturnInst *bodyCodegen(compiler::Context *ctx);
+        llvm::Value *bodyCodegen(compiler::Context *ctx);
 
     public:
         static For *

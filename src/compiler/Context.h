@@ -39,6 +39,8 @@
 #include "ast/UnaryOperation.h"
 #include "ast/Cast.h"
 #include "ast/If.h"
+#include "ast/Break.h"
+#include "ast/Continue.h"
 #include "ast/While.h"
 #include "ast/For.h"
 #include "parser/parser.h"
@@ -59,6 +61,8 @@ namespace silicon::compiler {
         llvm::IRBuilder<> llvm_ir_builder;
 
         llvm::Type *expected_type = nullptr;
+
+        loop_points_t *loop_points = nullptr;
 
         explicit Context(const std::string &filename);
 
@@ -112,6 +116,10 @@ namespace silicon::compiler {
         ast::If *def_if(ast::Node *condition, std::vector<ast::Node *> then_statements,
                         std::vector<ast::Node *> else_statements = {});
 
+        ast::Break *def_break();
+
+        ast::Continue *def_continue();
+
         ast::While *def_while(ast::Node *condition, std::vector<ast::Node *> body);
 
         ast::For *
@@ -119,7 +127,7 @@ namespace silicon::compiler {
 
         /* ------------------------- CODEGEN ------------------------- */
 
-        llvm::ReturnInst *codegen();
+        llvm::Value *codegen();
 
         llvm::AllocaInst *get_alloca(const std::string &name);
 
