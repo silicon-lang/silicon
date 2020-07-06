@@ -164,8 +164,8 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 
 %type<std::vector<silicon::ast::Node *>> statements scoped_statements scoped_statements_ arguments
 %type<std::vector<silicon::ast::Node *>> arguments_ variable_definitions
-%type<silicon::ast::Node *> statement export_statement extern_statement if_statement
-%type<silicon::ast::Node *> expression operation binary_operation unary_operation variable_definition variable_definition_
+%type<silicon::ast::Node *> statement export_statement extern_statement if_statement expression
+%type<silicon::ast::Node *> expression_ operation binary_operation unary_operation variable_definition variable_definition_
 %type<silicon::ast::Node *> literal
 %type<silicon::ast::Function *> function_definition
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
@@ -293,13 +293,13 @@ loop_statement
 // --------------------------------------------------
 
 while_statement
-: WHILE OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_while($3, { $5 }); }
-| WHILE OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_while($3, $6); }
+: WHILE OPEN_PAREN expression_ CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_while($3, { $5 }); }
+| WHILE OPEN_PAREN expression_ CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_while($3, $6); }
 ;
 
 do_while_statement
-: DO expression SEMICOLON WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($6, { $2 })->makeDoWhile(); }
-| DO OPEN_CURLY scoped_statements CLOSE_CURLY WHILE OPEN_PAREN expression CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($7, $3)->makeDoWhile(); }
+: DO expression SEMICOLON WHILE OPEN_PAREN expression_ CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($6, { $2 })->makeDoWhile(); }
+| DO OPEN_CURLY scoped_statements CLOSE_CURLY WHILE OPEN_PAREN expression_ CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($7, $3)->makeDoWhile(); }
 ;
 
 // --------------------------------------------------
@@ -307,8 +307,8 @@ do_while_statement
 // --------------------------------------------------
 
 for_statement
-: FOR OPEN_PAREN variable_definition SEMICOLON expression SEMICOLON expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_for($3, $5, $7, { $9 }); }
-| FOR OPEN_PAREN variable_definition SEMICOLON expression SEMICOLON expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_for($3, $5, $7, $10); }
+: FOR OPEN_PAREN variable_definition SEMICOLON expression_ SEMICOLON expression_ CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_for($3, $5, $7, { $9 }); }
+| FOR OPEN_PAREN variable_definition SEMICOLON expression_ SEMICOLON expression_ CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_for($3, $5, $7, $10); }
 ;
 
 // --------------------------------------------------
@@ -323,8 +323,8 @@ if_statement
 ;
 
 if_statement_
-: IF OPEN_PAREN expression CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_if($3, { $5 }); }
-| IF OPEN_PAREN expression CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_if($3, $6); }
+: IF OPEN_PAREN expression_ CLOSE_PAREN expression SEMICOLON { $$ = ctx.def_if($3, { $5 }); }
+| IF OPEN_PAREN expression_ CLOSE_PAREN OPEN_CURLY scoped_statements CLOSE_CURLY { $$ = ctx.def_if($3, $6); }
 ;
 
 // --------------------------------------------------
@@ -332,17 +332,21 @@ if_statement_
 // --------------------------------------------------
 
 expression
+: RETURN expression_ { $$ = ctx.def_ret($2); }
+| RETURN { $$ = ctx.def_ret(); }
+| BREAK { $$ = { ctx.def_break() }; }
+| CONTINUE { $$ = ctx.def_continue(); }
+| expression_ { $$ = $1; }
+;
+
+expression_
 : literal { $$ = $1; }
 | operation { $$ = $1; }
 | IDENTIFIER { $$ = ctx.var($1); }
 | IDENTIFIER OPEN_PAREN arguments CLOSE_PAREN { $$ = ctx.call_func($1, $3); }
-| OPEN_PAREN expression CLOSE_PAREN { $$ = $2; }
-| expression QUESTION_MARK expression COLON expression { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
-| expression AS type { $$ = ctx.def_cast($1, $3); }
-| RETURN expression { $$ = ctx.def_ret($2); }
-| RETURN { $$ = ctx.def_ret(); }
-| BREAK { $$ = { ctx.def_break() }; }
-| CONTINUE { $$ = { ctx.def_continue() }; }
+| OPEN_PAREN expression_ CLOSE_PAREN { $$ = $2; }
+| expression_ QUESTION_MARK expression_ COLON expression_ { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| expression_ AS type { $$ = ctx.def_cast($1, $3); }
 ;
 
 // --------------------------------------------------
@@ -355,51 +359,51 @@ operation
 ;
 
 binary_operation
-: expression ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
-| expression STAR expression { $$ = ctx.def_op(silicon::binary_operation_t::STAR, $1, $3); }
-| expression SLASH expression { $$ = ctx.def_op(silicon::binary_operation_t::SLASH, $1, $3); }
-| expression PERCENT expression { $$ = ctx.def_op(silicon::binary_operation_t::PERCENT, $1, $3); }
-| expression PLUS expression { $$ = ctx.def_op(silicon::binary_operation_t::PLUS, $1, $3); }
-| expression MINUS expression { $$ = ctx.def_op(silicon::binary_operation_t::MINUS, $1, $3); }
-| expression CARET expression { $$ = ctx.def_op(silicon::binary_operation_t::CARET, $1, $3); }
-| expression AND expression { $$ = ctx.def_op(silicon::binary_operation_t::AND, $1, $3); }
-| expression OR expression { $$ = ctx.def_op(silicon::binary_operation_t::OR, $1, $3); }
-//| expression STAR_STAR expression
-| expression DOUBLE_LESSER expression { $$ = ctx.def_op(silicon::binary_operation_t::DOUBLE_LESSER, $1, $3); }
-| expression DOUBLE_BIGGER expression { $$ = ctx.def_op(silicon::binary_operation_t::DOUBLE_BIGGER, $1, $3); }
-| expression TRIPLE_BIGGER expression { $$ = ctx.def_op(silicon::binary_operation_t::TRIPLE_BIGGER, $1, $3); }
-| expression STAR_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::STAR, $1, $3)); }
-| expression SLASH_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::SLASH, $1, $3)); }
-| expression PERCENT_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::PERCENT, $1, $3)); }
-| expression PLUS_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::PLUS, $1, $3)); }
-| expression MINUS_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::MINUS, $1, $3)); }
-| expression CARET_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::CARET, $1, $3)); }
-//| expression STAR_STAR_ASSIGN expression
-| expression AND_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::AND, $1, $3)); }
-| expression OR_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::OR, $1, $3)); }
-| expression DOUBLE_LESSER_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::DOUBLE_LESSER, $1, $3)); }
-| expression DOUBLE_BIGGER_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::DOUBLE_BIGGER, $1, $3)); }
-| expression TRIPLE_BIGGER_ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::TRIPLE_BIGGER, $1, $3)); }
-//| expression AND_AND expression
-//| expression OR_OR expression
-| expression LESSER expression { $$ = ctx.def_op(silicon::binary_operation_t::LESSER, $1, $3); }
-| expression LESSER_EQUAL expression { $$ = ctx.def_op(silicon::binary_operation_t::LESSER_EQUAL, $1, $3); }
-| expression EQUAL expression { $$ = ctx.def_op(silicon::binary_operation_t::EQUAL, $1, $3); }
-| expression NOT_EQUAL expression { $$ = ctx.def_op(silicon::binary_operation_t::NOT_EQUAL, $1, $3); }
-| expression BIGGER_EQUAL expression { $$ = ctx.def_op(silicon::binary_operation_t::BIGGER_EQUAL, $1, $3); }
-| expression BIGGER expression { $$ = ctx.def_op(silicon::binary_operation_t::BIGGER, $1, $3); }
+: expression_ ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
+| expression_ STAR expression_ { $$ = ctx.def_op(silicon::binary_operation_t::STAR, $1, $3); }
+| expression_ SLASH expression_ { $$ = ctx.def_op(silicon::binary_operation_t::SLASH, $1, $3); }
+| expression_ PERCENT expression_ { $$ = ctx.def_op(silicon::binary_operation_t::PERCENT, $1, $3); }
+| expression_ PLUS expression_ { $$ = ctx.def_op(silicon::binary_operation_t::PLUS, $1, $3); }
+| expression_ MINUS expression_ { $$ = ctx.def_op(silicon::binary_operation_t::MINUS, $1, $3); }
+| expression_ CARET expression_ { $$ = ctx.def_op(silicon::binary_operation_t::CARET, $1, $3); }
+| expression_ AND expression_ { $$ = ctx.def_op(silicon::binary_operation_t::AND, $1, $3); }
+| expression_ OR expression_ { $$ = ctx.def_op(silicon::binary_operation_t::OR, $1, $3); }
+//| expression_ STAR_STAR expression_
+| expression_ DOUBLE_LESSER expression_ { $$ = ctx.def_op(silicon::binary_operation_t::DOUBLE_LESSER, $1, $3); }
+| expression_ DOUBLE_BIGGER expression_ { $$ = ctx.def_op(silicon::binary_operation_t::DOUBLE_BIGGER, $1, $3); }
+| expression_ TRIPLE_BIGGER expression_ { $$ = ctx.def_op(silicon::binary_operation_t::TRIPLE_BIGGER, $1, $3); }
+| expression_ STAR_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::STAR, $1, $3)); }
+| expression_ SLASH_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::SLASH, $1, $3)); }
+| expression_ PERCENT_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::PERCENT, $1, $3)); }
+| expression_ PLUS_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::PLUS, $1, $3)); }
+| expression_ MINUS_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::MINUS, $1, $3)); }
+| expression_ CARET_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::CARET, $1, $3)); }
+//| expression_ STAR_STAR_ASSIGN expression_
+| expression_ AND_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::AND, $1, $3)); }
+| expression_ OR_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::OR, $1, $3)); }
+| expression_ DOUBLE_LESSER_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::DOUBLE_LESSER, $1, $3)); }
+| expression_ DOUBLE_BIGGER_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::DOUBLE_BIGGER, $1, $3)); }
+| expression_ TRIPLE_BIGGER_ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, ctx.def_op(silicon::binary_operation_t::TRIPLE_BIGGER, $1, $3)); }
+//| expression_ AND_AND expression_
+//| expression_ OR_OR expression_
+| expression_ LESSER expression_ { $$ = ctx.def_op(silicon::binary_operation_t::LESSER, $1, $3); }
+| expression_ LESSER_EQUAL expression_ { $$ = ctx.def_op(silicon::binary_operation_t::LESSER_EQUAL, $1, $3); }
+| expression_ EQUAL expression_ { $$ = ctx.def_op(silicon::binary_operation_t::EQUAL, $1, $3); }
+| expression_ NOT_EQUAL expression_ { $$ = ctx.def_op(silicon::binary_operation_t::NOT_EQUAL, $1, $3); }
+| expression_ BIGGER_EQUAL expression_ { $$ = ctx.def_op(silicon::binary_operation_t::BIGGER_EQUAL, $1, $3); }
+| expression_ BIGGER expression_ { $$ = ctx.def_op(silicon::binary_operation_t::BIGGER, $1, $3); }
 ;
 
 unary_operation
-: expression PLUS_PLUS { $$ = ctx.def_op(silicon::unary_operation_t::PLUS_PLUS, $1, true); }
-| expression MINUS_MINUS { $$ = ctx.def_op(silicon::unary_operation_t::MINUS_MINUS, $1, true); }
-| PLUS_PLUS expression %prec NOT { $$ = ctx.def_op(silicon::unary_operation_t::PLUS_PLUS, $2); }
-| MINUS_MINUS expression %prec NOT { $$ = ctx.def_op(silicon::unary_operation_t::MINUS_MINUS, $2); }
-//| AND expression
-//| PLUS expression %prec NOT
-| MINUS expression %prec NOT { $$ = ctx.def_op(silicon::unary_operation_t::MINUS, $2); }
-| NOT expression { $$ = ctx.def_op(silicon::unary_operation_t::NOT, $2); }
-//| TILDE expression
+: expression_ PLUS_PLUS { $$ = ctx.def_op(silicon::unary_operation_t::PLUS_PLUS, $1, true); }
+| expression_ MINUS_MINUS { $$ = ctx.def_op(silicon::unary_operation_t::MINUS_MINUS, $1, true); }
+| PLUS_PLUS expression_ %prec NOT { $$ = ctx.def_op(silicon::unary_operation_t::PLUS_PLUS, $2); }
+| MINUS_MINUS expression_ %prec NOT { $$ = ctx.def_op(silicon::unary_operation_t::MINUS_MINUS, $2); }
+//| AND expression_
+//| PLUS expression_ %prec NOT
+| MINUS expression_ %prec NOT { $$ = ctx.def_op(silicon::unary_operation_t::MINUS, $2); }
+| NOT expression_ { $$ = ctx.def_op(silicon::unary_operation_t::NOT, $2); }
+//| TILDE expression_
 ;
 
 // --------------------------------------------------
@@ -416,10 +420,10 @@ variable_definition
 ;
 
 variable_definition_
-: IDENTIFIER ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
-| IDENTIFIER COLON type ASSIGN expression { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
+: IDENTIFIER ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
+| IDENTIFIER COLON type ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
 //| IDENTIFIER QUESTION_MARK COLON type
-//| IDENTIFIER QUESTION_MARK COLON type ASSIGN expression
+//| IDENTIFIER QUESTION_MARK COLON type ASSIGN expression_
 ;
 
 // --------------------------------------------------
@@ -465,8 +469,8 @@ arguments
 ;
 
 arguments_
-: expression { $$ = { $1 }; }
-| arguments_ COMMA expression { $1.push_back($3); $$ = $1; }
+: expression_ { $$ = { $1 }; }
+| arguments_ COMMA expression_ { $1.push_back($3); $$ = $1; }
 ;
 
 // --------------------------------------------------
