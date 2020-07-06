@@ -34,8 +34,6 @@ namespace silicon::ast {
 
         While(Node *condition, std::vector<Node *> body);
 
-        llvm::Value *doWhileCodegen(compiler::Context *ctx);
-
         llvm::Value *conditionCodegen(compiler::Context *ctx);
 
         llvm::ReturnInst *bodyCodegen(compiler::Context *ctx);

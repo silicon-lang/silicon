@@ -134,13 +134,13 @@ silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<as
 
 silicon::ast::While *
 silicon::compiler::Context::def_while(ast::Node *condition, std::vector<ast::Node *> body) {
-    return ast::While::create(this, condition, body);
+    return ast::While::create(this, condition, std::move(body));
 }
 
 silicon::ast::For *
 silicon::compiler::Context::def_for(ast::Node *definition, ast::Node *condition, ast::Node *stepper,
                                     std::vector<ast::Node *> body) {
-    return ast::For::create(this, definition, condition, stepper, body);
+    return ast::For::create(this, definition, condition, stepper, std::move(body));
 }
 
 /* ------------------------- CODEGEN ------------------------- */

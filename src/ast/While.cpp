@@ -15,15 +15,16 @@
 //
 
 
+#include <utility>
 #include "While.h"
 #include "compiler/Context.h"
 
 
-silicon::ast::While::While(Node *condition, std::vector<Node *> body) : condition(condition), body(body) {
+silicon::ast::While::While(Node *condition, std::vector<Node *> body) : condition(condition), body(std::move(body)) {
 }
 
 silicon::ast::While *silicon::ast::While::create(compiler::Context *ctx, Node *condition, std::vector<Node *> body) {
-    auto *node = new While(condition, body);
+    auto *node = new While(condition, std::move(body));
 
     node->loc = parse_location(ctx->loc);
 
@@ -34,29 +35,29 @@ llvm::Value *silicon::ast::While::codegen(silicon::compiler::Context *ctx) {
     // TODO: can cause problem if the condition is something like "i--"
 //    if (!hasBody()) return nullptr;
 
-    if (is_do_while) return doWhileCodegen(ctx);
-
-    llvm::Value *conditionV = conditionCodegen(ctx);
-
     llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
 
+    llvm::BasicBlock *conditionBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop_condition");
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop");
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "after_loop");
+
+    if (is_do_while) ctx->llvm_ir_builder.CreateBr(loopBB);
+    else ctx->llvm_ir_builder.CreateBr(conditionBB);
+
+    function->getBasicBlockList().push_back(conditionBB);
+    ctx->llvm_ir_builder.SetInsertPoint(conditionBB);
+
+    llvm::Value *conditionV = conditionCodegen(ctx);
 
     ctx->llvm_ir_builder.CreateCondBr(conditionV, loopBB, afterBB);
 
     function->getBasicBlockList().push_back(loopBB);
-
     ctx->llvm_ir_builder.SetInsertPoint(loopBB);
-    llvm::Value *thenV = bodyCodegen(ctx);
-    if (!thenV) {
-        conditionV = conditionCodegen(ctx);
 
-        ctx->llvm_ir_builder.CreateCondBr(conditionV, loopBB, afterBB);
-    }
+    llvm::Value *thenV = bodyCodegen(ctx);
+    if (!thenV) ctx->llvm_ir_builder.CreateBr(conditionBB);
 
     function->getBasicBlockList().push_back(afterBB);
-
     ctx->llvm_ir_builder.SetInsertPoint(afterBB);
 
     return nullptr;
@@ -64,31 +65,6 @@ llvm::Value *silicon::ast::While::codegen(silicon::compiler::Context *ctx) {
 
 silicon::node_t silicon::ast::While::type() {
     return node_t::WHILE;
-}
-
-llvm::Value *silicon::ast::While::doWhileCodegen(compiler::Context *ctx) {
-    llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
-
-    llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop");
-    llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "after_loop");
-
-    ctx->llvm_ir_builder.CreateBr(loopBB);
-
-    function->getBasicBlockList().push_back(loopBB);
-
-    ctx->llvm_ir_builder.SetInsertPoint(loopBB);
-    llvm::Value *thenV = bodyCodegen(ctx);
-    if (!thenV) {
-        llvm::Value *conditionV = conditionCodegen(ctx);
-
-        ctx->llvm_ir_builder.CreateCondBr(conditionV, loopBB, afterBB);
-    }
-
-    function->getBasicBlockList().push_back(afterBB);
-
-    ctx->llvm_ir_builder.SetInsertPoint(afterBB);
-
-    return nullptr;
 }
 
 llvm::Value *silicon::ast::While::conditionCodegen(compiler::Context *ctx) {

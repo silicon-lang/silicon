@@ -37,39 +37,45 @@ llvm::Value *silicon::ast::For::codegen(compiler::Context *ctx) {
     llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
 
     llvm::BasicBlock *preBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "pre_loop");
+    llvm::BasicBlock *conditionBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop_condition");
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop");
+    llvm::BasicBlock *stepperBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop_stepper");
     llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "after_loop");
 
     ctx->llvm_ir_builder.CreateBr(preBB);
-
     function->getBasicBlockList().push_back(preBB);
-
     ctx->llvm_ir_builder.SetInsertPoint(preBB);
 
     ctx->operator++();
 
     definitionCodegen(ctx);
 
+    ctx->llvm_ir_builder.CreateBr(conditionBB);
+    function->getBasicBlockList().push_back(conditionBB);
+    ctx->llvm_ir_builder.SetInsertPoint(conditionBB);
+
     llvm::Value *conditionV = conditionCodegen(ctx);
 
     ctx->llvm_ir_builder.CreateCondBr(conditionV, loopBB, afterBB);
 
     function->getBasicBlockList().push_back(loopBB);
-
     ctx->llvm_ir_builder.SetInsertPoint(loopBB);
+
     llvm::Value *thenV = bodyCodegen(ctx);
     if (!thenV) {
+        ctx->llvm_ir_builder.CreateBr(stepperBB);
+
+        function->getBasicBlockList().push_back(stepperBB);
+        ctx->llvm_ir_builder.SetInsertPoint(stepperBB);
+
         stepperCodegen(ctx);
 
-        conditionV = conditionCodegen(ctx);
-
-        ctx->llvm_ir_builder.CreateCondBr(conditionV, loopBB, afterBB);
+        ctx->llvm_ir_builder.CreateBr(conditionBB);
     }
 
     ctx->operator--();
 
     function->getBasicBlockList().push_back(afterBB);
-
     ctx->llvm_ir_builder.SetInsertPoint(afterBB);
 
     return nullptr;
