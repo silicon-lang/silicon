@@ -98,6 +98,8 @@ llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
     // Validate the generated code, checking for consistency.
     verifyFunction(*function);
 
+    ctx->llvm_fpm->run(*function);
+
     return function;
 }
 

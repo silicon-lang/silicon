@@ -15,15 +15,31 @@
 //
 
 
-#include "Context.h"
-#include "llvm/ADT/STLExtras.h"
 #include <utility>
+#include <llvm/ADT/STLExtras.h>
+#include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Scalar/GVN.h>
+#include "Context.h"
 
 
 silicon::compiler::Context::Context(const std::string &filename) : llvm_ir_builder(llvm_ctx) {
     block = silicon::ast::Block::create(this);
 
     llvm_module = llvm::make_unique<llvm::Module>(filename, llvm_ctx);
+
+    llvm_fpm = llvm::make_unique<llvm::legacy::FunctionPassManager>(llvm_module.get());
+
+    // Do simple "peephole" optimizations and bit-twiddling optzns.
+    llvm_fpm->add(llvm::createInstructionCombiningPass());
+    // Reassociate expressions.
+    llvm_fpm->add(llvm::createReassociatePass());
+    // Eliminate Common SubExpressions.
+    llvm_fpm->add(llvm::createGVNPass());
+    // Simplify the control flow graph (deleting unreachable blocks, etc).
+    llvm_fpm->add(llvm::createCFGSimplificationPass());
+
+    llvm_fpm->doInitialization();
 }
 
 void silicon::compiler::Context::operator++() {

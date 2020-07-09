@@ -19,6 +19,7 @@
 #define SILICON_CONTEXT_H
 
 
+#include <llvm/IR/LegacyPassManager.h>
 #include <string>
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -59,6 +60,7 @@ namespace silicon::compiler {
 
         llvm::LLVMContext llvm_ctx;
         std::unique_ptr<llvm::Module> llvm_module;
+        std::unique_ptr<llvm::legacy::FunctionPassManager> llvm_fpm;
         llvm::IRBuilder<> llvm_ir_builder;
 
         llvm::Type *expected_type = nullptr;
