@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 #------------------------- LLVM -------------------------
 
-find_package(LLVM 9 REQUIRED CONFIG)
+find_package(LLVM 9 REQUIRED)
 
 message(STATUS "Using LLVM ${LLVM_PACKAGE_VERSION}")
 
@@ -15,29 +15,6 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 link_directories(${LLVM_LIBRARY_DIRS})
-
-find_program(LLVM_CONFIG_EXECUTABLE NAMES llvm-config DOC "llvm-config executable")
-
-#execute_process(
-#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --cppflags
-#        OUTPUT_VARIABLE LLVM_CFLAGS
-#        OUTPUT_STRIP_TRAILING_WHITESPACE
-#)
-
-#execute_process(
-#        COMMAND ${LLVM_CONFIG_EXECUTABLE} --ldflags
-#        OUTPUT_VARIABLE LLVM_LFLAGS
-#        OUTPUT_STRIP_TRAILING_WHITESPACE
-#)
-
-execute_process(
-        COMMAND ${LLVM_CONFIG_EXECUTABLE} --libs all
-        OUTPUT_VARIABLE LLVM_ALL_LIBS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-STRING(REGEX REPLACE "-lLLVM([^ ]*)(.*)" "\\1" LLVM_ALL_LIBS "${LLVM_ALL_LIBS}")
-#STRING(REGEX REPLACE "-L([^ ]*)(.*)" "\\1" LLVM_LIB_PATH "${LLVM_LFLAGS}")
 
 #------------------------- BISON -------------------------
 
@@ -115,6 +92,14 @@ add_executable(silicon
         src/ast/Cast.cpp src/ast/Cast.h
         )
 
-llvm_map_components_to_libnames(llvm_libs ${LLVM_ALL_LIBS})
+llvm_map_components_to_libnames(llvm_libs
+        support core irreader passes xcoreinfo nvptxinfo
+        aarch64asmparser amdgpuasmparser armasmparser bpfasmparser hexagonasmparser lanaiasmparser mipsasmparser
+        msp430asmparser powerpcasmparser riscvasmparser sparcasmparser systemzasmparser webassemblyasmparser
+        x86asmparser avrasmparser
+        aarch64codegen amdgpucodegen armcodegen avrcodegen bpfcodegen hexagoncodegen lanaicodegen mipscodegen
+        msp430codegen nvptxcodegen powerpccodegen riscvcodegen sparccodegen systemzcodegen webassemblycodegen x86codegen
+        xcorecodegen
+        )
 
-target_link_libraries(silicon ${llvm_libs})
+target_link_libraries(silicon -static ${llvm_libs})
