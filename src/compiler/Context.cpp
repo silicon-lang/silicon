@@ -40,6 +40,24 @@ silicon::compiler::Context::Context(const std::string &filename) : llvm_ir_build
     llvm_fpm->add(llvm::createCFGSimplificationPass());
 
     llvm_fpm->doInitialization();
+
+    // Types
+
+    def_type("void", void_type());
+
+    def_type("bool", bool_type());
+
+    def_type("string", string_type());
+
+    def_type("i8", int_type(8));
+    def_type("i16", int_type(16));
+    def_type("i32", int_type(32));
+    def_type("i64", int_type(64));
+    def_type("i128", int_type(128));
+
+    def_type("f16", float_type(16));
+    def_type("f32", float_type(32));
+    def_type("f64", float_type(64));
 }
 
 void silicon::compiler::Context::operator++() {
@@ -52,6 +70,24 @@ void silicon::compiler::Context::operator--() {
 
 void silicon::compiler::Context::statements(const std::vector<ast::Node *> &nodes) {
     block->setStatements(nodes);
+}
+
+llvm::Type *silicon::compiler::Context::def_type(const std::string &name, llvm::Type *type) {
+    if (types.count(name) > 0) fail_codegen("TypeError: Type <" + name + "> can not be defined again.");
+
+    types.insert({name, type});
+
+    return type;
+}
+
+llvm::Type *silicon::compiler::Context::type(const std::string &name) {
+    if (name.empty()) fail_codegen("TypeError: Type <" + name + "> not found.");
+
+    auto type = types.find(name);
+
+    if (type == types.end()) fail_codegen("TypeError: Type <" + name + "> not found.");
+
+    return type->second;
 }
 
 llvm::Type *silicon::compiler::Context::void_type() {
@@ -75,7 +111,7 @@ llvm::Type *silicon::compiler::Context::float_type(unsigned int bits) {
         case 64:
             return llvm_ir_builder.getDoubleTy();
         default:
-            return nullptr;
+            fail_codegen("TypeError: Float type with <" + std::to_string(bits) + "> bits does not exist.");
     }
 }
 
@@ -172,6 +208,12 @@ silicon::compiler::Context::def_for(ast::Node *definition, ast::Node *condition,
 }
 
 /* ------------------------- CODEGEN ------------------------- */
+
+void silicon::compiler::Context::fail_codegen(const std::string &error) const {
+    std::cerr << parse_location(loc) << ": " << error << std::endl;
+
+    exit(1);
+}
 
 llvm::Value *silicon::compiler::Context::codegen() {
     return block->codegen(this);

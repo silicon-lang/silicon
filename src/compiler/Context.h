@@ -19,8 +19,9 @@
 #define SILICON_CONTEXT_H
 
 
-#include <llvm/IR/LegacyPassManager.h>
+#include <map>
 #include <string>
+#include <llvm/IR/LegacyPassManager.h>
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
@@ -67,6 +68,8 @@ namespace silicon::compiler {
 
         loop_points_t *loop_points = nullptr;
 
+        std::map<std::string, llvm::Type *> types;
+
         explicit Context(const std::string &filename);
 
         virtual ~Context() = default;
@@ -76,6 +79,10 @@ namespace silicon::compiler {
         void operator--();
 
         void statements(const std::vector<ast::Node *> &nodes);
+
+        llvm::Type *def_type(const std::string &name, llvm::Type *type);
+
+        llvm::Type *type(const std::string &name);
 
         llvm::Type *void_type();
 
@@ -131,6 +138,8 @@ namespace silicon::compiler {
         def_for(ast::Node *definition, ast::Node *condition, ast::Node *stepper, std::vector<ast::Node *> body);
 
         /* ------------------------- CODEGEN ------------------------- */
+
+        void fail_codegen(const std::string &error) const;
 
         llvm::Value *codegen();
 

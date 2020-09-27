@@ -97,16 +97,6 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token EXTERN "extern"
 
 // --------------------------------------------------
-// Tokens -> Types
-// --------------------------------------------------
-
-%token VOID_TYPE "void"
-%token BOOLEAN_TYPE "bool"
-%token STRING_TYPE "string"
-%token <unsigned int> INTEGER_TYPE "int"
-%token <unsigned int> FLOAT_TYPE "float"
-
-// --------------------------------------------------
 // Tokens -> Operators
 // --------------------------------------------------
 
@@ -489,11 +479,7 @@ literal
 // --------------------------------------------------
 
 type
-: VOID_TYPE { $$ = ctx.void_type(); }
-| BOOLEAN_TYPE { $$ = ctx.bool_type(); }
-| STRING_TYPE { $$ = ctx.string_type(); }
-| INTEGER_TYPE { $$ = ctx.int_type($1); }
-| FLOAT_TYPE { $$ = ctx.float_type($1); }
+: IDENTIFIER { $$ = ctx.type($1); }
 ;
 
 %%
@@ -555,20 +541,6 @@ re2c:define:YYMARKER = "ctx.cursor";
 "continue" { return s(Parser::make_CONTINUE); }
 "export" { return s(Parser::make_EXPORT); }
 "extern" { return s(Parser::make_EXTERN); }
-
-// Tokens -> Types
-
-"void" { return s(Parser::make_VOID_TYPE); }
-"bool" { return s(Parser::make_BOOLEAN_TYPE); }
-"string" { return s(Parser::make_STRING_TYPE); }
-"i8" { return s(Parser::make_INTEGER_TYPE, 8); }
-"i16" { return s(Parser::make_INTEGER_TYPE, 16); }
-"i32" { return s(Parser::make_INTEGER_TYPE, 32); }
-"i64" { return s(Parser::make_INTEGER_TYPE, 64); }
-"i128" { return s(Parser::make_INTEGER_TYPE, 128); }
-"f16" { return s(Parser::make_FLOAT_TYPE, 16); }
-"f32" { return s(Parser::make_FLOAT_TYPE, 32); }
-"f64" { return s(Parser::make_FLOAT_TYPE, 64); }
 
 // Tokens -> Operators
 
