@@ -17,6 +17,7 @@
 {
 
 #include "ast/Node.h"
+#include "ast/Interface.h"
 #include "ast/Function.h"
 #include "ast/Prototype.h"
 #include "ast/If.h"
@@ -86,6 +87,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token FUNCTION "fn"
 %token RETURN "return"
 %token IF "if"
+%token INTERFACE "interface"
 %token ELSE "else"
 %token LOOP "loop"
 %token WHILE "while"
@@ -152,19 +154,32 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // Types
 // --------------------------------------------------
 
-%type<std::vector<silicon::ast::Node *>> statements scoped_statements scoped_statements_ arguments
-%type<std::vector<silicon::ast::Node *>> arguments_ variable_definitions
-%type<silicon::ast::Node *> statement export_statement extern_statement if_statement expression
-%type<silicon::ast::Node *> expression_ operation binary_operation unary_operation variable_definition variable_definition_
-%type<silicon::ast::Node *> literal
+%type<std::vector<silicon::ast::Node *>> statements scoped_statements scoped_statements_ arguments arguments_
+%type<std::vector<silicon::ast::Node *>> variable_definitions
+
+%type<silicon::ast::Node *> statement export_statement extern_statement if_statement expression expression_ operation
+%type<silicon::ast::Node *> binary_operation unary_operation variable_definition variable_definition_ literal
+
+%type<silicon::ast::Interface *> interface_definition
+
 %type<silicon::ast::Function *> function_definition
+
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
+
 %type<silicon::ast::If *> if_statement_
+
 %type<silicon::ast::Loop *> loop_statement
+
 %type<silicon::ast::While *> while_statement do_while_statement
+
 %type<silicon::ast::For *> for_statement
+
 %type<llvm::Type *> type
-%type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_ variadic_arguments_declaration
+
+%type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_ interface_properties
+%type<std::vector<std::pair<std::string, llvm::Type *>>> variadic_arguments_declaration
+
+%type<std::pair<std::string, llvm::Type *>> interface_property
 
 // --------------------------------------------------
 // Precedences
@@ -234,6 +249,7 @@ statements
 statement
 : export_statement { $$ = $1; }
 | extern_statement { $$ = $1; }
+| interface_definition { $$ = $1; }
 | function_definition { $$ = $1; }
 ;
 
@@ -397,6 +413,23 @@ unary_operation
 ;
 
 // --------------------------------------------------
+// Grammar -> Interfaces
+// --------------------------------------------------
+
+interface_definition
+: INTERFACE IDENTIFIER OPEN_CURLY interface_properties CLOSE_CURLY { $$ = ctx.def_interface($2, $4); }
+;
+
+interface_properties
+: interface_property { $$ = { $1 }; }
+| interface_properties interface_property { $1.push_back($2); $$ = $1; }
+;
+
+interface_property
+: IDENTIFIER COLON type SEMICOLON { $$ = {$1, $3}; }
+;
+
+// --------------------------------------------------
 // Grammar -> Variables
 // --------------------------------------------------
 
@@ -532,6 +565,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 "fn" { return s(Parser::make_FUNCTION); }
 "return" { return s(Parser::make_RETURN); }
 "if" { return s(Parser::make_IF); }
+"interface" { return s(Parser::make_INTERFACE); }
 "else" { return s(Parser::make_ELSE); }
 "loop" { return s(Parser::make_LOOP); }
 "while" { return s(Parser::make_WHILE); }

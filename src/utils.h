@@ -44,6 +44,8 @@ namespace silicon {
     enum class node_t {
         NODE,
 
+        INTERFACE,
+
         BLOCK,
 
         NULL_PTR,

@@ -143,6 +143,17 @@ silicon::ast::Node *silicon::compiler::Context::def_var(const std::string &name,
     return ast::VariableDefinition::create(this, name, type);
 }
 
+silicon::ast::Interface *silicon::compiler::Context::def_interface(const std::string &name,
+                                                                   std::vector<std::pair<std::string, llvm::Type *>> properties) {
+    if (interfaces.count(name) > 0) fail_codegen("TypeError: Interface <" + name + "> can not be defined again.");
+
+    auto *interface = ast::Interface::create(this, name, std::move(properties));
+
+    interfaces.insert({name, interface});
+
+    return interface;
+}
+
 std::pair<std::string, llvm::Type *> silicon::compiler::Context::def_arg(const std::string &name, llvm::Type *type) {
     return std::make_pair(name, type);
 }

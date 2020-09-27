@@ -70,6 +70,7 @@ add_executable(silicon
         src/compiler/codegen.cpp src/compiler/codegen.h
         src/compiler/Context.cpp src/compiler/Context.h
         src/ast/Node.cpp src/ast/Node.h
+        src/ast/Interface.cpp src/ast/Interface.h
         src/ast/Block.cpp src/ast/Block.h
         src/ast/Null.cpp src/ast/Null.h
         src/ast/BooleanLiteral.cpp src/ast/BooleanLiteral.h

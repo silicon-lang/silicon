@@ -33,6 +33,7 @@
 #include "ast/StringLiteral.h"
 #include "ast/VariableDefinition.h"
 #include "ast/Variable.h"
+#include "ast/Interface.h"
 #include "ast/Prototype.h"
 #include "ast/Function.h"
 #include "ast/Return.h"
@@ -69,6 +70,7 @@ namespace silicon::compiler {
         loop_points_t *loop_points = nullptr;
 
         std::map<std::string, llvm::Type *> types;
+        std::map<std::string, ast::Interface *> interfaces;
 
         explicit Context(const std::string &filename);
 
@@ -105,6 +107,9 @@ namespace silicon::compiler {
         ast::Node *var(const std::string &name);
 
         ast::Node *def_var(const std::string &name, llvm::Type *type = nullptr);
+
+        ast::Interface *
+        def_interface(const std::string &name, std::vector<std::pair<std::string, llvm::Type *>> properties);
 
         static std::pair<std::string, llvm::Type *> def_arg(const std::string &name, llvm::Type *type);
 
