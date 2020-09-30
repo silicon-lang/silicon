@@ -1,5 +1,7 @@
 # Silicon
 
+![Build](https://github.com/silicon-lang/silicon/workflows/Build/badge.svg)
+
 Silicon is a programming language highly inspired by JavaScript and more specifically TypeScript, aiming to provide more efficiency and reliability while keeping the syntax as simple as possible.
 
 ## Table of Contents

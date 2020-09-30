@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 #------------------------- LLVM -------------------------
 
-find_package(LLVM 9 REQUIRED)
+FIND_PACKAGE(LLVM 9 REQUIRED)
 
 message(STATUS "Using LLVM ${LLVM_PACKAGE_VERSION}")
 
@@ -24,7 +24,7 @@ set(SILICON_BISON_HEADER ${PROJECT_SOURCE_DIR}/src/parser/parser.h)
 
 FIND_PACKAGE(BISON 3.5 REQUIRED)
 
-bison_target(silicon_bison ${SILICON_BISON_INPUT} ${SILICON_BISON_OUTPUT}
+BISON_TARGET(silicon_bison ${SILICON_BISON_INPUT} ${SILICON_BISON_OUTPUT}
         DEFINES_FILE ${SILICON_BISON_HEADER})
 
 message(STATUS "Using Bison ${BISON_VERSION}")
