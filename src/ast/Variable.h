@@ -27,17 +27,24 @@ namespace silicon::ast {
     class Variable : public Node {
     private:
         std::string name;
+        Node *context;
 
-        explicit Variable(std::string name);
+        explicit Variable(std::string name, Node *context = nullptr);
+
+        uint64_t element_index(compiler::Context *ctx);
 
     public:
-        static Node *create(compiler::Context *ctx, const std::string& name);
+        static Node *create(compiler::Context *ctx, const std::string& name, Node *context = nullptr);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
 
         std::string getName();
+
+        llvm::Type *getType(compiler::Context *ctx);
+
+        llvm::Value *get_pointer(compiler::Context *ctx);
 
     };
 

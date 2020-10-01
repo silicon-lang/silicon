@@ -49,3 +49,15 @@ llvm::Value *silicon::ast::Interface::codegen(compiler::Context *ctx) {
 silicon::node_t silicon::ast::Interface::type() {
     return node_t::INTERFACE;
 }
+
+long silicon::ast::Interface::property_index(const std::string &property) {
+    long index = 0;
+
+    for (const auto &prop : properties) {
+        if (prop.first == property) return index;
+
+        index++;
+    }
+
+    return -1;
+}

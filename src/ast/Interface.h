@@ -33,11 +33,14 @@ namespace silicon::ast {
         explicit Interface(std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
 
     public:
-        static Interface *create(compiler::Context *ctx, std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
+        static Interface *
+        create(compiler::Context *ctx, std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
+
+        long property_index(const std::string &property);
 
     };
 

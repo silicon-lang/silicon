@@ -40,7 +40,7 @@ llvm::Value *silicon::ast::Null::codegen(compiler::Context *ctx) {
 
     if (!t) fail_codegen("Error: Can't detect suitable type");
 
-    return ctx->llvm_ir_builder.CreateLoad(llvm::ConstantPointerNull::get(t->getPointerTo()));
+    return ctx->load(llvm::ConstantPointerNull::get(t->getPointerTo()));
 }
 
 silicon::node_t silicon::ast::Null::type() {

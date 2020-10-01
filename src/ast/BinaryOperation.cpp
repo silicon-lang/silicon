@@ -129,42 +129,66 @@ llvm::Value *silicon::ast::BinaryOperation::assign(compiler::Context *ctx) {
 
             ctx->expected_type = r->getType();
 
-            l->codegen(ctx);
+            auto *alloca = l->codegen(ctx);
 
             ctx->expected_type = expected_type;
 
-            ctx->store(name, r);
+            ctx->store(r, alloca);
 
             return r;
         }
 
-        l->codegen(ctx);
-    } else if (left->type(node_t::VARIABLE)) {
+        auto *alloca = l->codegen(ctx);
+
+        ctx->expected_type = llvm_type;
+
+        llvm::Value *r = right->codegen(ctx);
+
+        if (!compare_types(r->getType(), ctx->expected_type)) {
+            fail_codegen(
+                    "TypeError: Expected the right side of the operation to be <"
+                    + parse_type(llvm_type)
+                    + ">, got <"
+                    + parse_type(r->getType())
+                    + "> instead."
+            );
+        }
+
+        ctx->expected_type = expected_type;
+
+        ctx->store(r, alloca);
+
+        return r;
+    }
+
+    if (left->type(node_t::VARIABLE)) {
         auto *l = (Variable *) left;
 
         name = l->getName();
-        llvm_type = ctx->get_alloca(l->getName())->getAllocatedType();
-    } else fail_codegen("Expected left side of the equation to be a variable");
+        llvm_type = l->getType(ctx);
 
-    ctx->expected_type = llvm_type;
+        ctx->expected_type = llvm_type;
 
-    llvm::Value *r = right->codegen(ctx);
+        llvm::Value *r = right->codegen(ctx);
 
-    if (llvm_type && !compare_types(r->getType(), ctx->expected_type)) {
-        fail_codegen(
-                "TypeError: Expected the right side of the operation to be <"
-                + parse_type(llvm_type)
-                + ">, got <"
-                + parse_type(r->getType())
-                + "> instead."
-        );
+        if (llvm_type && !compare_types(r->getType(), ctx->expected_type)) {
+            fail_codegen(
+                    "TypeError: Expected the right side of the operation to be <"
+                    + parse_type(llvm_type)
+                    + ">, got <"
+                    + parse_type(r->getType())
+                    + "> instead."
+            );
+        }
+
+        ctx->expected_type = expected_type;
+
+        ctx->store(r, l->get_pointer(ctx));
+
+        return r;
     }
 
-    ctx->expected_type = expected_type;
-
-    ctx->store(name, r);
-
-    return r;
+    fail_codegen("Expected left side of the equation to be a variable");
 }
 
 llvm::Value *silicon::ast::BinaryOperation::multiply(compiler::Context *ctx) {

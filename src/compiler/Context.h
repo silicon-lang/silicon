@@ -107,9 +107,11 @@ namespace silicon::compiler {
 
         ast::Node *string_lit(std::string value);
 
-        ast::Node *var(const std::string &name);
+        ast::Node *var(const std::string &name, ast::Node *context = nullptr);
 
         ast::Node *def_var(const std::string &name, ast::Type *type = nullptr);
+
+        ast::Interface *interface(const std::string &name);
 
         ast::Interface *
         def_interface(const std::string &name, std::vector<std::pair<std::string, ast::Type *>> properties);
@@ -157,9 +159,9 @@ namespace silicon::compiler {
 
         llvm::Value *alloc(const std::string &name, llvm::Type *type);
 
-        llvm::Value *store(const std::string &name, llvm::Value *value);
+        llvm::StoreInst *store(llvm::Value *value, llvm::Value *ptr);
 
-        llvm::Value *load(const std::string &name);
+        llvm::LoadInst *load(llvm::Value *ptr, const std::string &name = "");
 
         friend class ast::Block;
     };

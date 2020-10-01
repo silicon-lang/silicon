@@ -353,6 +353,7 @@ expression_
 | OPEN_PAREN expression_ CLOSE_PAREN { $$ = $2; }
 | expression_ QUESTION_MARK expression_ COLON expression_ { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
 | expression_ AS type { $$ = ctx.def_cast($1, $3); }
+| expression_ DOT IDENTIFIER { $$ = ctx.var($3, $1); }
 ;
 
 // --------------------------------------------------

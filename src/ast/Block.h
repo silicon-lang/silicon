@@ -56,10 +56,6 @@ namespace silicon::ast {
 
         llvm::Value *alloc(compiler::Context *ctx, const std::string &name, llvm::Type *type);
 
-        llvm::Value *store(compiler::Context *ctx, const std::string &name, llvm::Value *value);
-
-        llvm::Value *load(compiler::Context *ctx, const std::string &name);
-
     };
 
 }

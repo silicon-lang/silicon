@@ -111,6 +111,8 @@ namespace silicon {
 
     std::string replace_all(std::string str, const std::string &from, const std::string &to);
 
+    bool is_interface(llvm::Type *type);
+
     bool compare_types(llvm::Type *type1, llvm::Type *type2);
 
     bool compare_types(llvm::Value *value1, llvm::Value *value2);

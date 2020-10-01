@@ -33,7 +33,7 @@ silicon::ast::Block *silicon::ast::Block::create(compiler::Context *ctx, ast::Bl
 }
 
 llvm::Value *silicon::ast::Block::codegen(compiler::Context *ctx) {
-    llvm::Type *expected_type = ctx->expected_type;
+//    llvm::Type *expected_type = ctx->expected_type;
 
     for (auto &statement : statements) {
         if (statement->type(node_t::RETURN)
@@ -43,11 +43,11 @@ llvm::Value *silicon::ast::Block::codegen(compiler::Context *ctx) {
             return statement->codegen(ctx);
         }
 
-        ctx->expected_type = nullptr;
+//        ctx->expected_type = nullptr;
 
         statement->codegen(ctx);
 
-        ctx->expected_type = expected_type;
+//        ctx->expected_type = expected_type;
     }
 
     return nullptr;
@@ -102,34 +102,4 @@ llvm::Value *silicon::ast::Block::alloc(compiler::Context *ctx, const std::strin
     if (bits > 0 && bits % 8 == 0) variables[name]->setAlignment(bits / 8);
 
     return variables[name];
-}
-
-llvm::Value *silicon::ast::Block::store(compiler::Context *ctx, const std::string &name, llvm::Value *value) {
-    auto *variable = this->get_alloca(name);
-
-    if (!variable)
-        fail_codegen("Variable <" + name + "> is not allocated yet");
-
-    llvm::StoreInst *store = ctx->llvm_ir_builder.CreateStore(value, variable);
-
-    unsigned alignment = variable->getAlignment();
-
-    if (alignment > 0) store->setAlignment(alignment);
-
-    return store;
-}
-
-llvm::Value *silicon::ast::Block::load(compiler::Context *ctx, const std::string &name) {
-    auto *variable = this->get_alloca(name);
-
-    if (!variable)
-        fail_codegen("Variable <" + name + "> is not allocated yet");
-
-    llvm::LoadInst *load = ctx->llvm_ir_builder.CreateLoad(variable, name);
-
-    unsigned alignment = variable->getAlignment();
-
-    if (alignment > 0) load->setAlignment(alignment);
-
-    return load;
 }
