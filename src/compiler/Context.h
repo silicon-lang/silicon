@@ -26,6 +26,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
 #include "ast/Node.h"
+#include "ast/Type.h"
 #include "ast/Block.h"
 #include "ast/Null.h"
 #include "ast/BooleanLiteral.h"
@@ -82,8 +83,6 @@ namespace silicon::compiler {
 
         llvm::Type *def_type(const std::string &name, llvm::Type *type);
 
-        llvm::Type *type(const std::string &name);
-
         llvm::Type *void_type();
 
         llvm::Type *bool_type();
@@ -94,7 +93,11 @@ namespace silicon::compiler {
 
         llvm::Type *string_type();
 
-        ast::Node *null(llvm::Type *type = nullptr);
+        ast::Type *type(llvm::Type *type);
+
+        ast::Type *type(const std::string &name);
+
+        ast::Node *null(ast::Type *type = nullptr);
 
         ast::Node *bool_lit(bool value);
 
@@ -104,12 +107,12 @@ namespace silicon::compiler {
 
         ast::Node *var(const std::string &name);
 
-        ast::Node *def_var(const std::string &name, llvm::Type *type = nullptr);
+        ast::Node *def_var(const std::string &name, ast::Type *type = nullptr);
 
-        static std::pair<std::string, llvm::Type *> def_arg(const std::string &name, llvm::Type *type);
+        static std::pair<std::string, ast::Type *> def_arg(const std::string &name, ast::Type *type);
 
-        ast::Prototype *def_proto(const std::string &name, std::vector<std::pair<std::string, llvm::Type *>> args,
-                                  llvm::Type *return_type = nullptr);
+        ast::Prototype *def_proto(const std::string &name, std::vector<std::pair<std::string, ast::Type *>> args,
+                                  ast::Type *return_type = nullptr);
 
         ast::Function *def_func(ast::Prototype *prototype, std::vector<ast::Node *> body);
 
@@ -121,7 +124,9 @@ namespace silicon::compiler {
 
         ast::Node *def_op(unary_operation_t op, ast::Node *node, bool suffix = false);
 
-        ast::Node *def_cast(ast::Node *node, llvm::Type *type);
+        ast::Node *def_cast(ast::Node *node, llvm::Type *llvm_type);
+
+        ast::Node *def_cast(ast::Node *node, ast::Type *type);
 
         ast::If *def_if(ast::Node *condition, std::vector<ast::Node *> then_statements,
                         std::vector<ast::Node *> else_statements = {});
@@ -139,7 +144,7 @@ namespace silicon::compiler {
 
         /* ------------------------- CODEGEN ------------------------- */
 
-        void fail_codegen(const std::string &error) const;
+        void fail_codegen(const std::string &error) const noexcept __attribute__ ((__noreturn__));
 
         llvm::Value *codegen();
 

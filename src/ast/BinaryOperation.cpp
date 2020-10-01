@@ -115,14 +115,14 @@ silicon::value_pair_t *silicon::ast::BinaryOperation::parse_pair(compiler::Conte
 llvm::Value *silicon::ast::BinaryOperation::assign(compiler::Context *ctx) {
     llvm::Type *expected_type = ctx->expected_type;
 
-    llvm::Type *llvm_type = nullptr;
+    llvm::Type *llvm_type;
     std::string name;
 
     if (left->type(node_t::VARIABLE_DEFINITION)) {
         auto *l = (VariableDefinition *) left;
 
         name = l->getName();
-        llvm_type = l->getLLVMType();
+        llvm_type = l->getLLVMType(ctx);
 
         if (!llvm_type) {
             llvm::Value *r = right->codegen(ctx);

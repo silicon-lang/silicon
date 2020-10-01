@@ -20,13 +20,13 @@
 #include "FunctionCall.h"
 
 
-silicon::ast::FunctionCall::FunctionCall(std::string callee, std::vector<Node *> args) : callee(std::move(callee)),
-                                                                                         args(std::move(args)) {
+silicon::ast::FunctionCall::FunctionCall(std::string callee, std::vector<Node *> args) : callee(MOVE(callee)),
+                                                                                         args(MOVE(args)) {
 }
 
 silicon::ast::Node *
 silicon::ast::FunctionCall::create(compiler::Context *ctx, std::string callee, std::vector<Node *> args) {
-    auto *node = new FunctionCall(std::move(callee), std::move(args));
+    auto *node = new FunctionCall(MOVE(callee), MOVE(args));
 
     node->loc = parse_location(ctx->loc);
 

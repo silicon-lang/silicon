@@ -20,6 +20,7 @@
 
 
 #include "Node.h"
+#include "Type.h"
 
 
 namespace silicon::ast {
@@ -27,12 +28,12 @@ namespace silicon::ast {
     class Cast : public Node {
     private:
         Node *value;
-        llvm::Type *llvm_type;
+        ast::Type *llvm_type;
 
-        Cast(Node *value, llvm::Type *llvm_type);
+        Cast(Node *value, ast::Type *llvm_type);
 
     public:
-        static Node *create(compiler::Context *ctx, Node *value, llvm::Type *llvm_type);
+        static Node *create(compiler::Context *ctx, Node *value, ast::Type *llvm_type);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 

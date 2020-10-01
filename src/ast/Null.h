@@ -20,18 +20,19 @@
 
 
 #include "Node.h"
+#include "Type.h"
 
 
 namespace silicon::ast {
 
     class Null : public Node {
     private:
-        llvm::Type *llvm_type;
+        ast::Type *llvm_type;
 
-        Null(llvm::Type *llvm_type = nullptr);
+        explicit Null(ast::Type *llvm_type);
 
     public:
-        static Node *create(compiler::Context *ctx, llvm::Type *llvm_type = nullptr);
+        static Node *create(compiler::Context *ctx, ast::Type *llvm_type = nullptr);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 

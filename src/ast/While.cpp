@@ -20,11 +20,11 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::While::While(Node *condition, std::vector<Node *> body) : condition(condition), body(std::move(body)) {
+silicon::ast::While::While(Node *condition, std::vector<Node *> body) : condition(condition), body(MOVE(body)) {
 }
 
 silicon::ast::While *silicon::ast::While::create(compiler::Context *ctx, Node *condition, std::vector<Node *> body) {
-    auto *node = new While(condition, std::move(body));
+    auto *node = new While(condition, MOVE(body));
 
     node->loc = parse_location(ctx->loc);
 

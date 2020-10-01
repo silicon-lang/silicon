@@ -80,16 +80,6 @@ llvm::Type *silicon::compiler::Context::def_type(const std::string &name, llvm::
     return type;
 }
 
-llvm::Type *silicon::compiler::Context::type(const std::string &name) {
-    if (name.empty()) fail_codegen("TypeError: Type <" + name + "> not found.");
-
-    auto type = types.find(name);
-
-    if (type == types.end()) fail_codegen("TypeError: Type <" + name + "> not found.");
-
-    return type->second;
-}
-
 llvm::Type *silicon::compiler::Context::void_type() {
     return llvm_ir_builder.getVoidTy();
 }
@@ -119,7 +109,15 @@ llvm::Type *silicon::compiler::Context::string_type() {
     return llvm_ir_builder.getInt8PtrTy();
 }
 
-silicon::ast::Node *silicon::compiler::Context::null(llvm::Type *type) {
+silicon::ast::Type *silicon::compiler::Context::type(llvm::Type *type) {
+    return ast::Type::create(this, type);
+}
+
+silicon::ast::Type *silicon::compiler::Context::type(const std::string &name) {
+    return ast::Type::create(this, name);
+}
+
+silicon::ast::Node *silicon::compiler::Context::null(ast::Type *type) {
     return ast::Null::create(this, type);
 }
 
@@ -128,34 +126,35 @@ silicon::ast::Node *silicon::compiler::Context::bool_lit(bool value) {
 }
 
 silicon::ast::Node *silicon::compiler::Context::num_lit(std::string value) {
-    return ast::NumberLiteral::create(this, std::move(value));
+    return ast::NumberLiteral::create(this, MOVE(value));
 }
 
 silicon::ast::Node *silicon::compiler::Context::string_lit(std::string value) {
-    return ast::StringLiteral::create(this, std::move(value));
+    return ast::StringLiteral::create(this, MOVE(value));
 }
 
 silicon::ast::Node *silicon::compiler::Context::var(const std::string &name) {
     return ast::Variable::create(this, name);
 }
 
-silicon::ast::Node *silicon::compiler::Context::def_var(const std::string &name, llvm::Type *type) {
+silicon::ast::Node *silicon::compiler::Context::def_var(const std::string &name, ast::Type *type) {
     return ast::VariableDefinition::create(this, name, type);
 }
 
-std::pair<std::string, llvm::Type *> silicon::compiler::Context::def_arg(const std::string &name, llvm::Type *type) {
+std::pair<std::string, silicon::ast::Type *>
+silicon::compiler::Context::def_arg(const std::string &name, ast::Type *type) {
     return std::make_pair(name, type);
 }
 
 silicon::ast::Prototype *
-silicon::compiler::Context::def_proto(const std::string &name, std::vector<std::pair<std::string, llvm::Type *>> args,
-                                      llvm::Type *return_type) {
-    return ast::Prototype::create(this, name, std::move(args), return_type);
+silicon::compiler::Context::def_proto(const std::string &name, std::vector<std::pair<std::string, ast::Type *>> args,
+                                      ast::Type *return_type) {
+    return ast::Prototype::create(this, name, MOVE(args), return_type);
 }
 
 silicon::ast::Function *
 silicon::compiler::Context::def_func(ast::Prototype *prototype, std::vector<ast::Node *> body) {
-    return ast::Function::create(this, prototype, std::move(body));
+    return ast::Function::create(this, prototype, MOVE(body));
 }
 
 silicon::ast::Return *silicon::compiler::Context::def_ret(ast::Node *value) {
@@ -163,7 +162,7 @@ silicon::ast::Return *silicon::compiler::Context::def_ret(ast::Node *value) {
 }
 
 silicon::ast::Node *silicon::compiler::Context::call_func(std::string callee, std::vector<ast::Node *> args) {
-    return ast::FunctionCall::create(this, std::move(callee), std::move(args));
+    return ast::FunctionCall::create(this, MOVE(callee), MOVE(args));
 }
 
 silicon::ast::Node *silicon::compiler::Context::def_op(binary_operation_t op, ast::Node *left, ast::Node *right) {
@@ -174,14 +173,18 @@ silicon::ast::Node *silicon::compiler::Context::def_op(unary_operation_t op, ast
     return ast::UnaryOperation::create(this, op, node, suffix);
 }
 
-silicon::ast::Node *silicon::compiler::Context::def_cast(ast::Node *node, llvm::Type *type) {
+silicon::ast::Node *silicon::compiler::Context::def_cast(ast::Node *node, llvm::Type *llvm_type) {
+    return ast::Cast::create(this, node, type(llvm_type));
+}
+
+silicon::ast::Node *silicon::compiler::Context::def_cast(ast::Node *node, ast::Type *type) {
     return ast::Cast::create(this, node, type);
 }
 
 silicon::ast::If *
 silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<ast::Node *> then_statements,
                                    std::vector<ast::Node *> else_statements) {
-    return ast::If::create(this, condition, std::move(then_statements), std::move(else_statements));
+    return ast::If::create(this, condition, MOVE(then_statements), MOVE(else_statements));
 }
 
 silicon::ast::Break *silicon::compiler::Context::def_break() {
@@ -193,26 +196,24 @@ silicon::ast::Continue *silicon::compiler::Context::def_continue() {
 }
 
 silicon::ast::Loop *silicon::compiler::Context::def_loop(std::vector<ast::Node *> body) {
-    return ast::Loop::create(this, body);
+    return ast::Loop::create(this, MOVE(body));
 }
 
 silicon::ast::While *
 silicon::compiler::Context::def_while(ast::Node *condition, std::vector<ast::Node *> body) {
-    return ast::While::create(this, condition, std::move(body));
+    return ast::While::create(this, condition, MOVE(body));
 }
 
 silicon::ast::For *
 silicon::compiler::Context::def_for(ast::Node *definition, ast::Node *condition, ast::Node *stepper,
                                     std::vector<ast::Node *> body) {
-    return ast::For::create(this, definition, condition, stepper, std::move(body));
+    return ast::For::create(this, definition, condition, stepper, MOVE(body));
 }
 
 /* ------------------------- CODEGEN ------------------------- */
 
-void silicon::compiler::Context::fail_codegen(const std::string &error) const {
-    std::cerr << parse_location(loc) << ": " << error << std::endl;
-
-    exit(1);
+void silicon::compiler::Context::fail_codegen(const std::string &error) const noexcept {
+    codegen_error(parse_location(loc), error);
 }
 
 llvm::Value *silicon::compiler::Context::codegen() {

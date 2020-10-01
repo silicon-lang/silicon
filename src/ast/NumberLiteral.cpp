@@ -26,7 +26,7 @@ silicon::ast::NumberLiteral::NumberLiteral(std::string value) {
 }
 
 silicon::ast::Node *silicon::ast::NumberLiteral::create(compiler::Context *ctx, std::string value) {
-    auto *node = new NumberLiteral(std::move(value));
+    auto *node = new NumberLiteral(MOVE(value));
 
     node->loc = parse_location(ctx->loc);
 
