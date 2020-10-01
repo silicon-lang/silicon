@@ -17,6 +17,7 @@
 {
 
 #include "ast/Node.h"
+#include "ast/Type.h"
 #include "ast/Function.h"
 #include "ast/Prototype.h"
 #include "ast/If.h"
@@ -163,8 +164,8 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %type<silicon::ast::Loop *> loop_statement
 %type<silicon::ast::While *> while_statement do_while_statement
 %type<silicon::ast::For *> for_statement
-%type<llvm::Type *> type
-%type<std::vector<std::pair<std::string, llvm::Type *>>> arguments_definition arguments_definition_ variadic_arguments_declaration
+%type<silicon::ast::Type *> type
+%type<std::vector<std::pair<std::string, silicon::ast::Type *>>> arguments_definition arguments_definition_ variadic_arguments_declaration
 
 // --------------------------------------------------
 // Precedences

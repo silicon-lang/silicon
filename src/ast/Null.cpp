@@ -19,10 +19,13 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Null::Null(llvm::Type *llvm_type) : llvm_type(llvm_type) {
+silicon::ast::Null::Null(ast::Type *llvm_type) : llvm_type(llvm_type) {
+    if (!llvm_type) silicon_error("Argument <llvm_type> is required");
 }
 
-silicon::ast::Node *silicon::ast::Null::create(compiler::Context *ctx, llvm::Type *llvm_type) {
+silicon::ast::Node *silicon::ast::Null::create(compiler::Context *ctx, ast::Type *llvm_type) {
+    if (!llvm_type) llvm_type = ctx->type(nullptr);
+
     auto *node = new Null(llvm_type);
 
     node->loc = parse_location(ctx->loc);
@@ -31,14 +34,15 @@ silicon::ast::Node *silicon::ast::Null::create(compiler::Context *ctx, llvm::Typ
 }
 
 llvm::Value *silicon::ast::Null::codegen(compiler::Context *ctx) {
-    if (!llvm_type) llvm_type = ctx->expected_type;
+    llvm::Type *t = llvm_type->codegen(ctx);
 
-    if (!llvm_type) fail_codegen("Error: Can't detect suitable type");
+    if (!t) t = ctx->expected_type;
 
-    return ctx->llvm_ir_builder
-            .CreateLoad(llvm::ConstantPointerNull::get(llvm_type->getPointerTo()));
+    if (!t) fail_codegen("Error: Can't detect suitable type");
+
+    return ctx->llvm_ir_builder.CreateLoad(llvm::ConstantPointerNull::get(t->getPointerTo()));
 }
 
 silicon::node_t silicon::ast::Null::type() {
-    return silicon::node_t::NULL_PTR;
+    return node_t::NULL_PTR;
 }

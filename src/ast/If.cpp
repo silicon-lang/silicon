@@ -22,14 +22,14 @@
 
 silicon::ast::If::If(Node *condition, std::vector<Node *> then_statements, std::vector<Node *> else_statements)
         : condition(condition),
-          then_statements(std::move(then_statements)),
-          else_statements(std::move(else_statements)) {
+          then_statements(MOVE(then_statements)),
+          else_statements(MOVE(else_statements)) {
 }
 
 silicon::ast::If *
 silicon::ast::If::create(compiler::Context *ctx, Node *condition, std::vector<Node *> then_statements,
                          std::vector<Node *> else_statements) {
-    auto *node = new If(condition, std::move(then_statements), std::move(else_statements));
+    auto *node = new If(condition, MOVE(then_statements), MOVE(else_statements));
 
     node->loc = parse_location(ctx->loc);
 
@@ -166,7 +166,7 @@ llvm::Value *silicon::ast::If::elseCodegen(compiler::Context *ctx) {
 }
 
 silicon::ast::If *silicon::ast::If::setElse(std::vector<Node *> statements) {
-    else_statements = std::move(statements);
+    else_statements = MOVE(statements);
 
     return this;
 }

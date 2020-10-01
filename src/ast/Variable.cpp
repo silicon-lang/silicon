@@ -19,7 +19,7 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Variable::Variable(std::string name) : name(std::move(name)) {
+silicon::ast::Variable::Variable(std::string name) : name(MOVE(name)) {
 }
 
 silicon::ast::Node *silicon::ast::Variable::create(compiler::Context *ctx, const std::string &name) {

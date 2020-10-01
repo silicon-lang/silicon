@@ -20,15 +20,18 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Prototype::Prototype(std::string name, std::vector<std::pair<std::string, llvm::Type *>> args,
-                                   llvm::Type *return_type) : name(std::move(name)), args(std::move(args)),
-                                                              return_type(return_type) {
+silicon::ast::Prototype::Prototype(std::string name, std::vector<std::pair<std::string, ast::Type *>> args,
+                                   ast::Type *return_type) : name(MOVE(name)), args(MOVE(args)),
+                                                             return_type(return_type) {
+    if (!return_type) silicon_error("Argument <return_type> is required");
 }
 
 silicon::ast::Prototype *silicon::ast::Prototype::create(compiler::Context *ctx, const std::string &name,
-                                                         std::vector<std::pair<std::string, llvm::Type *>> args,
-                                                         llvm::Type *return_type) {
-    auto *node = new Prototype(name, std::move(args), return_type);
+                                                         std::vector<std::pair<std::string, ast::Type *>> args,
+                                                         ast::Type *return_type) {
+    if (!return_type) return_type = ctx->type(nullptr);
+
+    auto *node = new Prototype(name, MOVE(args), return_type);
 
     node->loc = parse_location(ctx->loc);
 
@@ -41,10 +44,10 @@ llvm::Function *silicon::ast::Prototype::codegen(compiler::Context *ctx) {
 
     for (auto &arg : args) {
         names.push_back(arg.first);
-        types.push_back(arg.second);
+        types.push_back(arg.second->codegen(ctx));
     }
 
-    llvm::Type *result_type = return_type;
+    llvm::Type *result_type = return_type->codegen(ctx);
 
     if (!result_type) result_type = ctx->void_type();
 
@@ -71,12 +74,12 @@ std::string silicon::ast::Prototype::getName() {
     return name;
 }
 
-llvm::Type *silicon::ast::Prototype::getReturnType() {
-    return return_type;
+llvm::Type *silicon::ast::Prototype::getReturnType(compiler::Context *ctx) {
+    return return_type->codegen(ctx);
 }
 
-silicon::ast::Prototype *silicon::ast::Prototype::setReturnType(llvm::Type *type) {
-    return_type = type;
+silicon::ast::Prototype *silicon::ast::Prototype::setReturnType(compiler::Context *ctx, llvm::Type *type) {
+    return_type = ctx->type(type);
 
     return this;
 }
