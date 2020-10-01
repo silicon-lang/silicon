@@ -19,11 +19,12 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Cast::Cast(Node *value, llvm::Type *llvm_type) : value(value), llvm_type(llvm_type) {
+silicon::ast::Cast::Cast(Node *value, ast::Type *llvm_type) : value(value), llvm_type(llvm_type) {
+    if (!llvm_type) silicon_error("Argument <llvm_type> is required");
 }
 
 silicon::ast::Node *
-silicon::ast::Cast::create(compiler::Context *ctx, Node *value, llvm::Type *llvm_type) {
+silicon::ast::Cast::create(compiler::Context *ctx, Node *value, ast::Type *llvm_type) {
     auto *node = new Cast(value, llvm_type);
 
     node->loc = parse_location(ctx->loc);
@@ -33,13 +34,14 @@ silicon::ast::Cast::create(compiler::Context *ctx, Node *value, llvm::Type *llvm
 
 llvm::Value *silicon::ast::Cast::codegen(compiler::Context *ctx) {
     llvm::Value *v;
+    llvm::Type *llvm_t = llvm_type->codegen(ctx);
 
     if (value->type(node_t::NUMBER_LIT)
-        && (llvm_type->isIntegerTy()
-            || llvm_type->isFloatingPointTy())) {
+        && (llvm_t->isIntegerTy()
+            || llvm_t->isFloatingPointTy())) {
         llvm::Type *expected_type = ctx->expected_type;
 
-        ctx->expected_type = llvm_type;
+        ctx->expected_type = llvm_t;
 
         v = value->codegen(ctx);
 
@@ -52,20 +54,20 @@ llvm::Value *silicon::ast::Cast::codegen(compiler::Context *ctx) {
 
     llvm::Type *t = v->getType();
 
-    if (compare_types(t, llvm_type)) return v;
+    if (compare_types(t, llvm_t)) return v;
 
-    if (llvm_type->isIntegerTy(1)) {
+    if (llvm_t->isIntegerTy(1)) {
         if (t->isVoidTy()) return ctx->bool_lit(false)->codegen(ctx);
 
         if (t->isArrayTy()) return ctx->bool_lit(true)->codegen(ctx);
     }
 
-    if (!llvm::CastInst::isCastable(t, llvm_type)) {
+    if (!llvm::CastInst::isCastable(t, llvm_t)) {
         fail_codegen(
                 "Error: Unsupported cast: <"
                 + parse_type(t)
                 + "> as <"
-                + parse_type(llvm_type)
+                + parse_type(llvm_t)
                 + ">"
         );
     }
@@ -74,11 +76,11 @@ llvm::Value *silicon::ast::Cast::codegen(compiler::Context *ctx) {
             llvm::CastInst::getCastOpcode(
                     v,
                     true,
-                    llvm_type,
+                    llvm_t,
                     true
             ),
             v,
-            llvm_type,
+            llvm_t,
             "cast"
     );
 }

@@ -20,6 +20,7 @@
 
 
 #include "Node.h"
+#include "Type.h"
 
 
 namespace silicon::ast {
@@ -27,12 +28,12 @@ namespace silicon::ast {
     class Interface : public Node {
     private:
         std::string name;
-        std::vector<std::pair<std::string, llvm::Type *>> properties;
+        std::vector<std::pair<std::string, ast::Type *>> properties;
 
-        explicit Interface(std::string name, std::vector<std::pair<std::string, llvm::Type *>> properties);
+        explicit Interface(std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
 
     public:
-        static Interface *create(compiler::Context *ctx, std::string name, std::vector<std::pair<std::string, llvm::Type *>> properties);
+        static Interface *create(compiler::Context *ctx, std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 

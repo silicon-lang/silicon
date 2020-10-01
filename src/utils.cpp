@@ -95,3 +95,15 @@ std::string silicon::parse_location(yy::location location) {
 
     return l;
 }
+
+void silicon::codegen_error(const std::string &location, const std::string &error) noexcept {
+    std::cerr << location << ": " << error << std::endl;
+
+    exit(1);
+}
+
+void silicon::silicon_error(const std::string &error) noexcept {
+    std::cerr << "Silicon: " << error << std::endl;
+
+    exit(1);
+}

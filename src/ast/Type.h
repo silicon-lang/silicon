@@ -1,5 +1,5 @@
 //
-//   Copyright 2020 Ardalan Amini
+//   Copyright 10/1/20 Ardalan Amini
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -15,37 +15,42 @@
 //
 
 
-#ifndef SILICON_VARIABLEDEFINITION_H
-#define SILICON_VARIABLEDEFINITION_H
+#ifndef SILICON_TYPE_H
+#define SILICON_TYPE_H
 
 
 #include "Node.h"
-#include "Type.h"
 
 
 namespace silicon::ast {
 
-    class VariableDefinition : public Node {
+    class Type {
     private:
-        std::string name;
-        ast::Type *llvm_type;
+        std::function<llvm::Type *()> llvm_type;
 
-        explicit VariableDefinition(std::string name, ast::Type *type);
+        explicit Type(std::function<llvm::Type *()> llvm_type);
+
+    protected:
+        std::string loc;
 
     public:
-        static Node *create(compiler::Context *ctx, const std::string& name, ast::Type *type = nullptr);
+        static Type *create(compiler::Context *ctx, llvm::Type *type);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        static Type *create(compiler::Context *ctx, const std::string &name);
 
-        node_t type() override;
+        llvm::Type *codegen(compiler::Context *ctx);
 
-        std::string getName();
+        node_t type();
 
-        llvm::Type *getLLVMType(compiler::Context *ctx);
+        bool type(node_t t);
+
+        void fail_codegen(const std::string &error) noexcept __attribute__ ((__noreturn__));
 
     };
 
 }
 
+#define MOVE(V) std::move(V)
 
-#endif //SILICON_VARIABLEDEFINITION_H
+
+#endif //SILICON_TYPE_H

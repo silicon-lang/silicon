@@ -44,6 +44,8 @@ namespace silicon {
     enum class node_t {
         NODE,
 
+        TYPE,
+
         INTERFACE,
 
         BLOCK,
@@ -116,6 +118,10 @@ namespace silicon {
     std::string parse_type(llvm::Type *type);
 
     std::string parse_location(yy::location location);
+
+    void codegen_error(const std::string &location, const std::string &error) noexcept __attribute__ ((__noreturn__));
+
+    void silicon_error(const std::string &error) noexcept __attribute__ ((__noreturn__));
 
 }
 

@@ -19,14 +19,14 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Interface::Interface(std::string name, std::vector<std::pair<std::string, llvm::Type *>> properties)
+silicon::ast::Interface::Interface(std::string name, std::vector<std::pair<std::string, ast::Type *>> properties)
         : name(
-        std::move(name)), properties(std::move(properties)) {
+        MOVE(name)), properties(MOVE(properties)) {
 }
 
 silicon::ast::Interface *silicon::ast::Interface::create(compiler::Context *ctx, std::string name,
-                                                         std::vector<std::pair<std::string, llvm::Type *>> properties) {
-    auto *node = new Interface(std::move(name), std::move(properties));
+                                                         std::vector<std::pair<std::string, ast::Type *>> properties) {
+    auto *node = new Interface(MOVE(name), MOVE(properties));
 
     node->loc = parse_location(ctx->loc);
 
@@ -37,7 +37,7 @@ llvm::Value *silicon::ast::Interface::codegen(compiler::Context *ctx) {
     llvm::StructType *type = llvm::StructType::create(ctx->llvm_ctx, "interface." + name);
     std::vector<llvm::Type *> body{};
 
-    for (const auto &property: properties) body.push_back(property.second);
+    for (const auto &property: properties) body.push_back(property.second->codegen(ctx));
 
     type->setBody(body);
 

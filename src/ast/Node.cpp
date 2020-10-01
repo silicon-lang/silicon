@@ -16,12 +16,11 @@
 
 
 #include "Node.h"
+#include "utils.h"
 
 
-void silicon::ast::Node::fail_codegen(const std::string &error) {
-    std::cerr << loc << ": " << error << std::endl;
-
-    exit(1);
+void silicon::ast::Node::fail_codegen(const std::string &error) noexcept {
+    codegen_error(loc, error);
 }
 
 bool silicon::ast::Node::type(silicon::node_t t) {

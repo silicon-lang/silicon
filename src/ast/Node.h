@@ -37,7 +37,7 @@ namespace silicon::ast {
     public:
         virtual ~Node() = default;
 
-        void fail_codegen(const std::string &error);
+        void fail_codegen(const std::string &error) noexcept __attribute__ ((__noreturn__));
 
         virtual llvm::Value *codegen(compiler::Context *ctx) = 0;
 

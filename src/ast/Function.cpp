@@ -22,12 +22,12 @@
 
 
 silicon::ast::Function::Function(Prototype *prototype, std::vector<Node *> body)
-        : prototype(prototype), body(std::move(body)) {
+        : prototype(prototype), body(MOVE(body)) {
 }
 
 silicon::ast::Function *
 silicon::ast::Function::create(compiler::Context *ctx, Prototype *prototype, std::vector<Node *> body) {
-    auto *node = new Function(prototype, std::move(body));
+    auto *node = new Function(prototype, MOVE(body));
 
     node->loc = parse_location(ctx->loc);
 
@@ -59,7 +59,7 @@ llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
         ctx->store(Arg.getName(), &Arg);
     }
 
-    llvm::Type *return_type = prototype->getReturnType();
+    llvm::Type *return_type = prototype->getReturnType(ctx);
 
     llvm::Type *expected_type = ctx->expected_type;
 
@@ -89,7 +89,7 @@ llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
         function->removeFromParent();
 
         return ctx->def_func(
-                        prototype->setReturnType(result->getReturnValue()->getType()),
+                        prototype->setReturnType(ctx, result->getReturnValue()->getType()),
                         body
                 )
                 ->codegen(ctx);
