@@ -43,6 +43,18 @@ bool silicon::compare_types(llvm::Type *type1, llvm::Type *type2) {
                && compare_types(type1->getArrayElementType(), type2->getArrayElementType());
     }
 
+    if (type1->isStructTy()) {
+        if (!type2->isStructTy()) return false;
+
+        if (type1->getStructNumElements() != type2->getStructNumElements()) return false;
+
+        for (unsigned i = 0; i < type1->getStructNumElements(); i++) {
+            if (!compare_types(type1->getStructElementType(i), type2->getStructElementType(i))) return false;
+        }
+
+        return true;
+    }
+
     if (type1->isVoidTy()) return type2->isVoidTy();
 
     if (type1->isIntegerTy()) return type2->isIntegerTy(type1->getIntegerBitWidth());
