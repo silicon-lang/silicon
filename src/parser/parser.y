@@ -454,6 +454,7 @@ variable_definition
 
 variable_definition_
 : IDENTIFIER ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
+| IDENTIFIER ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
 | IDENTIFIER COLON type ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
 | IDENTIFIER COLON type ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
 //| IDENTIFIER QUESTION_MARK COLON type
