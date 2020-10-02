@@ -15,50 +15,36 @@
 //
 
 
-#ifndef SILICON_BLOCK_H
-#define SILICON_BLOCK_H
+#ifndef SILICON_INTERFACE_H
+#define SILICON_INTERFACE_H
 
 
-#include <vector>
-#include <map>
-#include <llvm/IR/Instructions.h>
 #include "Node.h"
+#include "Type.h"
 
 
 namespace silicon::ast {
 
-    class Block : public Node {
+    class Interface : public Node {
     private:
-        Block *parent;
+        std::string name;
+        std::vector<std::pair<std::string, ast::Type *>> properties;
 
-        std::vector<Node *> statements;
-
-        std::map<std::string, llvm::AllocaInst *> variables;
-
-        explicit Block(Block *parent = nullptr);
+        explicit Interface(std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
 
     public:
-        static Block *create(compiler::Context *ctx, Block *parent = nullptr);
+        static Interface *
+        create(compiler::Context *ctx, std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
 
-        Block *getParent();
-
-        Block *setStatements(const std::vector<Node *> &nodes);
-
-        Block *push(Node *statement);
-
-        bool allocated(const std::string &name);
-
-        llvm::AllocaInst *get_alloca(const std::string &name);
-
-        llvm::Value *alloc(compiler::Context *ctx, const std::string &name, llvm::Type *type);
+        long property_index(const std::string &property);
 
     };
 
 }
 
 
-#endif //SILICON_BLOCK_H
+#endif //SILICON_INTERFACE_H

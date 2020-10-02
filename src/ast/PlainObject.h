@@ -1,5 +1,5 @@
 //
-//   Copyright 2020 Ardalan Amini
+//   Copyright 10/2/20 Ardalan Amini
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -15,40 +15,32 @@
 //
 
 
-#ifndef SILICON_VARIABLE_H
-#define SILICON_VARIABLE_H
+#ifndef SILICON_PLAINOBJECT_H
+#define SILICON_PLAINOBJECT_H
 
 
 #include "Node.h"
+#include <map>
 
 
 namespace silicon::ast {
 
-    class Variable : public Node {
+    class PlainObject : public Node {
     private:
-        std::string name;
-        Node *context;
+        std::map<std::string, Node *> value;
 
-        explicit Variable(std::string name, Node *context = nullptr);
-
-        uint64_t element_index(compiler::Context *ctx);
+        explicit PlainObject(std::map<std::string, Node *> value);
 
     public:
-        static Node *create(compiler::Context *ctx, const std::string& name, Node *context = nullptr);
+        static Node *create(compiler::Context *ctx, std::map<std::string, Node *>);
 
         llvm::Value *codegen(compiler::Context *ctx) override;
 
         node_t type() override;
-
-        std::string getName();
-
-        llvm::Type *getType(compiler::Context *ctx);
-
-        llvm::Value *get_pointer(compiler::Context *ctx);
 
     };
 
 }
 
 
-#endif //SILICON_VARIABLE_H
+#endif //SILICON_PLAINOBJECT_H

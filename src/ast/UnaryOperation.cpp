@@ -87,7 +87,7 @@ llvm::Value *silicon::ast::UnaryOperation::increment(compiler::Context *ctx) {
             );
     }
 
-    ctx->store(var->getName(), operation);
+    ctx->store(operation, var->get_pointer(ctx));
 
     if (suffix) return l;
 
@@ -132,7 +132,7 @@ llvm::Value *silicon::ast::UnaryOperation::decrement(compiler::Context *ctx) {
             );
     }
 
-    ctx->store(var->getName(), operation);
+    ctx->store(operation, var->get_pointer(ctx));
 
     if (suffix) return l;
 

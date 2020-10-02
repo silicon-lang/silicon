@@ -17,6 +17,7 @@
 
 #include "utils.h"
 #include <llvm/IR/Function.h>
+#include <regex>
 
 
 std::string silicon::replace_all(std::string str, const std::string &from, const std::string &to) {
@@ -31,6 +32,11 @@ std::string silicon::replace_all(std::string str, const std::string &from, const
     return str;
 }
 
+bool silicon::is_interface(llvm::Type *type) {
+    // TODO: for now
+    return type->isStructTy();
+}
+
 bool silicon::compare_types(llvm::Type *type1, llvm::Type *type2) {
     if (type1->isPointerTy()) {
         return type2->isPointerTy()
@@ -41,6 +47,21 @@ bool silicon::compare_types(llvm::Type *type1, llvm::Type *type2) {
         return type2->isArrayTy()
                && type1->getArrayNumElements() == type2->getArrayNumElements()
                && compare_types(type1->getArrayElementType(), type2->getArrayElementType());
+    }
+
+    if (type1->isStructTy()) {
+        if (!type2->isStructTy()) return false;
+
+        // TODO: is this safe?
+        // if (type1->getStructName() == type2->getStructName()) return true;
+
+        if (type1->getStructNumElements() != type2->getStructNumElements()) return false;
+
+        for (unsigned i = 0; i < type1->getStructNumElements(); i++) {
+            if (!compare_types(type1->getStructElementType(i), type2->getStructElementType(i))) return false;
+        }
+
+        return true;
     }
 
     if (type1->isVoidTy()) return type2->isVoidTy();
@@ -64,6 +85,14 @@ bool silicon::compare_types(llvm::Value *value1, llvm::Value *value2) {
 }
 
 std::string silicon::parse_type(llvm::Type *type) {
+    if (type->isStructTy()) {
+        std::regex regex(".*\\.(.*)");
+        std::cmatch match;
+        std::regex_match(type->getStructName().str().c_str(), match, regex);
+
+        return match[1];
+    }
+
     if (type->isVoidTy()) return "void";
 
     if (type->isIntegerTy()) {

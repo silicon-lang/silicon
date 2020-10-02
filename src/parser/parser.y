@@ -18,6 +18,7 @@
 
 #include "ast/Node.h"
 #include "ast/Type.h"
+#include "ast/Interface.h"
 #include "ast/Function.h"
 #include "ast/Prototype.h"
 #include "ast/If.h"
@@ -87,6 +88,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token FUNCTION "fn"
 %token RETURN "return"
 %token IF "if"
+%token INTERFACE "interface"
 %token ELSE "else"
 %token LOOP "loop"
 %token WHILE "while"
@@ -153,19 +155,35 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // Types
 // --------------------------------------------------
 
-%type<std::vector<silicon::ast::Node *>> statements scoped_statements scoped_statements_ arguments
-%type<std::vector<silicon::ast::Node *>> arguments_ variable_definitions
-%type<silicon::ast::Node *> statement export_statement extern_statement if_statement expression
-%type<silicon::ast::Node *> expression_ operation binary_operation unary_operation variable_definition variable_definition_
-%type<silicon::ast::Node *> literal
+%type<std::vector<silicon::ast::Node *>> statements scoped_statements scoped_statement arguments arguments_
+%type<std::vector<silicon::ast::Node *>> variable_definitions
+
+%type<silicon::ast::Node *> statement export_statement extern_statement if_statement expression expression_ operation
+%type<silicon::ast::Node *> binary_operation unary_operation variable_definition variable_definition_ literal plain_object
+
+%type<silicon::ast::Interface *> interface_definition
+
 %type<silicon::ast::Function *> function_definition
+
 %type<silicon::ast::Prototype *> function_declaration variadic_function_declaration
+
 %type<silicon::ast::If *> if_statement_
+
 %type<silicon::ast::Loop *> loop_statement
+
 %type<silicon::ast::While *> while_statement do_while_statement
+
 %type<silicon::ast::For *> for_statement
 %type<silicon::ast::Type *> type
-%type<std::vector<std::pair<std::string, silicon::ast::Type *>>> arguments_definition arguments_definition_ variadic_arguments_declaration
+
+%type<std::vector<std::pair<std::string, silicon::ast::Type *>>> arguments_definition arguments_definition_ interface_properties
+%type<std::vector<std::pair<std::string, silicon::ast::Type *>>> variadic_arguments_declaration
+
+%type<std::pair<std::string, silicon::ast::Type *>> interface_property
+
+%type<std::map<std::string, silicon::ast::Node *>> object_properties
+
+%type<std::pair<std::string, silicon::ast::Node *>> object_property
 
 // --------------------------------------------------
 // Precedences
@@ -235,15 +253,16 @@ statements
 statement
 : export_statement { $$ = $1; }
 | extern_statement { $$ = $1; }
+| interface_definition { $$ = $1; }
 | function_definition { $$ = $1; }
 ;
 
 scoped_statements
 : %empty { $$ = { }; }
-| scoped_statements scoped_statements_ { $1.insert($1.end(), $2.begin(), $2.end()); $$ = $1; }
+| scoped_statements scoped_statement { $1.insert($1.end(), $2.begin(), $2.end()); $$ = $1; }
 ;
 
-scoped_statements_
+scoped_statement
 : variable_definitions SEMICOLON { $$ = $1; }
 | if_statement { $$ = { $1 }; }
 | loop_statement { $$ = { $1 }; }
@@ -324,6 +343,7 @@ if_statement_
 
 expression
 : RETURN expression_ { $$ = ctx.def_ret($2); }
+| RETURN plain_object { $$ = ctx.def_ret($2); }
 | RETURN { $$ = ctx.def_ret(); }
 | BREAK { $$ = { ctx.def_break() }; }
 | CONTINUE { $$ = ctx.def_continue(); }
@@ -337,7 +357,11 @@ expression_
 | IDENTIFIER OPEN_PAREN arguments CLOSE_PAREN { $$ = ctx.call_func($1, $3); }
 | OPEN_PAREN expression_ CLOSE_PAREN { $$ = $2; }
 | expression_ QUESTION_MARK expression_ COLON expression_ { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| expression_ QUESTION_MARK plain_object COLON expression_ { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| expression_ QUESTION_MARK expression_ COLON plain_object { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| expression_ QUESTION_MARK plain_object COLON plain_object { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
 | expression_ AS type { $$ = ctx.def_cast($1, $3); }
+| expression_ DOT IDENTIFIER { $$ = ctx.var($3, $1); }
 ;
 
 // --------------------------------------------------
@@ -351,6 +375,7 @@ operation
 
 binary_operation
 : expression_ ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
+| expression_ ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
 | expression_ STAR expression_ { $$ = ctx.def_op(silicon::binary_operation_t::STAR, $1, $3); }
 | expression_ SLASH expression_ { $$ = ctx.def_op(silicon::binary_operation_t::SLASH, $1, $3); }
 | expression_ PERCENT expression_ { $$ = ctx.def_op(silicon::binary_operation_t::PERCENT, $1, $3); }
@@ -398,6 +423,23 @@ unary_operation
 ;
 
 // --------------------------------------------------
+// Grammar -> Interfaces
+// --------------------------------------------------
+
+interface_definition
+: INTERFACE IDENTIFIER OPEN_CURLY interface_properties CLOSE_CURLY { $$ = ctx.def_interface($2, $4); }
+;
+
+interface_properties
+: interface_property { $$ = { $1 }; }
+| interface_properties interface_property { $1.push_back($2); $$ = $1; }
+;
+
+interface_property
+: IDENTIFIER COLON type SEMICOLON { $$ = {$1, $3}; }
+;
+
+// --------------------------------------------------
 // Grammar -> Variables
 // --------------------------------------------------
 
@@ -412,9 +454,12 @@ variable_definition
 
 variable_definition_
 : IDENTIFIER ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
+| IDENTIFIER ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
 | IDENTIFIER COLON type ASSIGN expression_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
+| IDENTIFIER COLON type ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
 //| IDENTIFIER QUESTION_MARK COLON type
 //| IDENTIFIER QUESTION_MARK COLON type ASSIGN expression_
+//| IDENTIFIER QUESTION_MARK COLON type ASSIGN plain_object
 ;
 
 // --------------------------------------------------
@@ -461,7 +506,9 @@ arguments
 
 arguments_
 : expression_ { $$ = { $1 }; }
+| plain_object { $$ = { $1 }; }
 | arguments_ COMMA expression_ { $1.push_back($3); $$ = $1; }
+| arguments_ COMMA plain_object { $1.push_back($3); $$ = $1; }
 ;
 
 // --------------------------------------------------
@@ -473,6 +520,25 @@ literal
 | BOOLEAN_LITERAL { $$ = ctx.bool_lit($1); }
 | NUMBER_LITERAL { $$ = ctx.num_lit($1); }
 | STRING_LITERAL { $$ = ctx.string_lit($1); }
+//| plain_object { $$ = $1; }
+;
+
+// --------------------------------------------------
+// Grammar -> Literals -> Objects
+// --------------------------------------------------
+
+plain_object
+: OPEN_CURLY object_properties CLOSE_CURLY { $$ = ctx.plain_object($2); }
+;
+
+object_properties
+: object_property { $$ = { $1 }; }
+| object_properties COMMA object_property { $1[$3.first] = $3.second; $$ = $1; }
+;
+
+object_property
+: IDENTIFIER COLON expression_ { $$ = {$1, $3}; }
+| IDENTIFIER COLON plain_object { $$ = {$1, $3}; }
 ;
 
 // --------------------------------------------------
@@ -533,6 +599,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 "fn" { return s(Parser::make_FUNCTION); }
 "return" { return s(Parser::make_RETURN); }
 "if" { return s(Parser::make_IF); }
+"interface" { return s(Parser::make_INTERFACE); }
 "else" { return s(Parser::make_ELSE); }
 "loop" { return s(Parser::make_LOOP); }
 "while" { return s(Parser::make_WHILE); }

@@ -55,8 +55,9 @@ llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
 
     // Record the function arguments in the NamedValues map.
     for (auto &Arg : function->args()) {
-        ctx->alloc(Arg.getName(), Arg.getType());
-        ctx->store(Arg.getName(), &Arg);
+        auto *alloca = ctx->alloc(Arg.getName(), Arg.getType());
+
+        ctx->store(&Arg, alloca);
     }
 
     llvm::Type *return_type = prototype->getReturnType(ctx);

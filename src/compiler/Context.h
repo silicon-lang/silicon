@@ -31,9 +31,11 @@
 #include "ast/Null.h"
 #include "ast/BooleanLiteral.h"
 #include "ast/NumberLiteral.h"
+#include "ast/PlainObject.h"
 #include "ast/StringLiteral.h"
 #include "ast/VariableDefinition.h"
 #include "ast/Variable.h"
+#include "ast/Interface.h"
 #include "ast/Prototype.h"
 #include "ast/Function.h"
 #include "ast/Return.h"
@@ -70,6 +72,7 @@ namespace silicon::compiler {
         loop_points_t *loop_points = nullptr;
 
         std::map<std::string, llvm::Type *> types;
+        std::map<std::string, ast::Interface *> interfaces;
 
         explicit Context(const std::string &filename);
 
@@ -103,11 +106,18 @@ namespace silicon::compiler {
 
         ast::Node *num_lit(std::string value);
 
+        ast::Node *plain_object(std::map<std::string, ast::Node *> value);
+
         ast::Node *string_lit(std::string value);
 
-        ast::Node *var(const std::string &name);
+        ast::Node *var(const std::string &name, ast::Node *context = nullptr);
 
         ast::Node *def_var(const std::string &name, ast::Type *type = nullptr);
+
+        ast::Interface *interface(const std::string &name);
+
+        ast::Interface *
+        def_interface(const std::string &name, std::vector<std::pair<std::string, ast::Type *>> properties);
 
         static std::pair<std::string, ast::Type *> def_arg(const std::string &name, ast::Type *type);
 
@@ -152,9 +162,9 @@ namespace silicon::compiler {
 
         llvm::Value *alloc(const std::string &name, llvm::Type *type);
 
-        llvm::Value *store(const std::string &name, llvm::Value *value);
+        llvm::StoreInst *store(llvm::Value *value, llvm::Value *ptr);
 
-        llvm::Value *load(const std::string &name);
+        llvm::LoadInst *load(llvm::Value *ptr, const std::string &name = "");
 
         friend class ast::Block;
     };

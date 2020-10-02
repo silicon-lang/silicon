@@ -46,12 +46,15 @@ namespace silicon {
 
         TYPE,
 
+        INTERFACE,
+
         BLOCK,
 
         NULL_PTR,
         BOOLEAN_LIT,
         NUMBER_LIT,
         STRING_LIT,
+        PLAIN_OBJECT,
 
         VARIABLE_DEFINITION,
         VARIABLE,
@@ -108,6 +111,8 @@ namespace silicon {
     };
 
     std::string replace_all(std::string str, const std::string &from, const std::string &to);
+
+    bool is_interface(llvm::Type *type);
 
     bool compare_types(llvm::Type *type1, llvm::Type *type2);
 

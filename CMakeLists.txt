@@ -71,10 +71,12 @@ add_executable(silicon
         src/compiler/Context.cpp src/compiler/Context.h
         src/ast/Node.cpp src/ast/Node.h
         src/ast/Type.cpp src/ast/Type.h
+        src/ast/Interface.cpp src/ast/Interface.h
         src/ast/Block.cpp src/ast/Block.h
         src/ast/Null.cpp src/ast/Null.h
         src/ast/BooleanLiteral.cpp src/ast/BooleanLiteral.h
         src/ast/NumberLiteral.cpp src/ast/NumberLiteral.h
+        src/ast/PlainObject.cpp src/ast/PlainObject.h
         src/ast/StringLiteral.cpp src/ast/StringLiteral.h
         src/ast/VariableDefinition.cpp src/ast/VariableDefinition.h
         src/ast/Variable.cpp src/ast/Variable.h

@@ -36,7 +36,7 @@ namespace silicon::ast {
         bool is_extern = false;
         bool is_variadic = false;
 
-        llvm::Function::LinkageTypes linkage = llvm::Function::InternalLinkage;
+        llvm::Function::LinkageTypes linkage = llvm::Function::PrivateLinkage;
 
         Prototype(std::string name, std::vector<std::pair<std::string, ast::Type *>> args,
                   ast::Type *return_type);

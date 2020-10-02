@@ -129,16 +129,37 @@ silicon::ast::Node *silicon::compiler::Context::num_lit(std::string value) {
     return ast::NumberLiteral::create(this, MOVE(value));
 }
 
+silicon::ast::Node *silicon::compiler::Context::plain_object(std::map<std::string, ast::Node *> value) {
+    return ast::PlainObject::create(this, MOVE(value));
+}
+
 silicon::ast::Node *silicon::compiler::Context::string_lit(std::string value) {
     return ast::StringLiteral::create(this, MOVE(value));
 }
 
-silicon::ast::Node *silicon::compiler::Context::var(const std::string &name) {
-    return ast::Variable::create(this, name);
+silicon::ast::Node *silicon::compiler::Context::var(const std::string &name, ast::Node *context) {
+    return ast::Variable::create(this, name, context);
 }
 
 silicon::ast::Node *silicon::compiler::Context::def_var(const std::string &name, ast::Type *type) {
     return ast::VariableDefinition::create(this, name, type);
+}
+
+silicon::ast::Interface *silicon::compiler::Context::interface(const std::string &name) {
+    auto interface = interfaces.find(name);
+
+    return interface->second;
+}
+
+silicon::ast::Interface *silicon::compiler::Context::def_interface(const std::string &name,
+                                                                   std::vector<std::pair<std::string, ast::Type *>> properties) {
+    if (interfaces.count(name) > 0) fail_codegen("TypeError: Interface <" + name + "> can not be defined again.");
+
+    auto *interface = ast::Interface::create(this, name, MOVE(properties));
+
+    interfaces.insert({name, interface});
+
+    return interface;
 }
 
 std::pair<std::string, silicon::ast::Type *>
@@ -228,10 +249,10 @@ llvm::Value *silicon::compiler::Context::alloc(const std::string &name, llvm::Ty
     return block->alloc(this, name, type);
 }
 
-llvm::Value *silicon::compiler::Context::store(const std::string &name, llvm::Value *value) {
-    return block->store(this, name, value);
+llvm::StoreInst *silicon::compiler::Context::store(llvm::Value *value, llvm::Value *ptr) {
+    return llvm_ir_builder.CreateStore(value, ptr);
 }
 
-llvm::Value *silicon::compiler::Context::load(const std::string &name) {
-    return block->load(this, name);
+llvm::LoadInst *silicon::compiler::Context::load(llvm::Value *ptr, const std::string &name) {
+    return llvm_ir_builder.CreateLoad(ptr, name);
 }

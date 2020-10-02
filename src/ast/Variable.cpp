@@ -19,11 +19,11 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Variable::Variable(std::string name) : name(MOVE(name)) {
+silicon::ast::Variable::Variable(std::string name, Node *context) : name(MOVE(name)), context(context) {
 }
 
-silicon::ast::Node *silicon::ast::Variable::create(compiler::Context *ctx, const std::string &name) {
-    auto *node = new Variable(name);
+silicon::ast::Node *silicon::ast::Variable::create(compiler::Context *ctx, const std::string &name, Node *context) {
+    auto *node = new Variable(name, context);
 
     node->loc = parse_location(ctx->loc);
 
@@ -31,7 +31,20 @@ silicon::ast::Node *silicon::ast::Variable::create(compiler::Context *ctx, const
 }
 
 llvm::Value *silicon::ast::Variable::codegen(compiler::Context *ctx) {
-    return ctx->load(name);
+    if (context) return ctx->load(get_pointer(ctx));
+
+    auto *alloca = ctx->get_alloca(name);
+
+    if (!alloca)
+        fail_codegen("Variable <" + name + "> is not allocated yet");
+
+    llvm::LoadInst *load = ctx->load(alloca, name);
+
+    unsigned alignment = alloca->getAlignment();
+
+    if (alignment > 0) load->setAlignment(alignment);
+
+    return load;
 }
 
 silicon::node_t silicon::ast::Variable::type() {
@@ -40,4 +53,57 @@ silicon::node_t silicon::ast::Variable::type() {
 
 std::string silicon::ast::Variable::getName() {
     return name;
+}
+
+llvm::Type *silicon::ast::Variable::getType(compiler::Context *ctx) {
+    if (context) {
+        uint64_t index = element_index(ctx);
+        auto *var = (Variable *) context;
+        llvm::Type *type = var->getType(ctx);
+
+        return type->getStructElementType(index);
+    }
+
+    return ctx->get_alloca(name)->getAllocatedType();
+}
+
+llvm::Value *silicon::ast::Variable::get_pointer(compiler::Context *ctx) {
+    if (!context) {
+        auto *alloca = ctx->get_alloca(name);
+
+        if (!alloca)
+            fail_codegen("Variable <" + name + "> is not allocated yet");
+
+        return alloca;
+    }
+
+    uint64_t index = element_index(ctx);
+    auto *var = (Variable *) context;
+
+    return ctx->llvm_ir_builder.CreateStructGEP(var->get_pointer(ctx), index);
+}
+
+uint64_t silicon::ast::Variable::element_index(silicon::compiler::Context *ctx) {
+    if (!context->type(node_t::VARIABLE))
+        fail_codegen("Can not access property <" + name + "> of non variable");
+
+    auto *var = (Variable *) context;
+
+    llvm::Type *type = var->getType(ctx);
+    std::string type_name = parse_type(type);
+
+    if (!is_interface(type))
+        fail_codegen("Can not access property <" + name + "> of <" + type_name + ">");
+
+    Interface *interface = ctx->interface(type_name);
+
+    if (!interface)
+        fail_codegen("Can not find interface <" + type_name + ">");
+
+    long index = interface->property_index(name);
+
+    if (index == -1)
+        fail_codegen("Interface <" + type_name + "> has no property named <" + name + ">");
+
+    return index;
 }
