@@ -50,9 +50,10 @@ bool silicon::compare_types(llvm::Type *type1, llvm::Type *type2) {
     }
 
     if (type1->isStructTy()) {
-        if (type1->getStructName() == type2->getStructName()) return true;
-
         if (!type2->isStructTy()) return false;
+
+        // TODO: is this safe?
+        // if (type1->getStructName() == type2->getStructName()) return true;
 
         if (type1->getStructNumElements() != type2->getStructNumElements()) return false;
 

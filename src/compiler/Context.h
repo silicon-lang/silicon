@@ -31,6 +31,7 @@
 #include "ast/Null.h"
 #include "ast/BooleanLiteral.h"
 #include "ast/NumberLiteral.h"
+#include "ast/PlainObject.h"
 #include "ast/StringLiteral.h"
 #include "ast/VariableDefinition.h"
 #include "ast/Variable.h"
@@ -104,6 +105,8 @@ namespace silicon::compiler {
         ast::Node *bool_lit(bool value);
 
         ast::Node *num_lit(std::string value);
+
+        ast::Node *plain_object(std::map<std::string, ast::Node *> value);
 
         ast::Node *string_lit(std::string value);
 

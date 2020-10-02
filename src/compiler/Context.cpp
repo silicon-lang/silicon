@@ -129,6 +129,10 @@ silicon::ast::Node *silicon::compiler::Context::num_lit(std::string value) {
     return ast::NumberLiteral::create(this, MOVE(value));
 }
 
+silicon::ast::Node *silicon::compiler::Context::plain_object(std::map<std::string, ast::Node *> value) {
+    return ast::PlainObject::create(this, MOVE(value));
+}
+
 silicon::ast::Node *silicon::compiler::Context::string_lit(std::string value) {
     return ast::StringLiteral::create(this, MOVE(value));
 }

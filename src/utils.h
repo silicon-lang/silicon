@@ -54,6 +54,7 @@ namespace silicon {
         BOOLEAN_LIT,
         NUMBER_LIT,
         STRING_LIT,
+        PLAIN_OBJECT,
 
         VARIABLE_DEFINITION,
         VARIABLE,

@@ -38,7 +38,7 @@ llvm::Value *silicon::ast::Null::codegen(compiler::Context *ctx) {
 
     if (!t) t = ctx->expected_type;
 
-    if (!t) fail_codegen("Error: Can't detect suitable type");
+    if (!t) fail_codegen("TypeError: Can't detect suitable type");
 
     return ctx->load(llvm::ConstantPointerNull::get(t->getPointerTo()));
 }

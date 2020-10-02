@@ -76,6 +76,7 @@ add_executable(silicon
         src/ast/Null.cpp src/ast/Null.h
         src/ast/BooleanLiteral.cpp src/ast/BooleanLiteral.h
         src/ast/NumberLiteral.cpp src/ast/NumberLiteral.h
+        src/ast/PlainObject.cpp src/ast/PlainObject.h
         src/ast/StringLiteral.cpp src/ast/StringLiteral.h
         src/ast/VariableDefinition.cpp src/ast/VariableDefinition.h
         src/ast/Variable.cpp src/ast/Variable.h
