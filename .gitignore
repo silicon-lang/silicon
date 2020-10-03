@@ -32,8 +32,8 @@
 *.app
 
 .idea/
-
-cmake-build-debug/
+cmake-build-*/
+build/
 
 examples/*
 !examples/*.si
