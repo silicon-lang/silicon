@@ -159,7 +159,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
  global_statements statements statement scope arguments arguments_ variable_definitions
 
 %type<silicon::ast::Node *>
- global_statement export_statement extern_statement if_statement expression value operation binary_operation
+ global_statement export_statement extern_statement if_statement expression value value_ operation binary_operation
  unary_operation variable_definition variable_definition_ literal plain_object function_call inline_if
 
 %type<silicon::ast::Interface *> interface_definition
@@ -179,11 +179,11 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %type<silicon::ast::Type *> type
 
 %type<std::vector<std::pair<std::string, silicon::ast::Type *>>>
- arguments_definition arguments_definition_ interface_properties variadic_arguments_declaration
+ arguments_definition arguments_definition_ interface_properties variadic_arguments_declaration variadic_arguments_declaration_
 
 %type<std::pair<std::string, silicon::ast::Type *>> interface_property
 
-%type<std::map<std::string, silicon::ast::Node *>> object_properties
+%type<std::map<std::string, silicon::ast::Node *>> object_properties object_properties_
 
 %type<std::pair<std::string, silicon::ast::Node *>> object_property
 
@@ -271,11 +271,11 @@ statement
 | while_statement { $$ = { $1 }; }
 | do_while_statement { $$ = { $1 }; }
 | for_statement { $$ = { $1 }; }
-| expression { $$ = { $1 }; }
+| expression SEMICOLON { $$ = { $1 }; }
 ;
 
 scope
-: expression { $$ = { $1 }; }
+: expression SEMICOLON { $$ = { $1 }; }
 | OPEN_CURLY statements CLOSE_CURLY { $$ = $2; }
 ;
 
@@ -284,13 +284,12 @@ scope
 // --------------------------------------------------
 
 expression
-: RETURN value SEMICOLON { $$ = ctx.def_ret($2); }
-| RETURN plain_object SEMICOLON { $$ = ctx.def_ret($2); }
-| RETURN SEMICOLON { $$ = ctx.def_ret(); }
-| BREAK SEMICOLON { $$ = { ctx.def_break() }; }
-| CONTINUE SEMICOLON { $$ = ctx.def_continue(); }
-| operation SEMICOLON { $$ = $1; }
-| function_call SEMICOLON { $$ = $1; }
+: RETURN value_ { $$ = ctx.def_ret($2); }
+| RETURN { $$ = ctx.def_ret(); }
+| BREAK { $$ = { ctx.def_break() }; }
+| CONTINUE { $$ = ctx.def_continue(); }
+| operation { $$ = $1; }
+| function_call { $$ = $1; }
 ;
 
 value
@@ -304,6 +303,11 @@ value
 | value DOT IDENTIFIER { $$ = ctx.var($3, $1); }
 ;
 
+value_
+: value %prec RETURN { $$ = $1; }
+| plain_object { $$ = $1; }
+;
+
 // --------------------------------------------------
 // Grammar -> Operations
 // --------------------------------------------------
@@ -314,8 +318,7 @@ operation
 ;
 
 binary_operation
-: value ASSIGN value { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
-| value ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
+: value ASSIGN value_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
 | value STAR value { $$ = ctx.def_op(silicon::binary_operation_t::STAR, $1, $3); }
 | value SLASH value { $$ = ctx.def_op(silicon::binary_operation_t::SLASH, $1, $3); }
 | value PERCENT value { $$ = ctx.def_op(silicon::binary_operation_t::PERCENT, $1, $3); }
@@ -422,10 +425,7 @@ if_statement_
 ;
 
 inline_if
-: value QUESTION_MARK value COLON value { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
-| value QUESTION_MARK plain_object COLON value { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
-| value QUESTION_MARK value COLON plain_object { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
-| value QUESTION_MARK plain_object COLON plain_object { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+: value QUESTION_MARK value_ COLON value_ { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
 ;
 
 // --------------------------------------------------
@@ -459,13 +459,10 @@ variable_definition
 ;
 
 variable_definition_
-: IDENTIFIER ASSIGN value { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
-| IDENTIFIER ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
-| IDENTIFIER COLON type ASSIGN value { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
-| IDENTIFIER COLON type ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
+: IDENTIFIER ASSIGN value_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1), $3); }
+| IDENTIFIER COLON type ASSIGN value_ { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, ctx.def_var($1, $3), $5); }
 //| IDENTIFIER QUESTION_MARK COLON type
-//| IDENTIFIER QUESTION_MARK COLON type ASSIGN value
-//| IDENTIFIER QUESTION_MARK COLON type ASSIGN plain_object
+//| IDENTIFIER QUESTION_MARK COLON type ASSIGN value_
 ;
 
 // --------------------------------------------------
@@ -497,6 +494,7 @@ function_call
 arguments_definition
 : %empty { $$ = { }; }
 | arguments_definition_ { $$ = $1; }
+| arguments_definition_ COMMA { $$ = $1; }
 ;
 
 arguments_definition_
@@ -505,6 +503,11 @@ arguments_definition_
 ;
 
 variadic_arguments_declaration
+: variadic_arguments_declaration_ { $$ = $1; }
+| variadic_arguments_declaration_ COMMA { $$ = $1; }
+;
+
+variadic_arguments_declaration_
 : TRIPLE_DOT { $$ = { }; }
 | arguments_definition_ COMMA TRIPLE_DOT { $$ = $1; }
 ;
@@ -512,13 +515,12 @@ variadic_arguments_declaration
 arguments
 : %empty { $$ = { }; }
 | arguments_ { $$ = $1; }
+| arguments_ COMMA { $$ = $1; }
 ;
 
 arguments_
-: value { $$ = { $1 }; }
-| plain_object { $$ = { $1 }; }
-| arguments_ COMMA value { $1.push_back($3); $$ = $1; }
-| arguments_ COMMA plain_object { $1.push_back($3); $$ = $1; }
+: value_ { $$ = { $1 }; }
+| arguments_ COMMA value_ { $1.push_back($3); $$ = $1; }
 ;
 
 // --------------------------------------------------
@@ -530,7 +532,6 @@ literal
 | BOOLEAN_LITERAL { $$ = ctx.bool_lit($1); }
 | NUMBER_LITERAL { $$ = ctx.num_lit($1); }
 | STRING_LITERAL { $$ = ctx.string_lit($1); }
-//| plain_object { $$ = $1; }
 ;
 
 // --------------------------------------------------
@@ -542,13 +543,17 @@ plain_object
 ;
 
 object_properties
+: object_properties_ { $$ = $1; }
+| object_properties_ COMMA { $$ = $1; }
+;
+
+object_properties_
 : object_property { $$ = { $1 }; }
-| object_properties COMMA object_property { $1[$3.first] = $3.second; $$ = $1; }
+| object_properties_ COMMA object_property { $1[$3.first] = $3.second; $$ = $1; }
 ;
 
 object_property
-: IDENTIFIER COLON value { $$ = {$1, $3}; }
-| IDENTIFIER COLON plain_object { $$ = {$1, $3}; }
+: IDENTIFIER COLON value_ { $$ = {$1, $3}; }
 ;
 
 // --------------------------------------------------
