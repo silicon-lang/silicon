@@ -20,10 +20,16 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::While::While(Node *condition, std::vector<Node *> body) : condition(condition), body(MOVE(body)) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+While::While(Node *condition, vector<Node *> body) : condition(condition), body(MOVE(body)) {
 }
 
-silicon::ast::While *silicon::ast::While::create(compiler::Context *ctx, Node *condition, std::vector<Node *> body) {
+While *While::create(compiler::Context *ctx, Node *condition, vector<Node *> body) {
     auto *node = new While(condition, MOVE(body));
 
     node->loc = parse_location(ctx->loc);
@@ -31,7 +37,7 @@ silicon::ast::While *silicon::ast::While::create(compiler::Context *ctx, Node *c
     return node;
 }
 
-llvm::Value *silicon::ast::While::codegen(silicon::compiler::Context *ctx) {
+llvm::Value *While::codegen(Context *ctx) {
     // TODO: can cause problem if the condition is something like "i--"
 //    if (!hasBody()) return nullptr;
 
@@ -70,15 +76,15 @@ llvm::Value *silicon::ast::While::codegen(silicon::compiler::Context *ctx) {
     return nullptr;
 }
 
-silicon::node_t silicon::ast::While::type() {
+node_t While::type() {
     return node_t::WHILE;
 }
 
-llvm::Value *silicon::ast::While::conditionCodegen(compiler::Context *ctx) {
+llvm::Value *While::conditionCodegen(compiler::Context *ctx) {
     return ctx->def_cast(condition, ctx->bool_type())->codegen(ctx);
 }
 
-llvm::Value *silicon::ast::While::bodyCodegen(compiler::Context *ctx) {
+llvm::Value *While::bodyCodegen(compiler::Context *ctx) {
     ctx->operator++();
 
     ctx->statements(body);
@@ -90,12 +96,12 @@ llvm::Value *silicon::ast::While::bodyCodegen(compiler::Context *ctx) {
     return value;
 }
 
-silicon::ast::While *silicon::ast::While::makeDoWhile() {
+While *While::makeDoWhile() {
     is_do_while = true;
 
     return this;
 }
 
-bool silicon::ast::While::hasBody() {
-    return body.size() > 0;
+bool While::hasBody() {
+    return !body.empty();
 }

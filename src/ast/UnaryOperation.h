@@ -23,6 +23,8 @@
 
 
 namespace silicon::ast {
+    
+    using namespace compiler;
 
     class UnaryOperation : public Node {
     private:
@@ -32,18 +34,18 @@ namespace silicon::ast {
 
         UnaryOperation(unary_operation_t op, Node *node, bool suffix = false);
 
-        llvm::Value *increment(compiler::Context *ctx);
+        llvm::Value *increment(Context *ctx);
 
-        llvm::Value *decrement(compiler::Context *ctx);
+        llvm::Value *decrement(Context *ctx);
 
-        llvm::Value *negate(compiler::Context *ctx);
+        llvm::Value *negate(Context *ctx);
 
-        llvm::Value *not_op(compiler::Context *ctx);
+        llvm::Value *not_op(Context *ctx);
 
     public:
-        static Node *create(compiler::Context *ctx, unary_operation_t op, Node *node, bool suffix = false);
+        static Node *create(Context *ctx, unary_operation_t op, Node *node, bool suffix = false);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

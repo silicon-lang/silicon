@@ -19,10 +19,16 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Type::Type(std::function<llvm::Type *()> llvm_type) : llvm_type(MOVE(llvm_type)) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Type::Type(function<llvm::Type *()> llvm_type) : llvm_type(MOVE(llvm_type)) {
 }
 
-silicon::ast::Type *silicon::ast::Type::create(silicon::compiler::Context *ctx, llvm::Type *type) {
+Type *Type::create(Context *ctx, llvm::Type *type) {
     auto *node = new Type([type]() -> llvm::Type * {
         return type;
     });
@@ -32,8 +38,8 @@ silicon::ast::Type *silicon::ast::Type::create(silicon::compiler::Context *ctx, 
     return node;
 }
 
-silicon::ast::Type *silicon::ast::Type::create(silicon::compiler::Context *ctx, const std::string &name) {
-    std::string location = parse_location(ctx->loc);
+Type *Type::create(Context *ctx, const string &name) {
+    string location = parse_location(ctx->loc);
 
     auto *node = new Type([ctx, location, name]() -> llvm::Type * {
         if (name.empty()) codegen_error(location, "TypeError: Type <" + name + "> not found.");
@@ -50,18 +56,18 @@ silicon::ast::Type *silicon::ast::Type::create(silicon::compiler::Context *ctx, 
     return node;
 }
 
-llvm::Type *silicon::ast::Type::codegen(compiler::Context *ctx) {
+llvm::Type *Type::codegen(Context *ctx) {
     return llvm_type();
 }
 
-silicon::node_t silicon::ast::Type::type() {
+node_t Type::type() {
     return node_t::TYPE;
 }
 
-bool silicon::ast::Type::type(silicon::node_t t) {
+bool Type::type(node_t t) {
     return type() == t;
 }
 
-void silicon::ast::Type::fail_codegen(const std::string &error) noexcept {
+void Type::fail_codegen(const string &error) noexcept {
     codegen_error(loc, error);
 }

@@ -23,30 +23,32 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class For : public Node {
     private:
-        Node *definition;
-        Node *condition;
-        Node *stepper;
-        std::vector<Node *> body;
+        Node *definition, *condition, *stepper;
+        vector<Node *> body;
 
-        For(Node *definition, Node *condition, Node *stepper, std::vector<Node *> body);
+        For(Node *definition, Node *condition, Node *stepper, vector<Node *> body);
 
-        llvm::Value *definitionCodegen(compiler::Context *ctx);
+        llvm::Value *definitionCodegen(Context *ctx);
 
-        llvm::Value *conditionCodegen(compiler::Context *ctx);
+        llvm::Value *conditionCodegen(Context *ctx);
 
-        llvm::Value *stepperCodegen(compiler::Context *ctx);
+        llvm::Value *stepperCodegen(Context *ctx);
 
-        llvm::Value *bodyCodegen(compiler::Context *ctx);
+        llvm::Value *bodyCodegen(Context *ctx);
 
     public:
-        static For *
-        create(compiler::Context *ctx, Node *definition, Node *condition, Node *stepper, std::vector<Node *> body);
+        static For *create(Context *ctx, Node *definition, Node *condition, Node *stepper, vector<Node *> body);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

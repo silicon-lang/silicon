@@ -24,22 +24,27 @@
 #include "utils.h"
 
 
+using namespace std;
+
+
 namespace silicon::compiler {
     class Context;
 }
 
 namespace silicon::ast {
 
+    using namespace compiler;
+
     class Node {
     protected:
-        std::string loc;
+        string loc;
 
     public:
         virtual ~Node() = default;
 
-        void fail_codegen(const std::string &error) noexcept __attribute__ ((__noreturn__));
+        void fail_codegen(const string &error) noexcept __attribute__ ((__noreturn__));
 
-        virtual llvm::Value *codegen(compiler::Context *ctx) = 0;
+        virtual llvm::Value *codegen(Context *ctx) = 0;
 
         virtual node_t type() = 0;
 

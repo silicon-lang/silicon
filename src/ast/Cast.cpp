@@ -19,12 +19,16 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Cast::Cast(Node *value, ast::Type *llvm_type) : value(value), llvm_type(llvm_type) {
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Cast::Cast(Node *value, Type *llvm_type) : value(value), llvm_type(llvm_type) {
     if (!llvm_type) silicon_error("Argument <llvm_type> is required");
 }
 
-silicon::ast::Node *
-silicon::ast::Cast::create(compiler::Context *ctx, Node *value, ast::Type *llvm_type) {
+Node *Cast::create(Context *ctx, Node *value, Type *llvm_type) {
     auto *node = new Cast(value, llvm_type);
 
     node->loc = parse_location(ctx->loc);
@@ -32,7 +36,7 @@ silicon::ast::Cast::create(compiler::Context *ctx, Node *value, ast::Type *llvm_
     return node;
 }
 
-llvm::Value *silicon::ast::Cast::codegen(compiler::Context *ctx) {
+llvm::Value *Cast::codegen(Context *ctx) {
     llvm::Value *v;
     llvm::Type *llvm_t = llvm_type->codegen(ctx);
 
@@ -85,6 +89,6 @@ llvm::Value *silicon::ast::Cast::codegen(compiler::Context *ctx) {
     );
 }
 
-silicon::node_t silicon::ast::Cast::type() {
+node_t Cast::type() {
     return node_t::CAST;
 }

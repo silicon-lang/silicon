@@ -19,10 +19,15 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::BooleanLiteral::BooleanLiteral(bool value) : value(value) {
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+BooleanLiteral::BooleanLiteral(bool value) : value(value) {
 }
 
-silicon::ast::Node *silicon::ast::BooleanLiteral::create(silicon::compiler::Context *ctx, bool value) {
+Node *BooleanLiteral::create(Context *ctx, bool value) {
     auto *node = new BooleanLiteral(value);
 
     node->loc = parse_location(ctx->loc);
@@ -30,10 +35,10 @@ silicon::ast::Node *silicon::ast::BooleanLiteral::create(silicon::compiler::Cont
     return node;
 }
 
-llvm::Value *silicon::ast::BooleanLiteral::codegen(compiler::Context *ctx) {
+llvm::Value *BooleanLiteral::codegen(Context *ctx) {
     return ctx->llvm_ir_builder.getInt1(value);
 }
 
-silicon::node_t silicon::ast::BooleanLiteral::type() {
+node_t BooleanLiteral::type() {
     return node_t::BOOLEAN_LIT;
 }

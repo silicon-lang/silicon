@@ -23,39 +23,43 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class If : public Node {
     private:
         Node *condition;
-        std::vector<Node *> then_statements;
-        std::vector<Node *> else_statements;
+        vector<Node *> then_statements, else_statements;
 
         bool is_inline = false;
 
-        If(Node *condition, std::vector<Node *> then_statements, std::vector<Node *> else_statements);
+        If(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements);
 
-        llvm::Value *inlineCodegen(compiler::Context *ctx);
+        llvm::Value *inlineCodegen(Context *ctx);
 
-        llvm::Value *conditionCodegen(compiler::Context *ctx);
+        llvm::Value *conditionCodegen(Context *ctx);
 
-        llvm::Value *thenCodegen(compiler::Context *ctx);
+        llvm::Value *thenCodegen(Context *ctx);
 
-        llvm::Value *elseCodegen(compiler::Context *ctx);
+        llvm::Value *elseCodegen(Context *ctx);
 
         bool hasThen();
 
         bool hasElse();
 
     public:
-        static If *create(compiler::Context *ctx, Node *condition, std::vector<Node *> then_statements,
-                            std::vector<Node *> else_statements = {});
+        static If *
+        create(Context *ctx, Node *condition, vector<Node *> then_statements, vector<Node *> else_statements = {});
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 
-        If *setElse(std::vector<Node *> statements);
+        If *setElse(vector<Node *> statements);
 
         If *makeInline();
 

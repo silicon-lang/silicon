@@ -24,6 +24,8 @@
 
 namespace silicon::ast {
 
+    using namespace compiler;
+
     class BooleanLiteral : public Node {
     private:
         bool value;
@@ -31,9 +33,9 @@ namespace silicon::ast {
         explicit BooleanLiteral(bool value);
 
     public:
-        static Node *create(compiler::Context *ctx, bool value);
+        static Node *create(Context *ctx, bool value);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

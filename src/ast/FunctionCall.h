@@ -23,19 +23,24 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class FunctionCall : public Node {
     private:
-        std::string callee;
-        std::vector<Node *> args;
+        string callee;
+        vector<Node *> args;
 
-        FunctionCall(std::string callee, std::vector<Node *> args);
+        FunctionCall(string callee, vector<Node *> args);
 
     public:
-        static Node *create(compiler::Context *ctx, std::string callee, std::vector<Node *> args);
+        static Node *create(Context *ctx, string callee, vector<Node *> args);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

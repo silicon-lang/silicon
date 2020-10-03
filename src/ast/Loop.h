@@ -22,20 +22,25 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class Loop : public Node {
     private:
-        std::vector<Node *> body;
+        vector<Node *> body;
 
-        explicit Loop(std::vector<Node *> body);
+        explicit Loop(vector<Node *> body);
 
-        llvm::Value *bodyCodegen(compiler::Context *ctx);
+        llvm::Value *bodyCodegen(Context *ctx);
 
     public:
-        static Loop *create(compiler::Context *ctx, std::vector<Node *> body);
+        static Loop *create(Context *ctx, vector<Node *> body);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

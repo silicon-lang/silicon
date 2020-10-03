@@ -22,18 +22,23 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class StringLiteral : public Node {
     private:
-        std::string value;
+        string value;
 
-        explicit StringLiteral(std::string value);
+        explicit StringLiteral(string value);
 
     public:
-        static Node *create(compiler::Context *ctx, std::string value);
+        static Node *create(Context *ctx, string value);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

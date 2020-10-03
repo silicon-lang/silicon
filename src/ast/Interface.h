@@ -23,24 +23,28 @@
 #include "Type.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class Interface : public Node {
     private:
-        std::string name;
-        std::vector<std::pair<std::string, ast::Type *>> properties;
+        string name;
+        vector<pair<string, Type *>> properties;
 
-        explicit Interface(std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
+        explicit Interface(string name, vector<pair<string, Type *>> properties);
 
     public:
-        static Interface *
-        create(compiler::Context *ctx, std::string name, std::vector<std::pair<std::string, ast::Type *>> properties);
+        static Interface *create(Context *ctx, string name, vector<pair<string, Type *>> properties);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 
-        long property_index(const std::string &property);
+        long property_index(const string &property);
 
     };
 

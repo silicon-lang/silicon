@@ -20,10 +20,13 @@
 #include <regex>
 
 
-std::string silicon::replace_all(std::string str, const std::string &from, const std::string &to) {
+using namespace std;
+
+
+string silicon::replace_all(string str, const string &from, const string &to) {
     size_t start_pos = 0;
 
-    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+    while ((start_pos = str.find(from, start_pos)) != string::npos) {
         str.replace(start_pos, from.length(), to);
 
         start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
@@ -84,11 +87,11 @@ bool silicon::compare_types(llvm::Value *value1, llvm::Value *value2) {
     return compare_types(type1, type2);
 }
 
-std::string silicon::parse_type(llvm::Type *type) {
+string silicon::parse_type(llvm::Type *type) {
     if (type->isStructTy()) {
-        std::regex regex(".*\\.(.*)");
-        std::cmatch match;
-        std::regex_match(type->getStructName().str().c_str(), match, regex);
+        regex re(".*\\.(.*)");
+        cmatch match;
+        regex_match(type->getStructName().str().c_str(), match, re);
 
         return match[1];
     }
@@ -100,7 +103,7 @@ std::string silicon::parse_type(llvm::Type *type) {
 
         if (bits == 1) return "bool";
 
-        return "i" + std::to_string(bits);
+        return "i" + to_string(bits);
     }
 
     if (type->isHalfTy()) return "f16";
@@ -115,24 +118,24 @@ std::string silicon::parse_type(llvm::Type *type) {
     return "unknown";
 }
 
-std::string silicon::parse_location(yy::location location) {
-    std::string l = (location.begin.filename ? location.begin.filename->c_str() : "(undefined)");
+string silicon::parse_location(yy::location location) {
+    string l = (location.begin.filename ? location.begin.filename->c_str() : "(undefined)");
 
-    l += ":" + std::to_string(location.begin.line);
+    l += ":" + to_string(location.begin.line);
 
-    l += ":" + std::to_string(location.begin.column) + "-" + std::to_string(location.end.column);
+    l += ":" + to_string(location.begin.column) + "-" + to_string(location.end.column);
 
     return l;
 }
 
-void silicon::codegen_error(const std::string &location, const std::string &error) noexcept {
-    std::cerr << location << ": " << error << std::endl;
+void silicon::codegen_error(const string &location, const string &error) noexcept {
+    cerr << location << ": " << error << endl;
 
     exit(1);
 }
 
-void silicon::silicon_error(const std::string &error) noexcept {
-    std::cerr << "Silicon: " << error << std::endl;
+void silicon::silicon_error(const string &error) noexcept {
+    cerr << "Silicon: " << error << endl;
 
     exit(1);
 }

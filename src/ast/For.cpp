@@ -19,21 +19,26 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::For::For(Node *definition, Node *condition, Node *stepper, std::vector<Node *> body) : definition(
-        definition), condition(condition), stepper(stepper), body(body) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+For::For(Node *definition, Node *condition, Node *stepper, vector<Node *> body) : definition(definition),
+                                                                                  condition(condition),
+                                                                                  stepper(stepper), body(MOVE(body)) {
 }
 
-silicon::ast::For *
-silicon::ast::For::create(compiler::Context *ctx, Node *definition, Node *condition, Node *stepper,
-                          std::vector<Node *> body) {
-    auto *node = new For(definition, condition, stepper, body);
+For *For::create(Context *ctx, Node *definition, Node *condition, Node *stepper, vector<Node *> body) {
+    auto *node = new For(definition, condition, stepper, MOVE(body));
 
     node->loc = parse_location(ctx->loc);
 
     return node;
 }
 
-llvm::Value *silicon::ast::For::codegen(compiler::Context *ctx) {
+llvm::Value *For::codegen(Context *ctx) {
     llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
 
     llvm::BasicBlock *preBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "pre_loop");
@@ -86,23 +91,23 @@ llvm::Value *silicon::ast::For::codegen(compiler::Context *ctx) {
     return nullptr;
 }
 
-silicon::node_t silicon::ast::For::type() {
+node_t For::type() {
     return node_t::FOR;
 }
 
-llvm::Value *silicon::ast::For::definitionCodegen(compiler::Context *ctx) {
+llvm::Value *For::definitionCodegen(Context *ctx) {
     return definition->codegen(ctx);
 }
 
-llvm::Value *silicon::ast::For::conditionCodegen(compiler::Context *ctx) {
+llvm::Value *For::conditionCodegen(Context *ctx) {
     return ctx->def_cast(condition, ctx->bool_type())->codegen(ctx);
 }
 
-llvm::Value *silicon::ast::For::stepperCodegen(compiler::Context *ctx) {
+llvm::Value *For::stepperCodegen(Context *ctx) {
     return stepper->codegen(ctx);
 }
 
-llvm::Value *silicon::ast::For::bodyCodegen(compiler::Context *ctx) {
+llvm::Value *For::bodyCodegen(Context *ctx) {
     ctx->operator++();
 
     ctx->statements(body);

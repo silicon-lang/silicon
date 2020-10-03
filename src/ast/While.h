@@ -23,27 +23,32 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class While : public Node {
     private:
         Node *condition;
-        std::vector<Node *> body;
+        vector<Node *> body;
 
         bool is_do_while = false;
 
-        While(Node *condition, std::vector<Node *> body);
+        While(Node *condition, vector<Node *> body);
 
-        llvm::Value *conditionCodegen(compiler::Context *ctx);
+        llvm::Value *conditionCodegen(Context *ctx);
 
-        llvm::Value *bodyCodegen(compiler::Context *ctx);
+        llvm::Value *bodyCodegen(Context *ctx);
 
         bool hasBody();
 
     public:
-        static While *create(compiler::Context *ctx, Node *condition, std::vector<Node *> body);
+        static While *create(Context *ctx, Node *condition, vector<Node *> body);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

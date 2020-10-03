@@ -22,29 +22,34 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class Variable : public Node {
     private:
-        std::string name;
+        string name;
         Node *context;
 
-        explicit Variable(std::string name, Node *context = nullptr);
+        explicit Variable(string name, Node *context = nullptr);
 
-        uint64_t element_index(compiler::Context *ctx);
+        uint64_t element_index(Context *ctx);
 
     public:
-        static Node *create(compiler::Context *ctx, const std::string& name, Node *context = nullptr);
+        static Node *create(Context *ctx, const string& name, Node *context = nullptr);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 
-        std::string getName();
+        string getName();
 
-        llvm::Type *getType(compiler::Context *ctx);
+        llvm::Type *getType(Context *ctx);
 
-        llvm::Value *get_pointer(compiler::Context *ctx);
+        llvm::Value *get_pointer(Context *ctx);
 
     };
 

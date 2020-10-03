@@ -24,6 +24,8 @@
 
 
 namespace silicon::ast {
+    
+    using namespace compiler;
 
     class Return : public Node {
     private:
@@ -32,9 +34,9 @@ namespace silicon::ast {
         explicit Return(Node *value = nullptr);
 
     public:
-        static Return *create(compiler::Context *ctx, Node *value = nullptr);
+        static Return *create(Context *ctx, Node *value = nullptr);
 
-        llvm::ReturnInst *codegen(compiler::Context *ctx) override;
+        llvm::ReturnInst *codegen(Context *ctx) override;
 
         node_t type() override;
 

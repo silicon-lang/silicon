@@ -19,13 +19,17 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Interface::Interface(std::string name, std::vector<std::pair<std::string, ast::Type *>> properties)
-        : name(
-        MOVE(name)), properties(MOVE(properties)) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Interface::Interface(string name, vector<pair<string, Type *>> properties) : name(MOVE(name)),
+                                                                             properties(MOVE(properties)) {
 }
 
-silicon::ast::Interface *silicon::ast::Interface::create(compiler::Context *ctx, std::string name,
-                                                         std::vector<std::pair<std::string, ast::Type *>> properties) {
+Interface *Interface::create(Context *ctx, string name, vector<pair<string, Type *>> properties) {
     auto *node = new Interface(MOVE(name), MOVE(properties));
 
     node->loc = parse_location(ctx->loc);
@@ -33,9 +37,9 @@ silicon::ast::Interface *silicon::ast::Interface::create(compiler::Context *ctx,
     return node;
 }
 
-llvm::Value *silicon::ast::Interface::codegen(compiler::Context *ctx) {
+llvm::Value *Interface::codegen(Context *ctx) {
     llvm::StructType *type = llvm::StructType::create(ctx->llvm_ctx, "interface." + name);
-    std::vector<llvm::Type *> body{};
+    vector<llvm::Type *> body{};
 
     for (const auto &property: properties) body.push_back(property.second->codegen(ctx));
 
@@ -46,11 +50,11 @@ llvm::Value *silicon::ast::Interface::codegen(compiler::Context *ctx) {
     return nullptr;
 }
 
-silicon::node_t silicon::ast::Interface::type() {
+node_t Interface::type() {
     return node_t::INTERFACE;
 }
 
-long silicon::ast::Interface::property_index(const std::string &property) {
+long Interface::property_index(const string &property) {
     long index = 0;
 
     for (const auto &prop : properties) {

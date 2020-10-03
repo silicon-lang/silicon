@@ -23,8 +23,13 @@
 #include "Context.h"
 
 
-silicon::compiler::Context::Context(const std::string &filename) : llvm_ir_builder(llvm_ctx) {
-    block = silicon::ast::Block::create(this);
+using namespace std;
+using namespace silicon::ast;
+using namespace silicon::compiler;
+
+
+Context::Context(const string &filename) : llvm_ir_builder(llvm_ctx) {
+    block = Block::create(this);
 
     llvm_module = llvm::make_unique<llvm::Module>(filename, llvm_ctx);
 
@@ -60,19 +65,19 @@ silicon::compiler::Context::Context(const std::string &filename) : llvm_ir_build
     def_type("f64", float_type(64));
 }
 
-void silicon::compiler::Context::operator++() {
-    block = ast::Block::create(this, block);
+void Context::operator++() {
+    block = Block::create(this, block);
 }
 
-void silicon::compiler::Context::operator--() {
+void Context::operator--() {
     block = block->getParent();
 }
 
-void silicon::compiler::Context::statements(const std::vector<ast::Node *> &nodes) {
+void Context::statements(const vector<Node *> &nodes) {
     block->setStatements(nodes);
 }
 
-llvm::Type *silicon::compiler::Context::def_type(const std::string &name, llvm::Type *type) {
+llvm::Type *Context::def_type(const string &name, llvm::Type *type) {
     if (types.count(name) > 0) fail_codegen("TypeError: Type <" + name + "> can not be defined again.");
 
     types.insert({name, type});
@@ -80,19 +85,19 @@ llvm::Type *silicon::compiler::Context::def_type(const std::string &name, llvm::
     return type;
 }
 
-llvm::Type *silicon::compiler::Context::void_type() {
+llvm::Type *Context::void_type() {
     return llvm_ir_builder.getVoidTy();
 }
 
-llvm::Type *silicon::compiler::Context::bool_type() {
+llvm::Type *Context::bool_type() {
     return llvm_ir_builder.getInt1Ty();
 }
 
-llvm::Type *silicon::compiler::Context::int_type(unsigned int bits) {
+llvm::Type *Context::int_type(unsigned int bits) {
     return llvm_ir_builder.getIntNTy(bits);
 }
 
-llvm::Type *silicon::compiler::Context::float_type(unsigned int bits) {
+llvm::Type *Context::float_type(unsigned int bits) {
     switch (bits) {
         case 16:
             return llvm_ir_builder.getHalfTy();
@@ -101,158 +106,148 @@ llvm::Type *silicon::compiler::Context::float_type(unsigned int bits) {
         case 64:
             return llvm_ir_builder.getDoubleTy();
         default:
-            fail_codegen("TypeError: Float type with <" + std::to_string(bits) + "> bits does not exist.");
+            fail_codegen("TypeError: Float type with <" + to_string(bits) + "> bits does not exist.");
     }
 }
 
-llvm::Type *silicon::compiler::Context::string_type() {
+llvm::Type *Context::string_type() {
     return llvm_ir_builder.getInt8PtrTy();
 }
 
-silicon::ast::Type *silicon::compiler::Context::type(llvm::Type *type) {
-    return ast::Type::create(this, type);
+Type *Context::type(llvm::Type *type) {
+    return Type::create(this, type);
 }
 
-silicon::ast::Type *silicon::compiler::Context::type(const std::string &name) {
-    return ast::Type::create(this, name);
+Type *Context::type(const string &name) {
+    return Type::create(this, name);
 }
 
-silicon::ast::Node *silicon::compiler::Context::null(ast::Type *type) {
-    return ast::Null::create(this, type);
+Node *Context::null(Type *type) {
+    return Null::create(this, type);
 }
 
-silicon::ast::Node *silicon::compiler::Context::bool_lit(bool value) {
-    return ast::BooleanLiteral::create(this, value);
+Node *Context::bool_lit(bool value) {
+    return BooleanLiteral::create(this, value);
 }
 
-silicon::ast::Node *silicon::compiler::Context::num_lit(std::string value) {
-    return ast::NumberLiteral::create(this, MOVE(value));
+Node *Context::num_lit(string value) {
+    return NumberLiteral::create(this, MOVE(value));
 }
 
-silicon::ast::Node *silicon::compiler::Context::plain_object(std::map<std::string, ast::Node *> value) {
-    return ast::PlainObject::create(this, MOVE(value));
+Node *Context::plain_object(map<string, Node *> value) {
+    return PlainObject::create(this, MOVE(value));
 }
 
-silicon::ast::Node *silicon::compiler::Context::string_lit(std::string value) {
-    return ast::StringLiteral::create(this, MOVE(value));
+Node *Context::string_lit(string value) {
+    return StringLiteral::create(this, MOVE(value));
 }
 
-silicon::ast::Node *silicon::compiler::Context::var(const std::string &name, ast::Node *context) {
-    return ast::Variable::create(this, name, context);
+Node *Context::var(const string &name, Node *context) {
+    return Variable::create(this, name, context);
 }
 
-silicon::ast::Node *silicon::compiler::Context::def_var(const std::string &name, ast::Type *type) {
-    return ast::VariableDefinition::create(this, name, type);
+Node *Context::def_var(const string &name, Type *type) {
+    return VariableDefinition::create(this, name, type);
 }
 
-silicon::ast::Interface *silicon::compiler::Context::interface(const std::string &name) {
+Interface *Context::interface(const string &name) {
     auto interface = interfaces.find(name);
 
     return interface->second;
 }
 
-silicon::ast::Interface *silicon::compiler::Context::def_interface(const std::string &name,
-                                                                   std::vector<std::pair<std::string, ast::Type *>> properties) {
+Interface *Context::def_interface(const string &name, vector<pair<string, Type *>> properties) {
     if (interfaces.count(name) > 0) fail_codegen("TypeError: Interface <" + name + "> can not be defined again.");
 
-    auto *interface = ast::Interface::create(this, name, MOVE(properties));
+    auto *interface = Interface::create(this, name, MOVE(properties));
 
     interfaces.insert({name, interface});
 
     return interface;
 }
 
-std::pair<std::string, silicon::ast::Type *>
-silicon::compiler::Context::def_arg(const std::string &name, ast::Type *type) {
-    return std::make_pair(name, type);
+pair<string, Type *> Context::def_arg(const string &name, Type *type) {
+    return make_pair(name, type);
 }
 
-silicon::ast::Prototype *
-silicon::compiler::Context::def_proto(const std::string &name, std::vector<std::pair<std::string, ast::Type *>> args,
-                                      ast::Type *return_type) {
-    return ast::Prototype::create(this, name, MOVE(args), return_type);
+Prototype *Context::def_proto(const string &name, vector<pair<string, Type *>> args, Type *return_type) {
+    return Prototype::create(this, name, MOVE(args), return_type);
 }
 
-silicon::ast::Function *
-silicon::compiler::Context::def_func(ast::Prototype *prototype, std::vector<ast::Node *> body) {
-    return ast::Function::create(this, prototype, MOVE(body));
+Function *Context::def_func(Prototype *prototype, vector<Node *> body) {
+    return Function::create(this, prototype, MOVE(body));
 }
 
-silicon::ast::Return *silicon::compiler::Context::def_ret(ast::Node *value) {
-    return ast::Return::create(this, value);
+Return *Context::def_ret(Node *value) {
+    return Return::create(this, value);
 }
 
-silicon::ast::Node *silicon::compiler::Context::call_func(std::string callee, std::vector<ast::Node *> args) {
-    return ast::FunctionCall::create(this, MOVE(callee), MOVE(args));
+Node *Context::call_func(string callee, vector<Node *> args) {
+    return FunctionCall::create(this, MOVE(callee), MOVE(args));
 }
 
-silicon::ast::Node *silicon::compiler::Context::def_op(binary_operation_t op, ast::Node *left, ast::Node *right) {
-    return ast::BinaryOperation::create(this, op, left, right);
+Node *Context::def_op(binary_operation_t op, Node *left, Node *right) {
+    return BinaryOperation::create(this, op, left, right);
 }
 
-silicon::ast::Node *silicon::compiler::Context::def_op(unary_operation_t op, ast::Node *node, bool suffix) {
-    return ast::UnaryOperation::create(this, op, node, suffix);
+Node *Context::def_op(unary_operation_t op, Node *node, bool suffix) {
+    return UnaryOperation::create(this, op, node, suffix);
 }
 
-silicon::ast::Node *silicon::compiler::Context::def_cast(ast::Node *node, llvm::Type *llvm_type) {
-    return ast::Cast::create(this, node, type(llvm_type));
+Node *Context::def_cast(Node *node, llvm::Type *llvm_type) {
+    return Cast::create(this, node, type(llvm_type));
 }
 
-silicon::ast::Node *silicon::compiler::Context::def_cast(ast::Node *node, ast::Type *type) {
-    return ast::Cast::create(this, node, type);
+Node *Context::def_cast(Node *node, Type *type) {
+    return Cast::create(this, node, type);
 }
 
-silicon::ast::If *
-silicon::compiler::Context::def_if(silicon::ast::Node *condition, std::vector<ast::Node *> then_statements,
-                                   std::vector<ast::Node *> else_statements) {
-    return ast::If::create(this, condition, MOVE(then_statements), MOVE(else_statements));
+If *Context::def_if(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements) {
+    return If::create(this, condition, MOVE(then_statements), MOVE(else_statements));
 }
 
-silicon::ast::Break *silicon::compiler::Context::def_break() {
-    return ast::Break::create(this);
+Break *Context::def_break() {
+    return Break::create(this);
 }
 
-silicon::ast::Continue *silicon::compiler::Context::def_continue() {
-    return ast::Continue::create(this);
+Continue *Context::def_continue() {
+    return Continue::create(this);
 }
 
-silicon::ast::Loop *silicon::compiler::Context::def_loop(std::vector<ast::Node *> body) {
-    return ast::Loop::create(this, MOVE(body));
+Loop *Context::def_loop(vector<Node *> body) {
+    return Loop::create(this, MOVE(body));
 }
 
-silicon::ast::While *
-silicon::compiler::Context::def_while(ast::Node *condition, std::vector<ast::Node *> body) {
-    return ast::While::create(this, condition, MOVE(body));
+While *Context::def_while(Node *condition, vector<Node *> body) {
+    return While::create(this, condition, MOVE(body));
 }
 
-silicon::ast::For *
-silicon::compiler::Context::def_for(ast::Node *definition, ast::Node *condition, ast::Node *stepper,
-                                    std::vector<ast::Node *> body) {
-    return ast::For::create(this, definition, condition, stepper, MOVE(body));
+For *Context::def_for(Node *definition, Node *condition, Node *stepper, vector<Node *> body) {
+    return For::create(this, definition, condition, stepper, MOVE(body));
 }
 
 /* ------------------------- CODEGEN ------------------------- */
 
-void silicon::compiler::Context::fail_codegen(const std::string &error) const noexcept {
+void Context::fail_codegen(const string &error) const noexcept {
     codegen_error(parse_location(loc), error);
 }
 
-llvm::Value *silicon::compiler::Context::codegen() {
+llvm::Value *Context::codegen() {
     return block->codegen(this);
 }
 
-llvm::AllocaInst *silicon::compiler::Context::get_alloca(const std::string &name) {
+llvm::AllocaInst *Context::get_alloca(const string &name) {
     return block->get_alloca(name);
 }
 
-llvm::Value *silicon::compiler::Context::alloc(const std::string &name, llvm::Type *type) {
+llvm::Value *Context::alloc(const string &name, llvm::Type *type) {
     return block->alloc(this, name, type);
 }
 
-llvm::StoreInst *silicon::compiler::Context::store(llvm::Value *value, llvm::Value *ptr) {
+llvm::StoreInst *Context::store(llvm::Value *value, llvm::Value *ptr) {
     return llvm_ir_builder.CreateStore(value, ptr);
 }
 
-llvm::LoadInst *silicon::compiler::Context::load(llvm::Value *ptr, const std::string &name) {
+llvm::LoadInst *Context::load(llvm::Value *ptr, const string &name) {
     return llvm_ir_builder.CreateLoad(ptr, name);
 }

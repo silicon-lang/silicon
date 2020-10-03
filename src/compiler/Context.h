@@ -52,29 +52,34 @@
 #include "parser/parser.h"
 
 
+using namespace std;
+
+
 namespace silicon::compiler {
+
+    using namespace ast;
 
     class Context {
     private:
-        ast::Block *block;
+        Block *block;
 
     public:
         const char *cursor{};
         yy::location loc;
 
         llvm::LLVMContext llvm_ctx;
-        std::unique_ptr<llvm::Module> llvm_module;
-        std::unique_ptr<llvm::legacy::FunctionPassManager> llvm_fpm;
+        unique_ptr<llvm::Module> llvm_module;
+        unique_ptr<llvm::legacy::FunctionPassManager> llvm_fpm;
         llvm::IRBuilder<> llvm_ir_builder;
 
         llvm::Type *expected_type = nullptr;
 
         loop_points_t *loop_points = nullptr;
 
-        std::map<std::string, llvm::Type *> types;
-        std::map<std::string, ast::Interface *> interfaces;
+        map<string, llvm::Type *> types;
+        map<string, Interface *> interfaces;
 
-        explicit Context(const std::string &filename);
+        explicit Context(const string &filename);
 
         virtual ~Context() = default;
 
@@ -82,9 +87,9 @@ namespace silicon::compiler {
 
         void operator--();
 
-        void statements(const std::vector<ast::Node *> &nodes);
+        void statements(const vector<Node *> &nodes);
 
-        llvm::Type *def_type(const std::string &name, llvm::Type *type);
+        llvm::Type *def_type(const string &name, llvm::Type *type);
 
         llvm::Type *void_type();
 
@@ -96,77 +101,77 @@ namespace silicon::compiler {
 
         llvm::Type *string_type();
 
-        ast::Type *type(llvm::Type *type);
+        Type *type(llvm::Type *type);
 
-        ast::Type *type(const std::string &name);
+        Type *type(const string &name);
 
-        ast::Node *null(ast::Type *type = nullptr);
+        Node *null(Type *type = nullptr);
 
-        ast::Node *bool_lit(bool value);
+        Node *bool_lit(bool value);
 
-        ast::Node *num_lit(std::string value);
+        Node *num_lit(string value);
 
-        ast::Node *plain_object(std::map<std::string, ast::Node *> value);
+        Node *plain_object(map<string, Node *> value);
 
-        ast::Node *string_lit(std::string value);
+        Node *string_lit(string value);
 
-        ast::Node *var(const std::string &name, ast::Node *context = nullptr);
+        Node *var(const string &name, Node *context = nullptr);
 
-        ast::Node *def_var(const std::string &name, ast::Type *type = nullptr);
+        Node *def_var(const string &name, Type *type = nullptr);
 
-        ast::Interface *interface(const std::string &name);
+        Interface *interface(const string &name);
 
-        ast::Interface *
-        def_interface(const std::string &name, std::vector<std::pair<std::string, ast::Type *>> properties);
+        Interface *
+        def_interface(const string &name, vector<pair<string, Type *>> properties);
 
-        static std::pair<std::string, ast::Type *> def_arg(const std::string &name, ast::Type *type);
+        static pair<string, Type *> def_arg(const string &name, Type *type);
 
-        ast::Prototype *def_proto(const std::string &name, std::vector<std::pair<std::string, ast::Type *>> args,
-                                  ast::Type *return_type = nullptr);
+        Prototype *
+        def_proto(const string &name, vector<pair<string, Type *>> args, Type *return_type = nullptr);
 
-        ast::Function *def_func(ast::Prototype *prototype, std::vector<ast::Node *> body);
+        Function *def_func(Prototype *prototype, vector<Node *> body);
 
-        ast::Return *def_ret(ast::Node *value = nullptr);
+        Return *def_ret(Node *value = nullptr);
 
-        ast::Node *call_func(std::string callee, std::vector<ast::Node *> args = {});
+        Node *call_func(string callee, vector<Node *> args = {});
 
-        ast::Node *def_op(binary_operation_t op, ast::Node *left, ast::Node *right);
+        Node *def_op(binary_operation_t op, Node *left, Node *right);
 
-        ast::Node *def_op(unary_operation_t op, ast::Node *node, bool suffix = false);
+        Node *def_op(unary_operation_t op, Node *node, bool suffix = false);
 
-        ast::Node *def_cast(ast::Node *node, llvm::Type *llvm_type);
+        Node *def_cast(Node *node, llvm::Type *llvm_type);
 
-        ast::Node *def_cast(ast::Node *node, ast::Type *type);
+        Node *def_cast(Node *node, Type *type);
 
-        ast::If *def_if(ast::Node *condition, std::vector<ast::Node *> then_statements,
-                        std::vector<ast::Node *> else_statements = {});
+        If *
+        def_if(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements = {});
 
-        ast::Break *def_break();
+        Break *def_break();
 
-        ast::Continue *def_continue();
+        Continue *def_continue();
 
-        ast::Loop *def_loop(std::vector<ast::Node *> body);
+        Loop *def_loop(vector<Node *> body);
 
-        ast::While *def_while(ast::Node *condition, std::vector<ast::Node *> body);
+        While *def_while(Node *condition, vector<Node *> body);
 
-        ast::For *
-        def_for(ast::Node *definition, ast::Node *condition, ast::Node *stepper, std::vector<ast::Node *> body);
+        For *
+        def_for(Node *definition, Node *condition, Node *stepper, vector<Node *> body);
 
         /* ------------------------- CODEGEN ------------------------- */
 
-        void fail_codegen(const std::string &error) const noexcept __attribute__ ((__noreturn__));
+        void fail_codegen(const string &error) const noexcept __attribute__ ((__noreturn__));
 
         llvm::Value *codegen();
 
-        llvm::AllocaInst *get_alloca(const std::string &name);
+        llvm::AllocaInst *get_alloca(const string &name);
 
-        llvm::Value *alloc(const std::string &name, llvm::Type *type);
+        llvm::Value *alloc(const string &name, llvm::Type *type);
 
         llvm::StoreInst *store(llvm::Value *value, llvm::Value *ptr);
 
-        llvm::LoadInst *load(llvm::Value *ptr, const std::string &name = "");
+        llvm::LoadInst *load(llvm::Value *ptr, const string &name = "");
 
-        friend class ast::Block;
+        friend class Block;
     };
 
 }

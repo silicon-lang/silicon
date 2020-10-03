@@ -24,14 +24,16 @@
 
 namespace silicon::ast {
 
+    using namespace compiler;
+
     class Continue : public Node {
     private:
         Continue();
 
     public:
-        static Continue *create(compiler::Context *ctx);
+        static Continue *create(Context *ctx);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

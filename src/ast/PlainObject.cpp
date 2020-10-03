@@ -19,11 +19,16 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::PlainObject::PlainObject(std::map<std::string, Node *> value) : value(MOVE(value)) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+PlainObject::PlainObject(map<string, Node *> value) : value(MOVE(value)) {
 }
 
-silicon::ast::Node *
-silicon::ast::PlainObject::create(silicon::compiler::Context *ctx, std::map<std::string, Node *> value) {
+Node *PlainObject::create(Context *ctx, map<string, Node *> value) {
     auto *node = new PlainObject(MOVE(value));
 
     node->loc = parse_location(ctx->loc);
@@ -31,12 +36,12 @@ silicon::ast::PlainObject::create(silicon::compiler::Context *ctx, std::map<std:
     return node;
 }
 
-llvm::Value *silicon::ast::PlainObject::codegen(compiler::Context *ctx) {
+llvm::Value *PlainObject::codegen(Context *ctx) {
     llvm::Type *type = ctx->expected_type;
 
     if (!type) fail_codegen("TypeError: Can't detect suitable type");
 
-    std::string type_name = parse_type(type);
+    string type_name = parse_type(type);
 
     if (!is_interface(type)) fail_codegen("TypeError: Can't cast object to type <" + type_name + ">");
 
@@ -48,12 +53,12 @@ llvm::Value *silicon::ast::PlainObject::codegen(compiler::Context *ctx) {
 
     if (bits > 0 && bits % 8 == 0) var->setAlignment(bits / 8);
 
-    std::map<std::string, Node *>::iterator it;
+    map<string, Node *>::iterator it;
 
     llvm::Type *expected_type = ctx->expected_type;
 
     for (it = value.begin(); it != value.end(); it++) {
-        std::string name = it->first;
+        string name = it->first;
 
         long index = interface->property_index(name);
 
@@ -63,14 +68,6 @@ llvm::Value *silicon::ast::PlainObject::codegen(compiler::Context *ctx) {
         ctx->expected_type = type->getStructElementType(index);
 
         ctx->store(it->second->codegen(ctx), ctx->llvm_ir_builder.CreateStructGEP(var, index));
-//
-//        ctx->llvm_ir_builder.CreateStructGEP(var, index);
-//
-//        ctx->def_op(binary_operation_t::ASSIGN, ctx->var(it->first, interface), it->second)->codegen(ctx);
-//        std::cout << it->first  // string (key)
-//                  << ':'
-//                  << it->second   // string's value
-//                  << std::endl;
     }
 
     ctx->expected_type = expected_type;
@@ -78,6 +75,6 @@ llvm::Value *silicon::ast::PlainObject::codegen(compiler::Context *ctx) {
     return ctx->load(var);
 }
 
-silicon::node_t silicon::ast::PlainObject::type() {
+node_t PlainObject::type() {
     return node_t::PLAIN_OBJECT;
 }

@@ -19,10 +19,16 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Block::Block(silicon::ast::Block *parent) : parent(parent) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Block::Block(Block *parent) : parent(parent) {
 }
 
-silicon::ast::Block *silicon::ast::Block::create(compiler::Context *ctx, ast::Block *parent) {
+Block *Block::create(Context *ctx, ast::Block *parent) {
     auto *node = new Block(parent);
 
     node->loc = parse_location(ctx->loc);
@@ -32,7 +38,7 @@ silicon::ast::Block *silicon::ast::Block::create(compiler::Context *ctx, ast::Bl
     return node;
 }
 
-llvm::Value *silicon::ast::Block::codegen(compiler::Context *ctx) {
+llvm::Value *Block::codegen(Context *ctx) {
 //    llvm::Type *expected_type = ctx->expected_type;
 
     for (auto &statement : statements) {
@@ -53,27 +59,27 @@ llvm::Value *silicon::ast::Block::codegen(compiler::Context *ctx) {
     return nullptr;
 }
 
-silicon::node_t silicon::ast::Block::type() {
+node_t Block::type() {
     return node_t::BLOCK;
 }
 
-silicon::ast::Block *silicon::ast::Block::getParent() {
+Block *Block::getParent() {
     return parent;
 }
 
-silicon::ast::Block *silicon::ast::Block::setStatements(const std::vector<Node *> &nodes) {
+Block *Block::setStatements(const vector<Node *> &nodes) {
     statements = nodes;
 
     return this;
 }
 
-silicon::ast::Block *silicon::ast::Block::push(Node *statement) {
+Block *Block::push(Node *statement) {
     statements.push_back(statement);
 
     return this;
 }
 
-bool silicon::ast::Block::allocated(const std::string &name) {
+bool Block::allocated(const string &name) {
     if (variables[name]) return true;
 
     if (parent == nullptr) return false;
@@ -81,7 +87,7 @@ bool silicon::ast::Block::allocated(const std::string &name) {
     return parent->allocated(name);
 }
 
-llvm::AllocaInst *silicon::ast::Block::get_alloca(const std::string &name) {
+llvm::AllocaInst *Block::get_alloca(const string &name) {
     llvm::AllocaInst *variable = variables[name];
 
     if (variable) return variable;
@@ -91,7 +97,7 @@ llvm::AllocaInst *silicon::ast::Block::get_alloca(const std::string &name) {
     return parent->get_alloca(name);
 }
 
-llvm::Value *silicon::ast::Block::alloc(compiler::Context *ctx, const std::string &name, llvm::Type *type) {
+llvm::Value *Block::alloc(Context *ctx, const string &name, llvm::Type *type) {
     if (this->allocated(name))
         fail_codegen("Variable <" + name + "> is already allocated");
 

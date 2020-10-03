@@ -24,37 +24,40 @@
 #include "llvm/IR/Function.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class Prototype : public Node {
     private:
-        std::string name;
+        string name;
 
-        std::vector<std::pair<std::string, ast::Type *>> args;
-        ast::Type *return_type;
+        vector<pair<string, Type *>> args;
+        Type *return_type;
 
         bool is_extern = false;
         bool is_variadic = false;
 
         llvm::Function::LinkageTypes linkage = llvm::Function::PrivateLinkage;
 
-        Prototype(std::string name, std::vector<std::pair<std::string, ast::Type *>> args,
-                  ast::Type *return_type);
+        Prototype(string name, vector<pair<string, Type *>> args, Type *return_type);
 
     public:
         static Prototype *
-        create(compiler::Context *ctx, const std::string &name, std::vector<std::pair<std::string, ast::Type *>> args,
-               ast::Type *return_type = nullptr);
+        create(Context *ctx, const string &name, vector<pair<string, Type *>> args, Type *return_type = nullptr);
 
-        llvm::Function *codegen(compiler::Context *ctx) override;
+        llvm::Function *codegen(Context *ctx) override;
 
         node_t type() override;
 
-        std::string getName();
+        string getName();
 
-        llvm::Type *getReturnType(compiler::Context *ctx);
+        llvm::Type *getReturnType(Context *ctx);
 
-        Prototype *setReturnType(compiler::Context *ctx, llvm::Type *type);
+        Prototype *setReturnType(Context *ctx, llvm::Type *type);
 
         Prototype *externalLinkage();
 

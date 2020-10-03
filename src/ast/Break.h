@@ -24,14 +24,16 @@
 
 namespace silicon::ast {
 
+    using namespace compiler;
+
     class Break : public Node {
     private:
-        Break();
+        Break() = default;
 
     public:
-        static Break *create(compiler::Context *ctx);
+        static Break *create(Context *ctx);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

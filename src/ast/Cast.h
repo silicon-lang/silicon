@@ -25,17 +25,19 @@
 
 namespace silicon::ast {
 
+    using namespace compiler;
+
     class Cast : public Node {
     private:
         Node *value;
-        ast::Type *llvm_type;
+        Type *llvm_type;
 
-        Cast(Node *value, ast::Type *llvm_type);
+        Cast(Node *value, Type *llvm_type);
 
     public:
-        static Node *create(compiler::Context *ctx, Node *value, ast::Type *llvm_type);
+        static Node *create(Context *ctx, Node *value, Type *llvm_type);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

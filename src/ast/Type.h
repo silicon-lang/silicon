@@ -22,35 +22,40 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class Type {
     private:
-        std::function<llvm::Type *()> llvm_type;
+        function<llvm::Type *()> llvm_type;
 
-        explicit Type(std::function<llvm::Type *()> llvm_type);
+        explicit Type(function<llvm::Type *()> llvm_type);
 
     protected:
-        std::string loc;
+        string loc;
 
     public:
-        static Type *create(compiler::Context *ctx, llvm::Type *type);
+        static Type *create(Context *ctx, llvm::Type *type);
 
-        static Type *create(compiler::Context *ctx, const std::string &name);
+        static Type *create(Context *ctx, const string &name);
 
-        llvm::Type *codegen(compiler::Context *ctx);
+        llvm::Type *codegen(Context *ctx);
 
         node_t type();
 
         bool type(node_t t);
 
-        void fail_codegen(const std::string &error) noexcept __attribute__ ((__noreturn__));
+        void fail_codegen(const string &error) noexcept __attribute__ ((__noreturn__));
 
     };
 
 }
 
-#define MOVE(V) std::move(V)
+#define MOVE(V) move(V)
 
 
 #endif //SILICON_TYPE_H
