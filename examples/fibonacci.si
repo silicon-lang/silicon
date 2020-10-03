@@ -1,4 +1,7 @@
-extern fn printf(format: string, ...): i32;
+extern fn printf(
+  format: string,
+  ...,
+): i32;
 
 fn fibonacci_loop(x: i64) {
   let a: i64 = 1, b: i64 = 0, temp = a;
@@ -16,14 +19,24 @@ fn fibonacci_loop(x: i64) {
   return b;
 }
 
-fn fibonacci_recursive(x: i64): i64 {
+fn fibonacci_recursive(
+  x: i64
+): i64 {
   if (x <= 2) return 1;
 
   return fibonacci_recursive(x - 1) + fibonacci_recursive(x - 2);
 }
 
 fn main() {
-  printf("%s: %lli\n", "loop", fibonacci_loop(40));
+  printf(
+    "%s: %lli\n",
+    "loop",
+    fibonacci_loop(40),
+  );
 
-  printf("%s: %lli\n", "recursive", fibonacci_recursive(40));
+  printf(
+    "%s: %lli\n",
+    "recursive",
+    fibonacci_recursive(40)
+  );
 }

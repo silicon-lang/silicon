@@ -18,29 +18,33 @@ link_directories(${LLVM_LIBRARY_DIRS})
 
 #------------------------- BISON -------------------------
 
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/parser)
+
 set(SILICON_BISON_INPUT ${PROJECT_SOURCE_DIR}/src/parser/parser.y)
-set(SILICON_BISON_OUTPUT ${PROJECT_SOURCE_DIR}/src/parser/parser.re)
-set(SILICON_BISON_HEADER ${PROJECT_SOURCE_DIR}/src/parser/parser.h)
+set(SILICON_BISON_OUTPUT ${PROJECT_BINARY_DIR}/parser/parser.re)
+set(SILICON_BISON_HEADER ${PROJECT_BINARY_DIR}/parser/parser.h)
 
 FIND_PACKAGE(BISON 3.5 REQUIRED)
 
-BISON_TARGET(silicon_bison ${SILICON_BISON_INPUT} ${SILICON_BISON_OUTPUT}
-        DEFINES_FILE ${SILICON_BISON_HEADER})
+BISON_TARGET(SILICON ${SILICON_BISON_INPUT} ${SILICON_BISON_OUTPUT}
+        DEFINES_FILE ${SILICON_BISON_HEADER}
+        VERBOSE
+        )
 
 message(STATUS "Using Bison ${BISON_VERSION}")
 
 #------------------------- RE2C -------------------------
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
-set(SILICON_RE2C_OUTPUT ${PROJECT_SOURCE_DIR}/src/parser/parser.cpp)
+set(SILICON_RE2C_OUTPUT ${PROJECT_BINARY_DIR}/parser/parser.cpp)
 
 FIND_PACKAGE(RE2C 1.3 REQUIRED)
 
 message(STATUS "Using RE2C ${RE2C_VERSION}")
 
 RE2C_TARGET(
-        NAME silicon_re2c
-        INPUT ${BISON_silicon_bison_OUTPUT_SOURCE}
+        NAME SILICON
+        INPUT ${BISON_SILICON_OUTPUT_SOURCE}
         OUTPUT ${SILICON_RE2C_OUTPUT}
 )
 
@@ -63,8 +67,8 @@ include_directories(
 
 add_executable(silicon
         src/main.cpp
+        ${BISON_SILICON_OUTPUT_HEADER}
         ${SILICON_RE2C_OUTPUT}
-        ${BISON_silicon_bison_OUTPUT_HEADER}
         src/utils/CLI11.hpp
         src/utils.cpp src/utils.h
         src/compiler/codegen.cpp src/compiler/codegen.h
