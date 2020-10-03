@@ -35,6 +35,7 @@
 
 cmake-build-debug/
 
+src/parser/parser.output
 src/parser/parser.re
 src/parser/parser.h
 src/parser/parser.cpp
