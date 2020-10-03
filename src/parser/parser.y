@@ -156,11 +156,11 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 // --------------------------------------------------
 
 %type<std::vector<silicon::ast::Node *>>
- global_statements statements statement arguments arguments_ variable_definitions
+ global_statements statements statement scope arguments arguments_ variable_definitions
 
 %type<silicon::ast::Node *>
  global_statement export_statement extern_statement if_statement expression value operation binary_operation
- unary_operation variable_definition variable_definition_ literal plain_object
+ unary_operation variable_definition variable_definition_ literal plain_object function_call inline_if
 
 %type<silicon::ast::Interface *> interface_definition
 
@@ -274,6 +274,11 @@ statement
 | expression { $$ = { $1 }; }
 ;
 
+scope
+: expression { $$ = { $1 }; }
+| OPEN_CURLY statements CLOSE_CURLY { $$ = $2; }
+;
+
 // --------------------------------------------------
 // Grammar -> Expressions
 // --------------------------------------------------
@@ -285,20 +290,18 @@ expression
 | BREAK SEMICOLON { $$ = { ctx.def_break() }; }
 | CONTINUE SEMICOLON { $$ = ctx.def_continue(); }
 | operation SEMICOLON { $$ = $1; }
-| IDENTIFIER OPEN_PAREN arguments CLOSE_PAREN SEMICOLON { $$ = ctx.call_func($1, $3); }
-//| value SEMICOLON { $$ = $1; }
+| function_call SEMICOLON { $$ = $1; }
 ;
 
 value
 : literal { $$ = $1; }
 | operation { $$ = $1; }
-| IDENTIFIER { $$ = ctx.var($1); }
-| IDENTIFIER OPEN_PAREN arguments CLOSE_PAREN { $$ = ctx.call_func($1, $3); }
+| function_call { $$ = $1; }
+| inline_if { $$ = $1; }
 | OPEN_PAREN value CLOSE_PAREN { $$ = $2; }
-| value QUESTION_MARK value COLON value { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
-| value QUESTION_MARK plain_object COLON value { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
-| value QUESTION_MARK value COLON plain_object { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
-| value QUESTION_MARK plain_object COLON plain_object { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| value AS type { $$ = ctx.def_cast($1, $3); }
+| IDENTIFIER { $$ = ctx.var($1); }
+| value DOT IDENTIFIER { $$ = ctx.var($3, $1); }
 ;
 
 // --------------------------------------------------
@@ -311,9 +314,7 @@ operation
 ;
 
 binary_operation
-: value DOT IDENTIFIER { $$ = ctx.var($3, $1); }
-| value AS type { $$ = ctx.def_cast($1, $3); }
-| value ASSIGN value { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
+: value ASSIGN value { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
 | value ASSIGN plain_object { $$ = ctx.def_op(silicon::binary_operation_t::ASSIGN, $1, $3); }
 | value STAR value { $$ = ctx.def_op(silicon::binary_operation_t::STAR, $1, $3); }
 | value SLASH value { $$ = ctx.def_op(silicon::binary_operation_t::SLASH, $1, $3); }
@@ -383,8 +384,7 @@ extern_statement
 // --------------------------------------------------
 
 loop_statement
-: LOOP expression { $$ = ctx.def_loop({ $2 }); }
-| LOOP OPEN_CURLY statements CLOSE_CURLY { $$ = ctx.def_loop($3); }
+: LOOP scope { $$ = ctx.def_loop($2); }
 ;
 
 // --------------------------------------------------
@@ -392,13 +392,11 @@ loop_statement
 // --------------------------------------------------
 
 while_statement
-: WHILE OPEN_PAREN value CLOSE_PAREN expression { $$ = ctx.def_while($3, { $5 }); }
-| WHILE OPEN_PAREN value CLOSE_PAREN OPEN_CURLY statements CLOSE_CURLY { $$ = ctx.def_while($3, $6); }
+: WHILE OPEN_PAREN value CLOSE_PAREN scope { $$ = ctx.def_while($3, $5); }
 ;
 
 do_while_statement
-: DO expression WHILE OPEN_PAREN value CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($5, { $2 })->makeDoWhile(); }
-| DO OPEN_CURLY statements CLOSE_CURLY WHILE OPEN_PAREN value CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($7, $3)->makeDoWhile(); }
+: DO scope WHILE OPEN_PAREN value CLOSE_PAREN SEMICOLON { $$ = ctx.def_while($5, $2)->makeDoWhile(); }
 ;
 
 // --------------------------------------------------
@@ -406,8 +404,7 @@ do_while_statement
 // --------------------------------------------------
 
 for_statement
-: FOR OPEN_PAREN variable_definition SEMICOLON value SEMICOLON value CLOSE_PAREN expression { $$ = ctx.def_for($3, $5, $7, { $9 }); }
-| FOR OPEN_PAREN variable_definition SEMICOLON value SEMICOLON value CLOSE_PAREN OPEN_CURLY statements CLOSE_CURLY { $$ = ctx.def_for($3, $5, $7, $10); }
+: FOR OPEN_PAREN variable_definition SEMICOLON value SEMICOLON value CLOSE_PAREN scope { $$ = ctx.def_for($3, $5, $7, $9); }
 ;
 
 // --------------------------------------------------
@@ -416,14 +413,19 @@ for_statement
 
 if_statement
 : if_statement_ { $$ = $1; }
-| if_statement_ ELSE expression { $$ = $1->setElse({ $3 }); }
-| if_statement_ ELSE OPEN_CURLY statements CLOSE_CURLY { $$ = $1->setElse($4); }
+| if_statement_ ELSE scope { $$ = $1->setElse($3); }
 | if_statement_ ELSE if_statement { $$ = $1->setElse({ $3 }); }
 ;
 
 if_statement_
-: IF OPEN_PAREN value CLOSE_PAREN expression { $$ = ctx.def_if($3, { $5 }); }
-| IF OPEN_PAREN value CLOSE_PAREN OPEN_CURLY statements CLOSE_CURLY { $$ = ctx.def_if($3, $6); }
+: IF OPEN_PAREN value CLOSE_PAREN scope { $$ = ctx.def_if($3, $5); }
+;
+
+inline_if
+: value QUESTION_MARK value COLON value { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| value QUESTION_MARK plain_object COLON value { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| value QUESTION_MARK value COLON plain_object { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
+| value QUESTION_MARK plain_object COLON plain_object { $$ = ctx.def_if($1, { $3 }, { $5 })->makeInline(); }
 ;
 
 // --------------------------------------------------
@@ -482,6 +484,10 @@ function_declaration
 variadic_function_declaration
 : FUNCTION IDENTIFIER OPEN_PAREN variadic_arguments_declaration CLOSE_PAREN COLON type { $$ = ctx.def_proto($2, $4, $7)->makeVariadic(); }
 | FUNCTION IDENTIFIER OPEN_PAREN variadic_arguments_declaration CLOSE_PAREN { $$ = ctx.def_proto($2, $4)->makeVariadic(); }
+;
+
+function_call
+: IDENTIFIER OPEN_PAREN arguments CLOSE_PAREN { $$ = ctx.call_func($1, $3); }
 ;
 
 // --------------------------------------------------
