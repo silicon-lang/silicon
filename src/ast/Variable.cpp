@@ -99,7 +99,7 @@ uint64_t Variable::element_index(Context *ctx) {
     if (!interface)
         fail_codegen("Can not find interface <" + type_name + ">");
 
-    long index = interface->property_index(name);
+    long index = interface->property_index(ctx, name);
 
     if (index == -1)
         fail_codegen("Interface <" + type_name + "> has no property named <" + name + ">");

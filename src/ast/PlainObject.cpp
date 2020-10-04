@@ -50,10 +50,27 @@ llvm::Value *PlainObject::codegen(Context *ctx) {
 
     llvm::Type *expected_type = ctx->expected_type;
 
+    for (const auto &property: interface->get_properties(ctx)) {
+        string name = property.first;
+        bool exists = false;
+
+        for (it = value.begin(); it != value.end(); it++) {
+            string prop = it->first;
+
+            if (name == prop) {
+                exists = true;
+
+                break;
+            }
+        }
+
+        if (!exists) fail_codegen("Error: Property <" + name + "> is missing from interface <" + type_name + ">");
+    }
+
     for (it = value.begin(); it != value.end(); it++) {
         string name = it->first;
 
-        long index = interface->property_index(name);
+        long index = interface->property_index(ctx, name);
 
         if (index == -1)
             fail_codegen("Error: Interface <" + type_name + "> has no property named <" + name + ">");

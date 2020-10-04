@@ -89,6 +89,7 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %token RETURN "return"
 %token IF "if"
 %token INTERFACE "interface"
+%token EXTENDS "extends"
 %token ELSE "else"
 %token LOOP "loop"
 %token WHILE "while"
@@ -186,6 +187,8 @@ Parser::symbol_type yylex(silicon::compiler::Context &ctx);
 %type<std::map<std::string, silicon::ast::Node *>> object_properties object_properties_
 
 %type<std::pair<std::string, silicon::ast::Node *>> object_property
+
+%type<std::vector<std::string>> interface_parents
 
 // --------------------------------------------------
 // Precedences
@@ -434,6 +437,12 @@ inline_if
 
 interface_definition
 : INTERFACE IDENTIFIER OPEN_CURLY interface_properties CLOSE_CURLY { $$ = ctx.def_interface($2, $4); }
+| INTERFACE IDENTIFIER EXTENDS interface_parents OPEN_CURLY interface_properties CLOSE_CURLY { $$ = ctx.def_interface($2, $6, $4); }
+;
+
+interface_parents
+: IDENTIFIER { $$ = { $1 }; }
+| interface_parents COMMA IDENTIFIER { $1.push_back($3); $$ = $1; }
 ;
 
 interface_properties
@@ -615,6 +624,7 @@ re2c:define:YYMARKER = "ctx.cursor";
 "return" { return s(Parser::make_RETURN); }
 "if" { return s(Parser::make_IF); }
 "interface" { return s(Parser::make_INTERFACE); }
+"extends" { return s(Parser::make_EXTENDS); }
 "else" { return s(Parser::make_ELSE); }
 "loop" { return s(Parser::make_LOOP); }
 "while" { return s(Parser::make_WHILE); }
