@@ -94,6 +94,8 @@ Interface *Context::interface(const string &name) {
     return interface->second;
 }
 
+/* ------------------------- AST ------------------------- */
+
 Type *Context::type(llvm::Type *type) const {
     return CREATE_NODE(Type, [type]() -> llvm::Type * {
         return type;

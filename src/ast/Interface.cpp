@@ -69,6 +69,12 @@ vector<pair<string, Type *>> Interface::get_properties(Context *ctx) {
     map<string, bool> names{};
 
     for (const string &parent : parents) {
+        if (parent == name) fail_codegen("TypeError: Interface <" + name + "> can't extend itself");
+
+        auto *type = ctx->type(parent)->codegen(ctx);
+
+        if (!is_interface(type)) fail_codegen("TypeError: Interfaces can only extend other interfaces");
+
         auto *interface = ctx->interface(parent);
 
         for (const auto &property: interface->get_properties(ctx)) {
