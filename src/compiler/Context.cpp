@@ -146,10 +146,10 @@ Node *Context::def_var(const string &name, Type *type) const {
     return CREATE_NODE(VariableDefinition, name, type);
 }
 
-Interface *Context::def_interface(const string &name, vector<pair<string, Type *>> properties) {
+Interface *Context::def_interface(const string &name, vector<pair<string, Type *>> properties, vector<string> parents) {
     if (interfaces.count(name) > 0) fail_codegen("TypeError: Interface <" + name + "> can not be defined again.");
 
-    auto *interface = CREATE_NODE(Interface, name, MOVE(properties));
+    auto *interface = CREATE_NODE(Interface, name, MOVE(properties), MOVE(parents));
 
     interfaces.insert({name, interface});
 

@@ -113,7 +113,8 @@ namespace silicon::compiler {
 
         Node *def_var(const string &name, Type *type = nullptr) const;
 
-        Interface *def_interface(const string &name, vector<pair<string, Type *>> properties);
+        Interface *
+        def_interface(const string &name, vector<pair<string, Type *>> properties, vector<string> parents = {});
 
         static pair<string, Type *> def_arg(const string &name, Type *type);
 

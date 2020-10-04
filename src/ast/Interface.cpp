@@ -25,17 +25,20 @@ using namespace ast;
 using namespace compiler;
 
 
-Interface::Interface(const string &location, string name, vector<pair<string, Type *>> properties) : name(MOVE(name)),
-                                                                                                     properties(
-                                                                                                             MOVE(properties)) {
+Interface::Interface(const string &location, string name, vector<pair<string, Type *>> properties,
+                     vector<string> parents) : name(MOVE(name)), properties(MOVE(properties)), parents(MOVE(parents)) {
     this->location = location;
 }
 
 llvm::Value *Interface::codegen(Context *ctx) {
-    llvm::StructType *type = llvm::StructType::create(ctx->llvm_ctx, "interface." + name);
-    vector<llvm::Type *> body{};
+    vector<pair<string, Type *>> props = get_properties(ctx);
 
-    for (const auto &property: properties) body.push_back(property.second->codegen(ctx));
+    llvm::StructType *type = llvm::StructType::create(ctx->llvm_ctx, "interface." + name);
+
+    vector<llvm::Type *> body{};
+    body.reserve(props.size());
+
+    for (const auto &property: props) body.push_back(property.second->codegen(ctx));
 
     type->setBody(body);
 
@@ -48,14 +51,46 @@ node_t Interface::type() {
     return node_t::INTERFACE;
 }
 
-long Interface::property_index(const string &property) {
+long Interface::property_index(Context *ctx, const string &property) {
+    vector<pair<string, Type *>> props = get_properties(ctx);
     long index = 0;
 
-    for (const auto &prop : properties) {
+    for (const auto &prop : props) {
         if (prop.first == property) return index;
 
         index++;
     }
 
     return -1;
+}
+
+vector<pair<string, Type *>> Interface::get_properties(Context *ctx) {
+    vector<pair<string, Type *>> props{};
+    map<string, bool> names{};
+
+    for (const string &parent : parents) {
+        auto *interface = ctx->interface(parent);
+
+        for (const auto &property: interface->get_properties(ctx)) {
+            string property_name = property.first;
+
+            if (names.count(property_name) > 0) fail_codegen("Property <" + property_name + "> can not be redefined");
+
+            names[property_name] = true;
+
+            props.push_back(property);
+        }
+    }
+
+    for (const auto &property: properties) {
+        string property_name = property.first;
+
+        if (names.count(property_name) > 0) fail_codegen("Property <" + property_name + "> can not be redefined");
+
+        names[property_name] = true;
+
+        props.push_back(property);
+    }
+
+    return props;
 }

@@ -34,15 +34,18 @@ namespace silicon::ast {
     private:
         string name;
         vector<pair<string, Type *>> properties;
+        vector<string> parents;
 
     public:
-        Interface(const string &location, string name, vector<pair<string, Type *>> properties);
+        Interface(const string &location, string name, vector<pair<string, Type *>> properties, vector<string> parents = {});
 
         llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 
-        long property_index(const string &property);
+        long property_index(Context *ctx, const string &property);
+
+        vector<pair<string, Type *>> get_properties(Context *ctx);
 
     };
 
