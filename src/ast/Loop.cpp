@@ -19,18 +19,17 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Loop::Loop(std::vector<Node *> body) : body(body) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Loop::Loop(const string &location, vector<Node *> body) : body(MOVE(body)) {
+    this->location = location;
 }
 
-silicon::ast::Loop *silicon::ast::Loop::create(compiler::Context *ctx, std::vector<Node *> body) {
-    auto *node = new Loop(body);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::Loop::codegen(compiler::Context *ctx) {
+llvm::Value *Loop::codegen(Context *ctx) {
     llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
 
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(ctx->llvm_ctx, "loop");
@@ -57,11 +56,11 @@ llvm::Value *silicon::ast::Loop::codegen(compiler::Context *ctx) {
     return nullptr;
 }
 
-silicon::node_t silicon::ast::Loop::type() {
+node_t Loop::type() {
     return node_t::LOOP;
 }
 
-llvm::Value *silicon::ast::Loop::bodyCodegen(compiler::Context *ctx) {
+llvm::Value *Loop::bodyCodegen(Context *ctx) {
     ctx->operator++();
 
     ctx->statements(body);

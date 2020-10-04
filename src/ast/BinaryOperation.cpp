@@ -19,20 +19,19 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::BinaryOperation::BinaryOperation(binary_operation_t op, Node *left, Node *right) : op(op), left(left),
-                                                                                                 right(right) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+BinaryOperation::BinaryOperation(const string &location, binary_operation_t op, Node *left, Node *right) : op(op),
+                                                                                                           left(left),
+                                                                                                           right(right) {
+    this->location = location;
 }
 
-silicon::ast::Node *
-silicon::ast::BinaryOperation::create(compiler::Context *ctx, binary_operation_t op, Node *left, Node *right) {
-    auto *node = new BinaryOperation(op, left, right);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::BinaryOperation::codegen(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::codegen(Context *ctx) {
     switch (op) {
         case binary_operation_t::ASSIGN:
             return assign(ctx);
@@ -73,11 +72,11 @@ llvm::Value *silicon::ast::BinaryOperation::codegen(compiler::Context *ctx) {
     }
 }
 
-silicon::node_t silicon::ast::BinaryOperation::type() {
+node_t BinaryOperation::type() {
     return node_t::BINARY_OP;
 }
 
-silicon::value_pair_t *silicon::ast::BinaryOperation::parse_pair(compiler::Context *ctx) {
+value_pair_t *BinaryOperation::parse_pair(Context *ctx) {
     auto *pair = new value_pair_t();
 
     llvm::Type *expected_type = ctx->expected_type;
@@ -112,11 +111,11 @@ silicon::value_pair_t *silicon::ast::BinaryOperation::parse_pair(compiler::Conte
     return pair;
 }
 
-llvm::Value *silicon::ast::BinaryOperation::assign(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::assign(Context *ctx) {
     llvm::Type *expected_type = ctx->expected_type;
 
     llvm::Type *llvm_type;
-    std::string name;
+    string name;
 
     if (left->type(node_t::VARIABLE_DEFINITION)) {
         auto *l = (VariableDefinition *) left;
@@ -191,7 +190,7 @@ llvm::Value *silicon::ast::BinaryOperation::assign(compiler::Context *ctx) {
     fail_codegen("Expected left side of the equation to be a variable");
 }
 
-llvm::Value *silicon::ast::BinaryOperation::multiply(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::multiply(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -215,7 +214,7 @@ llvm::Value *silicon::ast::BinaryOperation::multiply(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::divide(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::divide(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -242,7 +241,7 @@ llvm::Value *silicon::ast::BinaryOperation::divide(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::remainder(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::remainder(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -269,7 +268,7 @@ llvm::Value *silicon::ast::BinaryOperation::remainder(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::add(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::add(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -293,7 +292,7 @@ llvm::Value *silicon::ast::BinaryOperation::add(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::sub(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::sub(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -317,7 +316,7 @@ llvm::Value *silicon::ast::BinaryOperation::sub(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::bw_xor(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::bw_xor(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -339,7 +338,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_xor(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::bw_and(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::bw_and(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -361,7 +360,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_and(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::bw_or(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::bw_or(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -383,7 +382,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_or(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::bw_left_shift(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::bw_left_shift(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -405,7 +404,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_left_shift(compiler::Context *ctx
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::bw_right_shift(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::bw_right_shift(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -427,7 +426,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_right_shift(compiler::Context *ct
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::bw_u_right_shift(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::bw_u_right_shift(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -449,7 +448,7 @@ llvm::Value *silicon::ast::BinaryOperation::bw_u_right_shift(compiler::Context *
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::lt(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::lt(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -476,7 +475,7 @@ llvm::Value *silicon::ast::BinaryOperation::lt(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::lte(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::lte(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -503,7 +502,7 @@ llvm::Value *silicon::ast::BinaryOperation::lte(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::eq(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::eq(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -529,7 +528,7 @@ llvm::Value *silicon::ast::BinaryOperation::eq(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::ne(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::ne(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -555,7 +554,7 @@ llvm::Value *silicon::ast::BinaryOperation::ne(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::gte(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::gte(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;
@@ -582,7 +581,7 @@ llvm::Value *silicon::ast::BinaryOperation::gte(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::BinaryOperation::gt(compiler::Context *ctx) {
+llvm::Value *BinaryOperation::gt(Context *ctx) {
     value_pair_t *pair = parse_pair(ctx);
 
     llvm::Value *l = pair->left;

@@ -22,8 +22,12 @@
 #include "compiler/codegen.h"
 
 
+using namespace std;
+using namespace silicon::compiler;
+
+
 void print_version() {
-    std::cout << "silicon " << SILICON_VERSION << std::endl;
+    cout << "silicon " << SILICON_VERSION << endl;
 
     exit(0);
 }
@@ -37,7 +41,7 @@ int main(int argc, char **argv) {
             "Print version info and exit"
     );
 
-    std::string input;
+    string input;
     app.add_option(
                     "input",
                     input
@@ -46,7 +50,7 @@ int main(int argc, char **argv) {
             ->check(CLI::ExistingFile)
             ->required();
 
-    std::string output = "output";
+    string output = "output";
     app.add_option(
                     "-o,--output",
                     output,
@@ -64,7 +68,7 @@ int main(int argc, char **argv) {
 
     CLI11_PARSE(app, argc, argv);
 
-    silicon::compiler::codegen(input, output, emit_llvm);
+    codegen(input, output, emit_llvm);
 
     return 0;
 }

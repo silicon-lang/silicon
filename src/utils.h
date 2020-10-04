@@ -25,6 +25,9 @@
 #include <parser/location.hh>
 
 
+using namespace std;
+
+
 namespace silicon {
 
     struct value_pair_t {
@@ -110,7 +113,7 @@ namespace silicon {
 //        AND,
     };
 
-    std::string replace_all(std::string str, const std::string &from, const std::string &to);
+    string replace_all(string str, const string &from, const string &to);
 
     bool is_interface(llvm::Type *type);
 
@@ -118,15 +121,17 @@ namespace silicon {
 
     bool compare_types(llvm::Value *value1, llvm::Value *value2);
 
-    std::string parse_type(llvm::Type *type);
+    string parse_type(llvm::Type *type);
 
-    std::string parse_location(yy::location location);
+    string parse_location(yy::location location);
 
-    void codegen_error(const std::string &location, const std::string &error) noexcept __attribute__ ((__noreturn__));
+    void codegen_error(const string &location, const string &error) noexcept __attribute__ ((__noreturn__));
 
-    void silicon_error(const std::string &error) noexcept __attribute__ ((__noreturn__));
+    void silicon_error(const string &error) noexcept __attribute__ ((__noreturn__));
 
 }
+
+#define MOVE(V) move(V)
 
 
 #endif //SILICON_UTILS_H

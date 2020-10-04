@@ -21,21 +21,19 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Function::Function(Prototype *prototype, std::vector<Node *> body)
-        : prototype(prototype), body(MOVE(body)) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Function::Function(const string &location, Prototype *prototype, vector<Node *> body) : prototype(prototype),
+                                                                                        body(MOVE(body)) {
+    this->location = location;
 }
 
-silicon::ast::Function *
-silicon::ast::Function::create(compiler::Context *ctx, Prototype *prototype, std::vector<Node *> body) {
-    auto *node = new Function(prototype, MOVE(body));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
-    std::string name = prototype->getName();
+llvm::Function *Function::codegen(Context *ctx) {
+    string name = prototype->getName();
 
     llvm::Function *function = ctx->llvm_module->getFunction(name);
 
@@ -70,7 +68,7 @@ llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
 
     if (!result) {
         llvm::Type *fnReturnT = function->getReturnType();
-        ast::Node *node = nullptr; // default: fnReturnT->isVoidTy()
+        Node *node = nullptr; // default: fnReturnT->isVoidTy()
 
         if (fnReturnT->isIntegerTy(1)) node = ctx->bool_lit(false);
         else if (fnReturnT->isIntegerTy() || fnReturnT->isFloatingPointTy()) node = ctx->num_lit("0");
@@ -104,11 +102,11 @@ llvm::Function *silicon::ast::Function::codegen(compiler::Context *ctx) {
     return function;
 }
 
-silicon::node_t silicon::ast::Function::type() {
+node_t Function::type() {
     return node_t::FUNCTION;
 }
 
-silicon::ast::Function *silicon::ast::Function::externalLinkage() {
+Function *Function::externalLinkage() {
     prototype->externalLinkage();
 
     return this;

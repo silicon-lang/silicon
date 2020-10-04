@@ -22,57 +22,60 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class BinaryOperation : public Node {
     private:
         binary_operation_t op;
         Node *left, *right;
 
-        BinaryOperation(binary_operation_t op, Node *left, Node *right);
+        value_pair_t *parse_pair(Context *ctx);
 
-        value_pair_t *parse_pair(compiler::Context *ctx);
+        llvm::Value *assign(Context *ctx);
 
-        llvm::Value *assign(compiler::Context *ctx);
+        llvm::Value *multiply(Context *ctx);
 
-        llvm::Value *multiply(compiler::Context *ctx);
+        llvm::Value *divide(Context *ctx);
 
-        llvm::Value *divide(compiler::Context *ctx);
+        llvm::Value *remainder(Context *ctx);
 
-        llvm::Value *remainder(compiler::Context *ctx);
+        llvm::Value *add(Context *ctx);
 
-        llvm::Value *add(compiler::Context *ctx);
+        llvm::Value *sub(Context *ctx);
 
-        llvm::Value *sub(compiler::Context *ctx);
+        llvm::Value *bw_xor(Context *ctx);
 
-        llvm::Value *bw_xor(compiler::Context *ctx);
+        llvm::Value *bw_and(Context *ctx);
 
-        llvm::Value *bw_and(compiler::Context *ctx);
+        llvm::Value *bw_or(Context *ctx);
 
-        llvm::Value *bw_or(compiler::Context *ctx);
+        llvm::Value *bw_left_shift(Context *ctx);
 
-        llvm::Value *bw_left_shift(compiler::Context *ctx);
+        llvm::Value *bw_right_shift(Context *ctx);
 
-        llvm::Value *bw_right_shift(compiler::Context *ctx);
+        llvm::Value *bw_u_right_shift(Context *ctx);
 
-        llvm::Value *bw_u_right_shift(compiler::Context *ctx);
+        llvm::Value *lt(Context *ctx);
 
-        llvm::Value *lt(compiler::Context *ctx);
+        llvm::Value *lte(Context *ctx);
 
-        llvm::Value *lte(compiler::Context *ctx);
+        llvm::Value *eq(Context *ctx);
 
-        llvm::Value *eq(compiler::Context *ctx);
+        llvm::Value *ne(Context *ctx);
 
-        llvm::Value *ne(compiler::Context *ctx);
+        llvm::Value *gte(Context *ctx);
 
-        llvm::Value *gte(compiler::Context *ctx);
-
-        llvm::Value *gt(compiler::Context *ctx);
+        llvm::Value *gt(Context *ctx);
 
     public:
-        static Node *create(compiler::Context *ctx, binary_operation_t op, Node *left, Node *right);
+        BinaryOperation(const string& location, binary_operation_t op, Node *left, Node *right);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

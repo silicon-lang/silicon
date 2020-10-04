@@ -20,23 +20,18 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::If::If(Node *condition, std::vector<Node *> then_statements, std::vector<Node *> else_statements)
-        : condition(condition),
-          then_statements(MOVE(then_statements)),
-          else_statements(MOVE(else_statements)) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+If::If(const string &location, Node *condition, vector<Node *> then_statements, vector<Node *> else_statements)
+        : condition(condition), then_statements(MOVE(then_statements)), else_statements(MOVE(else_statements)) {
+    this->location = location;
 }
 
-silicon::ast::If *
-silicon::ast::If::create(compiler::Context *ctx, Node *condition, std::vector<Node *> then_statements,
-                         std::vector<Node *> else_statements) {
-    auto *node = new If(condition, MOVE(then_statements), MOVE(else_statements));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::If::codegen(compiler::Context *ctx) {
+llvm::Value *If::codegen(Context *ctx) {
     if (is_inline) return inlineCodegen(ctx);
 
     if (!hasThen() && !hasElse()) return nullptr;
@@ -76,17 +71,17 @@ llvm::Value *silicon::ast::If::codegen(compiler::Context *ctx) {
     return nullptr;
 }
 
-silicon::node_t silicon::ast::If::type() {
+node_t If::type() {
     return node_t::IF;
 }
 
-llvm::Value *silicon::ast::If::inlineCodegen(compiler::Context *ctx) {
+llvm::Value *If::inlineCodegen(Context *ctx) {
     llvm::Value *conditionV = conditionCodegen(ctx);
 
     llvm::Function *function = ctx->llvm_ir_builder.GetInsertBlock()->getParent();
 
-    ast::Node *Then = then_statements[0];
-    ast::Node *Else = else_statements[0];
+    Node *Then = then_statements[0];
+    Node *Else = else_statements[0];
 
     bool should_keep_then = !Then->type(node_t::BOOLEAN_LIT) && !Then->type(node_t::NUMBER_LIT);
     bool should_keep_else = !should_keep_then || (!Else->type(node_t::BOOLEAN_LIT) && !Else->type(node_t::NUMBER_LIT));
@@ -137,11 +132,11 @@ llvm::Value *silicon::ast::If::inlineCodegen(compiler::Context *ctx) {
     return PN;
 }
 
-llvm::Value *silicon::ast::If::conditionCodegen(compiler::Context *ctx) {
+llvm::Value *If::conditionCodegen(Context *ctx) {
     return ctx->def_cast(condition, ctx->bool_type())->codegen(ctx);
 }
 
-llvm::Value *silicon::ast::If::thenCodegen(compiler::Context *ctx) {
+llvm::Value *If::thenCodegen(Context *ctx) {
     ctx->operator++();
 
     ctx->statements(then_statements);
@@ -153,7 +148,7 @@ llvm::Value *silicon::ast::If::thenCodegen(compiler::Context *ctx) {
     return value;
 }
 
-llvm::Value *silicon::ast::If::elseCodegen(compiler::Context *ctx) {
+llvm::Value *If::elseCodegen(Context *ctx) {
     ctx->operator++();
 
     ctx->statements(else_statements);
@@ -165,22 +160,22 @@ llvm::Value *silicon::ast::If::elseCodegen(compiler::Context *ctx) {
     return value;
 }
 
-silicon::ast::If *silicon::ast::If::setElse(std::vector<Node *> statements) {
+If *If::setElse(vector<Node *> statements) {
     else_statements = MOVE(statements);
 
     return this;
 }
 
-silicon::ast::If *silicon::ast::If::makeInline() {
+If *If::makeInline() {
     is_inline = true;
 
     return this;
 }
 
-bool silicon::ast::If::hasThen() {
-    return then_statements.size() > 0;
+bool If::hasThen() {
+    return !then_statements.empty();
 }
 
-bool silicon::ast::If::hasElse() {
-    return else_statements.size() > 0;
+bool If::hasElse() {
+    return !else_statements.empty();
 }

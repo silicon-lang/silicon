@@ -24,17 +24,17 @@
 
 
 namespace silicon::ast {
+    
+    using namespace compiler;
 
     class Return : public Node {
     private:
         Node *value;
 
-        explicit Return(Node *value = nullptr);
-
     public:
-        static Return *create(compiler::Context *ctx, Node *value = nullptr);
+        explicit Return(const string &location, Node *value = nullptr);
 
-        llvm::ReturnInst *codegen(compiler::Context *ctx) override;
+        llvm::ReturnInst *codegen(Context *ctx) override;
 
         node_t type() override;
 

@@ -19,20 +19,16 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::UnaryOperation::UnaryOperation(unary_operation_t op, Node *node, bool suffix) : op(op), node(node),
-                                                                                              suffix(suffix) {
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+UnaryOperation::UnaryOperation(const string &location, unary_operation_t op, Node *node, bool suffix) : op(op), node(node), suffix(suffix) {
+    this->location = location;
 }
 
-silicon::ast::Node *
-silicon::ast::UnaryOperation::create(compiler::Context *ctx, unary_operation_t op, Node *node, bool suffix) {
-    auto *n = new UnaryOperation(op, node, suffix);
-
-    n->loc = parse_location(ctx->loc);
-
-    return n;
-}
-
-llvm::Value *silicon::ast::UnaryOperation::codegen(compiler::Context *ctx) {
+llvm::Value *UnaryOperation::codegen(Context *ctx) {
     switch (op) {
         case unary_operation_t::PLUS_PLUS:
             return increment(ctx);
@@ -45,11 +41,11 @@ llvm::Value *silicon::ast::UnaryOperation::codegen(compiler::Context *ctx) {
     }
 }
 
-silicon::node_t silicon::ast::UnaryOperation::type() {
-    return silicon::node_t::UNARY_OP;
+node_t UnaryOperation::type() {
+    return node_t::UNARY_OP;
 }
 
-llvm::Value *silicon::ast::UnaryOperation::increment(compiler::Context *ctx) {
+llvm::Value *UnaryOperation::increment(Context *ctx) {
     if (!node->type(node_t::VARIABLE))
         fail_codegen("Expected variable");
 
@@ -94,7 +90,7 @@ llvm::Value *silicon::ast::UnaryOperation::increment(compiler::Context *ctx) {
     return operation;
 }
 
-llvm::Value *silicon::ast::UnaryOperation::decrement(compiler::Context *ctx) {
+llvm::Value *UnaryOperation::decrement(Context *ctx) {
     if (!node->type(node_t::VARIABLE))
         fail_codegen("Expected variable");
 
@@ -139,7 +135,7 @@ llvm::Value *silicon::ast::UnaryOperation::decrement(compiler::Context *ctx) {
     return operation;
 }
 
-llvm::Value *silicon::ast::UnaryOperation::negate(compiler::Context *ctx) {
+llvm::Value *UnaryOperation::negate(Context *ctx) {
     llvm::Value *n = node->codegen(ctx);
 
     llvm::Type *type = n->getType();
@@ -155,7 +151,7 @@ llvm::Value *silicon::ast::UnaryOperation::negate(compiler::Context *ctx) {
     );
 }
 
-llvm::Value *silicon::ast::UnaryOperation::not_op(compiler::Context *ctx) {
+llvm::Value *UnaryOperation::not_op(Context *ctx) {
     llvm::Value *value = node->codegen(ctx);
 
     llvm::Type *type = value->getType();

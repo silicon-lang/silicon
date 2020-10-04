@@ -22,18 +22,21 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class BooleanLiteral : public Node {
     private:
         bool value;
 
-        explicit BooleanLiteral(bool value);
-
     public:
-        static Node *create(compiler::Context *ctx, bool value);
+        BooleanLiteral(const string &location, bool value);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

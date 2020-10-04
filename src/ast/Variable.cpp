@@ -19,18 +19,17 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Variable::Variable(std::string name, Node *context) : name(MOVE(name)), context(context) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Variable::Variable(const string &location, string name, Node *context) : name(MOVE(name)), context(context) {
+    this->location = location;
 }
 
-silicon::ast::Node *silicon::ast::Variable::create(compiler::Context *ctx, const std::string &name, Node *context) {
-    auto *node = new Variable(name, context);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::Variable::codegen(compiler::Context *ctx) {
+llvm::Value *Variable::codegen(Context *ctx) {
     if (context) return ctx->load(get_pointer(ctx));
 
     auto *alloca = ctx->get_alloca(name);
@@ -47,15 +46,15 @@ llvm::Value *silicon::ast::Variable::codegen(compiler::Context *ctx) {
     return load;
 }
 
-silicon::node_t silicon::ast::Variable::type() {
+node_t Variable::type() {
     return node_t::VARIABLE;
 }
 
-std::string silicon::ast::Variable::getName() {
+string Variable::getName() {
     return name;
 }
 
-llvm::Type *silicon::ast::Variable::getType(compiler::Context *ctx) {
+llvm::Type *Variable::getType(Context *ctx) {
     if (context) {
         uint64_t index = element_index(ctx);
         auto *var = (Variable *) context;
@@ -67,7 +66,7 @@ llvm::Type *silicon::ast::Variable::getType(compiler::Context *ctx) {
     return ctx->get_alloca(name)->getAllocatedType();
 }
 
-llvm::Value *silicon::ast::Variable::get_pointer(compiler::Context *ctx) {
+llvm::Value *Variable::get_pointer(Context *ctx) {
     if (!context) {
         auto *alloca = ctx->get_alloca(name);
 
@@ -83,14 +82,14 @@ llvm::Value *silicon::ast::Variable::get_pointer(compiler::Context *ctx) {
     return ctx->llvm_ir_builder.CreateStructGEP(var->get_pointer(ctx), index);
 }
 
-uint64_t silicon::ast::Variable::element_index(silicon::compiler::Context *ctx) {
+uint64_t Variable::element_index(Context *ctx) {
     if (!context->type(node_t::VARIABLE))
         fail_codegen("Can not access property <" + name + "> of non variable");
 
     auto *var = (Variable *) context;
 
     llvm::Type *type = var->getType(ctx);
-    std::string type_name = parse_type(type);
+    string type_name = parse_type(type);
 
     if (!is_interface(type))
         fail_codegen("Can not access property <" + name + "> of <" + type_name + ">");

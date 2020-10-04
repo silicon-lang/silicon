@@ -19,10 +19,15 @@
 #include "utils.h"
 
 
-void silicon::ast::Node::fail_codegen(const std::string &error) noexcept {
-    codegen_error(loc, error);
+using namespace std;
+using namespace silicon;
+using namespace ast;
+
+
+void Node::fail_codegen(const string &error) noexcept {
+    codegen_error(location, error);
 }
 
-bool silicon::ast::Node::type(silicon::node_t t) {
+bool Node::type(node_t t) {
     return type() == t;
 }

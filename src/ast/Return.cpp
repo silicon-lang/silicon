@@ -19,18 +19,16 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Return::Return(Node *value) : value(value) {
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Return::Return(const string &location, Node *value) : value(value) {
+    this->location = location;
 }
 
-silicon::ast::Return *silicon::ast::Return::create(compiler::Context *ctx, Node *value) {
-    auto *node = new Return(value);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::ReturnInst *silicon::ast::Return::codegen(compiler::Context *ctx) {
+llvm::ReturnInst *Return::codegen(Context *ctx) {
     if (!value) {
         if (ctx->expected_type && !compare_types(ctx->void_type(), ctx->expected_type)) {
             fail_codegen(
@@ -58,6 +56,6 @@ llvm::ReturnInst *silicon::ast::Return::codegen(compiler::Context *ctx) {
     return ctx->llvm_ir_builder.CreateRet(ret);
 }
 
-silicon::node_t silicon::ast::Return::type() {
+node_t Return::type() {
     return node_t::RETURN;
 }

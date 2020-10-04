@@ -23,18 +23,21 @@
 #include <map>
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class PlainObject : public Node {
     private:
-        std::map<std::string, Node *> value;
-
-        explicit PlainObject(std::map<std::string, Node *> value);
+        map<string, Node *> value;
 
     public:
-        static Node *create(compiler::Context *ctx, std::map<std::string, Node *>);
+        PlainObject(const string &location, map<string, Node *> value);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 

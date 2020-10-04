@@ -19,21 +19,21 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::NumberLiteral::NumberLiteral(std::string value) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+NumberLiteral::NumberLiteral(const string &location, string value) {
+    this->location = location;
+
     value = replace_all(value, "_", "");
 
     this->value = value;
 }
 
-silicon::ast::Node *silicon::ast::NumberLiteral::create(compiler::Context *ctx, std::string value) {
-    auto *node = new NumberLiteral(MOVE(value));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::NumberLiteral::codegen(compiler::Context *ctx) {
+llvm::Value *NumberLiteral::codegen(Context *ctx) {
     llvm::Type *llvm_type = ctx->expected_type;
 
     if (!llvm_type
@@ -41,7 +41,7 @@ llvm::Value *silicon::ast::NumberLiteral::codegen(compiler::Context *ctx) {
                 llvm_type->isIntegerTy()
                 && llvm_type->getIntegerBitWidth() == 1
         )) {
-        if (std::string::npos == value.find('.'))
+        if (string::npos == value.find('.'))
             return ctx->llvm_ir_builder.getInt32(stoi(value));
 
         return llvm::ConstantFP::get(ctx->float_type(64), value);
@@ -51,12 +51,12 @@ llvm::Value *silicon::ast::NumberLiteral::codegen(compiler::Context *ctx) {
 
     if (llvm_type->isFloatingPointTy()) return llvm::ConstantFP::get(llvm_type, value);
 
-    if (std::string::npos == value.find('.'))
+    if (string::npos == value.find('.'))
         return ctx->llvm_ir_builder.getInt32(stoi(value));
 
     return llvm::ConstantFP::get(ctx->float_type(64), value);
 }
 
-silicon::node_t silicon::ast::NumberLiteral::type() {
+node_t NumberLiteral::type() {
     return node_t::NUMBER_LIT;
 }

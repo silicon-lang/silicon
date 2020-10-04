@@ -30,13 +30,17 @@
 #include "parser/parser.h"
 
 
-void silicon::compiler::codegen(std::string input, std::string output, bool emit_llvm) {
+using namespace std;
+using namespace silicon;
+
+
+void compiler::codegen(string input, string output, bool emit_llvm) {
     const clock_t begin_time = clock();
 
-    std::ifstream f(input);
-    std::string buffer(std::istreambuf_iterator<char>(f), {});
+    ifstream f(input);
+    string buffer(istreambuf_iterator<char>(f), {});
 
-    silicon::compiler::Context ctx(input);
+    Context ctx(input);
 
     ctx.cursor = buffer.c_str();
     ctx.loc.begin.filename = &input;
@@ -60,7 +64,7 @@ void silicon::compiler::codegen(std::string input, std::string output, bool emit
     ctx.llvm_module->setTargetTriple(TargetTriple);
     auto TheTriple = llvm::Triple(TargetTriple);
 
-    std::string Error;
+    string Error;
     auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
 
     if (!Target) {
@@ -71,7 +75,7 @@ void silicon::compiler::codegen(std::string input, std::string output, bool emit
 
     auto CPU = llvm::sys::getHostCPUName();
     // TODO:
-    std::string FeaturesStr;
+    string FeaturesStr;
 
     llvm::TargetOptions opt;
     auto RM = llvm::Optional<llvm::Reloc::Model>();
@@ -87,7 +91,7 @@ void silicon::compiler::codegen(std::string input, std::string output, bool emit
 
         output += ".ll";
 
-        std::error_code EC;
+        error_code EC;
         llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::F_None);
 
         if (EC) {
@@ -106,7 +110,7 @@ void silicon::compiler::codegen(std::string input, std::string output, bool emit
 
         auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
 
-        std::error_code EC;
+        error_code EC;
         llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::F_None);
 
         if (EC) {
@@ -129,10 +133,10 @@ void silicon::compiler::codegen(std::string input, std::string output, bool emit
 
     const clock_t end_time = clock();
 
-    std::cout << "Wrote \""
-              << output
-              << "\" in "
-              << float(end_time - begin_time) / CLOCKS_PER_SEC
-              << " second(s)"
-              << std::endl;
+    cout << "Wrote \""
+         << output
+         << "\" in "
+         << float(end_time - begin_time) / CLOCKS_PER_SEC
+         << " second(s)"
+         << endl;
 }

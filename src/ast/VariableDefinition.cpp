@@ -19,23 +19,19 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::VariableDefinition::VariableDefinition(std::string name, ast::Type *type) : name(MOVE(name)),
-                                                                                          llvm_type(type) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+VariableDefinition::VariableDefinition(const string &location, string name, Type *type) : name(MOVE(name)), llvm_type(type) {
     if (!type) silicon_error("Argument <type> is required");
+
+    this->location = location;
 }
 
-silicon::ast::Node *
-silicon::ast::VariableDefinition::create(compiler::Context *ctx, const std::string &name, ast::Type *type) {
-    if (!type) type = ctx->type(nullptr);
-
-    auto *node = new VariableDefinition(name, type);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::VariableDefinition::codegen(compiler::Context *ctx) {
+llvm::Value *VariableDefinition::codegen(Context *ctx) {
     llvm::Type *t = llvm_type->codegen(ctx);
 
     if (!t) t = ctx->expected_type;
@@ -43,14 +39,14 @@ llvm::Value *silicon::ast::VariableDefinition::codegen(compiler::Context *ctx) {
     return ctx->alloc(name, t);
 }
 
-silicon::node_t silicon::ast::VariableDefinition::type() {
+node_t VariableDefinition::type() {
     return node_t::VARIABLE_DEFINITION;
 }
 
-std::string silicon::ast::VariableDefinition::getName() {
+string VariableDefinition::getName() {
     return name;
 }
 
-llvm::Type *silicon::ast::VariableDefinition::getLLVMType(compiler::Context *ctx) {
+llvm::Type *VariableDefinition::getLLVMType(Context *ctx) {
     return llvm_type->codegen(ctx);
 }

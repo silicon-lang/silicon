@@ -23,25 +23,28 @@
 #include "Type.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class VariableDefinition : public Node {
     private:
-        std::string name;
-        ast::Type *llvm_type;
-
-        explicit VariableDefinition(std::string name, ast::Type *type);
+        string name;
+        Type *llvm_type;
 
     public:
-        static Node *create(compiler::Context *ctx, const std::string& name, ast::Type *type = nullptr);
+        VariableDefinition(const string &location, string name, Type *type);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 
-        std::string getName();
+        string getName();
 
-        llvm::Type *getLLVMType(compiler::Context *ctx);
+        llvm::Type *getLLVMType(Context *ctx);
 
     };
 

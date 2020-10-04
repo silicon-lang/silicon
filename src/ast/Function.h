@@ -25,20 +25,22 @@
 #include "Prototype.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class Function : public Node {
     private:
         Prototype *prototype;
-        std::vector<Node *> body;
-
-        Function(Prototype *prototype, std::vector<Node *> body);
+        vector<Node *> body;
 
     public:
-        static Function *
-        create(compiler::Context *ctx, Prototype *prototype, std::vector<Node *> body);
+        Function(const string &location, Prototype *prototype, vector<Node *> body);
 
-        llvm::Function *codegen(compiler::Context *ctx) override;
+        llvm::Function *codegen(Context *ctx) override;
 
         node_t type() override;
 

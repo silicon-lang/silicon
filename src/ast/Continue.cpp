@@ -19,18 +19,17 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Continue::Continue() {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Continue::Continue(const string &location) {
+    this->location = location;
 }
 
-silicon::ast::Continue *silicon::ast::Continue::create(compiler::Context *ctx) {
-    auto *node = new Continue();
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::Continue::codegen(compiler::Context *ctx) {
+llvm::Value *Continue::codegen(Context *ctx) {
     loop_points_t *loop_points = ctx->loop_points;
 
     if (!loop_points) fail_codegen("Error: Unexpected \"continue\" outside loop");
@@ -38,6 +37,6 @@ llvm::Value *silicon::ast::Continue::codegen(compiler::Context *ctx) {
     return ctx->llvm_ir_builder.CreateBr(loop_points->continue_point);
 }
 
-silicon::node_t silicon::ast::Continue::type() {
+node_t Continue::type() {
     return node_t::CONTINUE;
 }

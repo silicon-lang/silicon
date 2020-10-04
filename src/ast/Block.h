@@ -25,36 +25,39 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
+
+    using namespace compiler;
 
     class Block : public Node {
     private:
         Block *parent;
 
-        std::vector<Node *> statements;
+        vector<Node *> statements;
 
-        std::map<std::string, llvm::AllocaInst *> variables;
-
-        explicit Block(Block *parent = nullptr);
+        map<string, llvm::AllocaInst *> variables;
 
     public:
-        static Block *create(compiler::Context *ctx, Block *parent = nullptr);
+        Block(const string &location, Block *parent = nullptr);
 
-        llvm::Value *codegen(compiler::Context *ctx) override;
+        llvm::Value *codegen(Context *ctx) override;
 
         node_t type() override;
 
         Block *getParent();
 
-        Block *setStatements(const std::vector<Node *> &nodes);
+        Block *setStatements(const vector<Node *> &nodes);
 
         Block *push(Node *statement);
 
-        bool allocated(const std::string &name);
+        bool allocated(const string &name);
 
-        llvm::AllocaInst *get_alloca(const std::string &name);
+        llvm::AllocaInst *get_alloca(const string &name);
 
-        llvm::Value *alloc(compiler::Context *ctx, const std::string &name, llvm::Type *type);
+        llvm::Value *alloc(Context *ctx, const string &name, llvm::Type *type);
 
     };
 

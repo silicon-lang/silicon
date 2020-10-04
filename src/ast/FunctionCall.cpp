@@ -20,30 +20,28 @@
 #include "FunctionCall.h"
 
 
-silicon::ast::FunctionCall::FunctionCall(std::string callee, std::vector<Node *> args) : callee(MOVE(callee)),
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+FunctionCall::FunctionCall(const string &location, string callee, vector<Node *> args) : callee(MOVE(callee)),
                                                                                          args(MOVE(args)) {
+    this->location = location;
 }
 
-silicon::ast::Node *
-silicon::ast::FunctionCall::create(compiler::Context *ctx, std::string callee, std::vector<Node *> args) {
-    auto *node = new FunctionCall(MOVE(callee), MOVE(args));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::FunctionCall::codegen(compiler::Context *ctx) {
+llvm::Value *FunctionCall::codegen(Context *ctx) {
     llvm::Function *calleeFunc = ctx->llvm_module->getFunction(callee);
 
     if (!calleeFunc) fail_codegen("Error: Undefined function <" + callee + ">");
 
     llvm::FunctionType *calleeType = calleeFunc->getFunctionType();
-    std::vector<llvm::Value *> argsV;
+    vector<llvm::Value *> argsV;
 
     llvm::Type *expected_type = ctx->expected_type;
 
-    std::vector<std::string> argNames;
+    vector<string> argNames;
     for (auto &arg : calleeFunc->args()) argNames.push_back(arg.getName());
 
     bool is_variadic = calleeType->isVarArg();
@@ -55,9 +53,9 @@ llvm::Value *silicon::ast::FunctionCall::codegen(compiler::Context *ctx) {
                 "Error: Function \""
                 + callee
                 + "\" expected <"
-                + std::to_string(expected_args_count)
+                + to_string(expected_args_count)
                 + "> parameter(s), got <"
-                + std::to_string(args_count)
+                + to_string(args_count)
                 + "> parameter(s) instead."
         );
     }
@@ -73,7 +71,7 @@ llvm::Value *silicon::ast::FunctionCall::codegen(compiler::Context *ctx) {
         if (ctx->expected_type && !compare_types(value->getType(), ctx->expected_type)) {
             arg->fail_codegen(
                     "TypeError: Expected parameter \""
-                    + (std::string) argNames[i]
+                    + (string) argNames[i]
                     + "\" to be <"
                     + parse_type(ctx->expected_type)
                     + ">, got <"
@@ -93,6 +91,6 @@ llvm::Value *silicon::ast::FunctionCall::codegen(compiler::Context *ctx) {
     return ctx->llvm_ir_builder.CreateCall(calleeFunc, argsV);
 }
 
-silicon::node_t silicon::ast::FunctionCall::type() {
+node_t FunctionCall::type() {
     return node_t::FUNCTION_CALL;
 }

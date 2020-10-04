@@ -20,7 +20,15 @@
 #include <utility>
 
 
-silicon::ast::StringLiteral::StringLiteral(std::string value) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+StringLiteral::StringLiteral(const string &location, string value) {
+    this->location = location;
+
     value = replace_all(value, "\\t", "\t");
     value = replace_all(value, "\\v", "\v");
     value = replace_all(value, "\\0", "\0");
@@ -35,16 +43,8 @@ silicon::ast::StringLiteral::StringLiteral(std::string value) {
     this->value = value;
 }
 
-silicon::ast::Node *silicon::ast::StringLiteral::create(compiler::Context *ctx, std::string value) {
-    auto *node = new StringLiteral(MOVE(value));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Value *silicon::ast::StringLiteral::codegen(compiler::Context *ctx) {
-    std::string name = "string." + value;
+llvm::Value *StringLiteral::codegen(Context *ctx) {
+    string name = "string." + value;
 
     llvm::GlobalVariable *gs = ctx->llvm_module->getNamedGlobal(name);
 
@@ -53,6 +53,6 @@ llvm::Value *silicon::ast::StringLiteral::codegen(compiler::Context *ctx) {
     return ctx->llvm_ir_builder.CreateConstGEP2_64(gs->getValueType(), gs, 0, 0);
 }
 
-silicon::node_t silicon::ast::StringLiteral::type() {
+node_t StringLiteral::type() {
     return node_t::STRING_LIT;
 }

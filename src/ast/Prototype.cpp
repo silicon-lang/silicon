@@ -20,27 +20,22 @@
 #include "compiler/Context.h"
 
 
-silicon::ast::Prototype::Prototype(std::string name, std::vector<std::pair<std::string, ast::Type *>> args,
-                                   ast::Type *return_type) : name(MOVE(name)), args(MOVE(args)),
-                                                             return_type(return_type) {
+using namespace std;
+using namespace silicon;
+using namespace ast;
+using namespace compiler;
+
+
+Prototype::Prototype(const string &location, string name, vector<pair<string, Type *>> args, Type *return_type) : name(
+        MOVE(name)), args(MOVE(args)), return_type(return_type) {
     if (!return_type) silicon_error("Argument <return_type> is required");
+
+    this->location = location;
 }
 
-silicon::ast::Prototype *silicon::ast::Prototype::create(compiler::Context *ctx, const std::string &name,
-                                                         std::vector<std::pair<std::string, ast::Type *>> args,
-                                                         ast::Type *return_type) {
-    if (!return_type) return_type = ctx->type(nullptr);
-
-    auto *node = new Prototype(name, MOVE(args), return_type);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-llvm::Function *silicon::ast::Prototype::codegen(compiler::Context *ctx) {
-    std::vector<std::string> names;
-    std::vector<llvm::Type *> types;
+llvm::Function *Prototype::codegen(Context *ctx) {
+    vector<string> names;
+    vector<llvm::Type *> types;
 
     for (auto &arg : args) {
         names.push_back(arg.first);
@@ -66,37 +61,37 @@ llvm::Function *silicon::ast::Prototype::codegen(compiler::Context *ctx) {
     return function;
 }
 
-silicon::node_t silicon::ast::Prototype::type() {
+node_t Prototype::type() {
     return node_t::PROTOTYPE;
 }
 
-std::string silicon::ast::Prototype::getName() {
+string Prototype::getName() {
     return name;
 }
 
-llvm::Type *silicon::ast::Prototype::getReturnType(compiler::Context *ctx) {
+llvm::Type *Prototype::getReturnType(Context *ctx) {
     return return_type->codegen(ctx);
 }
 
-silicon::ast::Prototype *silicon::ast::Prototype::setReturnType(compiler::Context *ctx, llvm::Type *type) {
+Prototype *Prototype::setReturnType(Context *ctx, llvm::Type *type) {
     return_type = ctx->type(type);
 
     return this;
 }
 
-silicon::ast::Prototype *silicon::ast::Prototype::externalLinkage() {
+Prototype *Prototype::externalLinkage() {
     linkage = llvm::Function::ExternalLinkage;
 
     return this;
 }
 
-silicon::ast::Prototype *silicon::ast::Prototype::makeExtern() {
+Prototype *Prototype::makeExtern() {
     is_extern = true;
 
     return this;
 }
 
-silicon::ast::Prototype *silicon::ast::Prototype::makeVariadic() {
+Prototype *Prototype::makeVariadic() {
     is_variadic = true;
 
     return this;
