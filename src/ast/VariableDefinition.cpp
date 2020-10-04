@@ -25,18 +25,10 @@ using namespace ast;
 using namespace compiler;
 
 
-VariableDefinition::VariableDefinition(string name, Type *type) : name(MOVE(name)), llvm_type(type) {
+VariableDefinition::VariableDefinition(const string &location, string name, Type *type) : name(MOVE(name)), llvm_type(type) {
     if (!type) silicon_error("Argument <type> is required");
-}
 
-Node *VariableDefinition::create(Context *ctx, const string &name, Type *type) {
-    if (!type) type = ctx->type(nullptr);
-
-    auto *node = new VariableDefinition(name, type);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+    this->location = location;
 }
 
 llvm::Value *VariableDefinition::codegen(Context *ctx) {

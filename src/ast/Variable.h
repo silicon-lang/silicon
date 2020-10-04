@@ -34,12 +34,10 @@ namespace silicon::ast {
         string name;
         Node *context;
 
-        explicit Variable(string name, Node *context = nullptr);
-
         uint64_t element_index(Context *ctx);
 
     public:
-        static Node *create(Context *ctx, const string& name, Node *context = nullptr);
+        Variable(const string &location, string name, Node *context = nullptr);
 
         llvm::Value *codegen(Context *ctx) override;
 

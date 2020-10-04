@@ -19,17 +19,14 @@
 #include "compiler/Context.h"
 
 
+using namespace std;
 using namespace silicon;
 using namespace ast;
 using namespace compiler;
 
 
-Break *Break::create(Context *ctx) {
-    auto *node = new Break();
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+Break::Break(const string &location) {
+    this->location = location;
 }
 
 llvm::Value *Break::codegen(Context *ctx) {

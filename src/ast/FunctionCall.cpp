@@ -26,15 +26,9 @@ using namespace ast;
 using namespace compiler;
 
 
-FunctionCall::FunctionCall(string callee, vector<Node *> args) : callee(MOVE(callee)), args(MOVE(args)) {
-}
-
-Node *FunctionCall::create(Context *ctx, string callee, vector<Node *> args) {
-    auto *node = new FunctionCall(MOVE(callee), MOVE(args));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+FunctionCall::FunctionCall(const string &location, string callee, vector<Node *> args) : callee(MOVE(callee)),
+                                                                                         args(MOVE(args)) {
+    this->location = location;
 }
 
 llvm::Value *FunctionCall::codegen(Context *ctx) {

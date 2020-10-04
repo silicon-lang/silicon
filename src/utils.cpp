@@ -123,7 +123,7 @@ string silicon::parse_location(yy::location location) {
 
     l += ":" + to_string(location.begin.line);
 
-    l += ":" + to_string(location.begin.column) + "-" + to_string(location.end.column);
+    l += "." + to_string(location.begin.column) + "-" + to_string(location.end.column);
 
     return l;
 }

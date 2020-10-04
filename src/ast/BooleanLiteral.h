@@ -22,6 +22,9 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
 
     using namespace compiler;
@@ -30,10 +33,8 @@ namespace silicon::ast {
     private:
         bool value;
 
-        explicit BooleanLiteral(bool value);
-
     public:
-        static Node *create(Context *ctx, bool value);
+        BooleanLiteral(const string &location, bool value);
 
         llvm::Value *codegen(Context *ctx) override;
 

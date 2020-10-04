@@ -26,20 +26,11 @@ using namespace ast;
 using namespace compiler;
 
 
-Prototype::Prototype(string name, vector<pair<string, Type *>> args, Type *return_type) : name(MOVE(name)),
-                                                                                          args(MOVE(args)),
-                                                                                          return_type(return_type) {
+Prototype::Prototype(const string &location, string name, vector<pair<string, Type *>> args, Type *return_type) : name(
+        MOVE(name)), args(MOVE(args)), return_type(return_type) {
     if (!return_type) silicon_error("Argument <return_type> is required");
-}
 
-Prototype *Prototype::create(Context *ctx, const string &name, vector<pair<string, Type *>> args, Type *return_type) {
-    if (!return_type) return_type = ctx->type(nullptr);
-
-    auto *node = new Prototype(name, MOVE(args), return_type);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+    this->location = location;
 }
 
 llvm::Function *Prototype::codegen(Context *ctx) {

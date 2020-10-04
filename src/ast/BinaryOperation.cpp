@@ -25,15 +25,10 @@ using namespace ast;
 using namespace compiler;
 
 
-BinaryOperation::BinaryOperation(binary_operation_t op, Node *left, Node *right) : op(op), left(left), right(right) {
-}
-
-Node *BinaryOperation::create(Context *ctx, binary_operation_t op, Node *left, Node *right) {
-    auto *node = new BinaryOperation(op, left, right);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+BinaryOperation::BinaryOperation(const string &location, binary_operation_t op, Node *left, Node *right) : op(op),
+                                                                                                           left(left),
+                                                                                                           right(right) {
+    this->location = location;
 }
 
 llvm::Value *BinaryOperation::codegen(Context *ctx) {

@@ -91,6 +91,62 @@ namespace silicon::compiler {
 
         llvm::Type *def_type(const string &name, llvm::Type *type);
 
+        Interface *interface(const string &name);
+
+        /* ------------------------- AST ------------------------- */
+
+        Type *type(llvm::Type *type = nullptr) const;
+
+        Type *type(const string &name);
+
+        Node *null(Type *type = nullptr) const;
+
+        [[nodiscard]] Node *bool_lit(bool value) const;
+
+        [[nodiscard]] Node *num_lit(string value) const;
+
+        [[nodiscard]] Node *plain_object(map<string, Node *> value) const;
+
+        [[nodiscard]] Node *string_lit(string value) const;
+
+        Node *var(const string &name, Node *context = nullptr) const;
+
+        Node *def_var(const string &name, Type *type = nullptr) const;
+
+        Interface *def_interface(const string &name, vector<pair<string, Type *>> properties);
+
+        static pair<string, Type *> def_arg(const string &name, Type *type);
+
+        Prototype *def_proto(const string &name, vector<pair<string, Type *>> args, Type *return_type = nullptr) const;
+
+        Function *def_func(Prototype *prototype, vector<Node *> body) const;
+
+        Return *def_ret(Node *value = nullptr) const;
+
+        [[nodiscard]] Node *call_func(string callee, vector<Node *> args = {}) const;
+
+        Node *def_op(binary_operation_t op, Node *left, Node *right) const;
+
+        Node *def_op(unary_operation_t op, Node *node, bool suffix = false) const;
+
+        Node *def_cast(Node *node, llvm::Type *llvm_type) const;
+
+        Node *def_cast(Node *node, Type *type) const;
+
+        If *def_if(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements = {}) const;
+
+        [[nodiscard]] Break *def_break() const;
+
+        [[nodiscard]] Continue *def_continue() const;
+
+        [[nodiscard]] Loop *def_loop(vector<Node *> body) const;
+
+        While *def_while(Node *condition, vector<Node *> body) const;
+
+        For *def_for(Node *definition, Node *condition, Node *stepper, vector<Node *> body) const;
+
+        /* ------------------------- CODEGEN ------------------------- */
+
         llvm::Type *void_type();
 
         llvm::Type *bool_type();
@@ -100,64 +156,6 @@ namespace silicon::compiler {
         llvm::Type *float_type(unsigned int bits);
 
         llvm::Type *string_type();
-
-        Type *type(llvm::Type *type);
-
-        Type *type(const string &name);
-
-        Node *null(Type *type = nullptr);
-
-        Node *bool_lit(bool value);
-
-        Node *num_lit(string value);
-
-        Node *plain_object(map<string, Node *> value);
-
-        Node *string_lit(string value);
-
-        Node *var(const string &name, Node *context = nullptr);
-
-        Node *def_var(const string &name, Type *type = nullptr);
-
-        Interface *interface(const string &name);
-
-        Interface *
-        def_interface(const string &name, vector<pair<string, Type *>> properties);
-
-        static pair<string, Type *> def_arg(const string &name, Type *type);
-
-        Prototype *
-        def_proto(const string &name, vector<pair<string, Type *>> args, Type *return_type = nullptr);
-
-        Function *def_func(Prototype *prototype, vector<Node *> body);
-
-        Return *def_ret(Node *value = nullptr);
-
-        Node *call_func(string callee, vector<Node *> args = {});
-
-        Node *def_op(binary_operation_t op, Node *left, Node *right);
-
-        Node *def_op(unary_operation_t op, Node *node, bool suffix = false);
-
-        Node *def_cast(Node *node, llvm::Type *llvm_type);
-
-        Node *def_cast(Node *node, Type *type);
-
-        If *
-        def_if(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements = {});
-
-        Break *def_break();
-
-        Continue *def_continue();
-
-        Loop *def_loop(vector<Node *> body);
-
-        While *def_while(Node *condition, vector<Node *> body);
-
-        For *
-        def_for(Node *definition, Node *condition, Node *stepper, vector<Node *> body);
-
-        /* ------------------------- CODEGEN ------------------------- */
 
         void fail_codegen(const string &error) const noexcept __attribute__ ((__noreturn__));
 

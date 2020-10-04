@@ -37,7 +37,7 @@ namespace silicon::ast {
 
     class Node {
     protected:
-        string loc;
+        string location;
 
     public:
         virtual ~Node() = default;

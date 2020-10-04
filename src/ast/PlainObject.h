@@ -34,10 +34,8 @@ namespace silicon::ast {
     private:
         map<string, Node *> value;
 
-        explicit PlainObject(map<string, Node *> value);
-
     public:
-        static Node *create(Context *ctx, map<string, Node *>);
+        PlainObject(const string &location, map<string, Node *> value);
 
         llvm::Value *codegen(Context *ctx) override;
 

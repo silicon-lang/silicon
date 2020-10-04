@@ -35,10 +35,8 @@ namespace silicon::ast {
         string name;
         vector<pair<string, Type *>> properties;
 
-        explicit Interface(string name, vector<pair<string, Type *>> properties);
-
     public:
-        static Interface *create(Context *ctx, string name, vector<pair<string, Type *>> properties);
+        Interface(const string &location, string name, vector<pair<string, Type *>> properties);
 
         llvm::Value *codegen(Context *ctx) override;
 

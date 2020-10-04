@@ -37,10 +37,8 @@ namespace silicon::ast {
         Prototype *prototype;
         vector<Node *> body;
 
-        Function(Prototype *prototype, vector<Node *> body);
-
     public:
-        static Function *create(Context *ctx, Prototype *prototype, vector<Node *> body);
+        Function(const string &location, Prototype *prototype, vector<Node *> body);
 
         llvm::Function *codegen(Context *ctx) override;
 

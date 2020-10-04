@@ -23,13 +23,16 @@
 #include "Context.h"
 
 
+#define CREATE_NODE(CLS, ...) new CLS(parse_location(loc), ##__VA_ARGS__)
+
+
 using namespace std;
 using namespace silicon::ast;
 using namespace silicon::compiler;
 
 
 Context::Context(const string &filename) : llvm_ir_builder(llvm_ctx) {
-    block = Block::create(this);
+    block = CREATE_NODE(Block);
 
     llvm_module = llvm::make_unique<llvm::Module>(filename, llvm_ctx);
 
@@ -66,7 +69,7 @@ Context::Context(const string &filename) : llvm_ir_builder(llvm_ctx) {
 }
 
 void Context::operator++() {
-    block = Block::create(this, block);
+    block = CREATE_NODE(Block, block);
 }
 
 void Context::operator--() {
@@ -84,6 +87,138 @@ llvm::Type *Context::def_type(const string &name, llvm::Type *type) {
 
     return type;
 }
+
+Interface *Context::interface(const string &name) {
+    auto interface = interfaces.find(name);
+
+    return interface->second;
+}
+
+Type *Context::type(llvm::Type *type) const {
+    return CREATE_NODE(Type, [type]() -> llvm::Type * {
+        return type;
+    });
+}
+
+Type *Context::type(const string &name) {
+    string location = parse_location(loc);
+
+    return CREATE_NODE(Type, [&, location, name]() -> llvm::Type * {
+        if (name.empty()) codegen_error(location, "TypeError: Type <" + name + "> not found.");
+
+        auto type = types.find(name);
+
+        if (type == types.end()) codegen_error(location, "TypeError: Type <" + name + "> not found.");
+
+        return type->second;
+    });
+}
+
+Node *Context::null(Type *type) const {
+    if (!type) type = this->type();
+
+    return CREATE_NODE(Null, type);
+}
+
+Node *Context::bool_lit(bool value) const {
+    return CREATE_NODE(BooleanLiteral, value);
+}
+
+Node *Context::num_lit(string value) const {
+    return CREATE_NODE(NumberLiteral, MOVE(value));
+}
+
+Node *Context::plain_object(map<string, Node *> value) const {
+    return CREATE_NODE(PlainObject, MOVE(value));
+}
+
+Node *Context::string_lit(string value) const {
+    return CREATE_NODE(StringLiteral, MOVE(value));
+}
+
+Node *Context::var(const string &name, Node *context) const {
+    return CREATE_NODE(Variable, name, context);
+}
+
+Node *Context::def_var(const string &name, Type *type) const {
+    if (!type) type = this->type();
+
+    return CREATE_NODE(VariableDefinition, name, type);
+}
+
+Interface *Context::def_interface(const string &name, vector<pair<string, Type *>> properties) {
+    if (interfaces.count(name) > 0) fail_codegen("TypeError: Interface <" + name + "> can not be defined again.");
+
+    auto *interface = CREATE_NODE(Interface, name, MOVE(properties));
+
+    interfaces.insert({name, interface});
+
+    return interface;
+}
+
+pair<string, Type *> Context::def_arg(const string &name, Type *type) {
+    return make_pair(name, type);
+}
+
+Prototype *Context::def_proto(const string &name, vector<pair<string, Type *>> args, Type *return_type) const {
+    if (!return_type) return_type = this->type();
+
+    return CREATE_NODE(Prototype, name, MOVE(args), return_type);
+}
+
+Function *Context::def_func(Prototype *prototype, vector<Node *> body) const {
+    return CREATE_NODE(Function, prototype, MOVE(body));
+}
+
+Return *Context::def_ret(Node *value) const {
+    return CREATE_NODE(Return, value);
+}
+
+Node *Context::call_func(string callee, vector<Node *> args) const {
+    return CREATE_NODE(FunctionCall, MOVE(callee), MOVE(args));
+}
+
+Node *Context::def_op(binary_operation_t op, Node *left, Node *right) const {
+    return CREATE_NODE(BinaryOperation, op, left, right);
+}
+
+Node *Context::def_op(unary_operation_t op, Node *node, bool suffix) const {
+    return CREATE_NODE(UnaryOperation, op, node, suffix);
+}
+
+Node *Context::def_cast(Node *node, llvm::Type *llvm_type) const {
+    return CREATE_NODE(Cast, node, type(llvm_type));
+}
+
+Node *Context::def_cast(Node *node, Type *type) const {
+    return CREATE_NODE(Cast, node, type);
+}
+
+If *Context::def_if(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements) const {
+    return CREATE_NODE(If, condition, MOVE(then_statements), MOVE(else_statements));
+}
+
+Break *Context::def_break() const {
+    return CREATE_NODE(Break);
+}
+
+Continue *Context::def_continue() const {
+    return CREATE_NODE(Continue);
+}
+
+Loop *Context::def_loop(vector<Node *> body) const {
+    return CREATE_NODE(Loop, MOVE(body));
+}
+
+While *Context::def_while(Node *condition, vector<Node *> body) const {
+    return CREATE_NODE(While, condition, MOVE(body));
+}
+
+For *Context::def_for(Node *definition, Node *condition, Node *stepper, vector<Node *> body) const {
+    return CREATE_NODE(For, definition, condition, stepper, MOVE(body));
+}
+
+/* ------------------------- CODEGEN ------------------------- */
 
 llvm::Type *Context::void_type() {
     return llvm_ir_builder.getVoidTy();
@@ -113,120 +248,6 @@ llvm::Type *Context::float_type(unsigned int bits) {
 llvm::Type *Context::string_type() {
     return llvm_ir_builder.getInt8PtrTy();
 }
-
-Type *Context::type(llvm::Type *type) {
-    return Type::create(this, type);
-}
-
-Type *Context::type(const string &name) {
-    return Type::create(this, name);
-}
-
-Node *Context::null(Type *type) {
-    return Null::create(this, type);
-}
-
-Node *Context::bool_lit(bool value) {
-    return BooleanLiteral::create(this, value);
-}
-
-Node *Context::num_lit(string value) {
-    return NumberLiteral::create(this, MOVE(value));
-}
-
-Node *Context::plain_object(map<string, Node *> value) {
-    return PlainObject::create(this, MOVE(value));
-}
-
-Node *Context::string_lit(string value) {
-    return StringLiteral::create(this, MOVE(value));
-}
-
-Node *Context::var(const string &name, Node *context) {
-    return Variable::create(this, name, context);
-}
-
-Node *Context::def_var(const string &name, Type *type) {
-    return VariableDefinition::create(this, name, type);
-}
-
-Interface *Context::interface(const string &name) {
-    auto interface = interfaces.find(name);
-
-    return interface->second;
-}
-
-Interface *Context::def_interface(const string &name, vector<pair<string, Type *>> properties) {
-    if (interfaces.count(name) > 0) fail_codegen("TypeError: Interface <" + name + "> can not be defined again.");
-
-    auto *interface = Interface::create(this, name, MOVE(properties));
-
-    interfaces.insert({name, interface});
-
-    return interface;
-}
-
-pair<string, Type *> Context::def_arg(const string &name, Type *type) {
-    return make_pair(name, type);
-}
-
-Prototype *Context::def_proto(const string &name, vector<pair<string, Type *>> args, Type *return_type) {
-    return Prototype::create(this, name, MOVE(args), return_type);
-}
-
-Function *Context::def_func(Prototype *prototype, vector<Node *> body) {
-    return Function::create(this, prototype, MOVE(body));
-}
-
-Return *Context::def_ret(Node *value) {
-    return Return::create(this, value);
-}
-
-Node *Context::call_func(string callee, vector<Node *> args) {
-    return FunctionCall::create(this, MOVE(callee), MOVE(args));
-}
-
-Node *Context::def_op(binary_operation_t op, Node *left, Node *right) {
-    return BinaryOperation::create(this, op, left, right);
-}
-
-Node *Context::def_op(unary_operation_t op, Node *node, bool suffix) {
-    return UnaryOperation::create(this, op, node, suffix);
-}
-
-Node *Context::def_cast(Node *node, llvm::Type *llvm_type) {
-    return Cast::create(this, node, type(llvm_type));
-}
-
-Node *Context::def_cast(Node *node, Type *type) {
-    return Cast::create(this, node, type);
-}
-
-If *Context::def_if(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements) {
-    return If::create(this, condition, MOVE(then_statements), MOVE(else_statements));
-}
-
-Break *Context::def_break() {
-    return Break::create(this);
-}
-
-Continue *Context::def_continue() {
-    return Continue::create(this);
-}
-
-Loop *Context::def_loop(vector<Node *> body) {
-    return Loop::create(this, MOVE(body));
-}
-
-While *Context::def_while(Node *condition, vector<Node *> body) {
-    return While::create(this, condition, MOVE(body));
-}
-
-For *Context::def_for(Node *definition, Node *condition, Node *stepper, vector<Node *> body) {
-    return For::create(this, definition, condition, stepper, MOVE(body));
-}
-
-/* ------------------------- CODEGEN ------------------------- */
 
 void Context::fail_codegen(const string &error) const noexcept {
     codegen_error(parse_location(loc), error);

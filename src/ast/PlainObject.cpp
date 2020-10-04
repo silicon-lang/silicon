@@ -25,15 +25,8 @@ using namespace ast;
 using namespace compiler;
 
 
-PlainObject::PlainObject(map<string, Node *> value) : value(MOVE(value)) {
-}
-
-Node *PlainObject::create(Context *ctx, map<string, Node *> value) {
-    auto *node = new PlainObject(MOVE(value));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+PlainObject::PlainObject(const string &location, map<string, Node *> value) : value(MOVE(value)) {
+    this->location = location;
 }
 
 llvm::Value *PlainObject::codegen(Context *ctx) {

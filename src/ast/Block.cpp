@@ -25,17 +25,8 @@ using namespace ast;
 using namespace compiler;
 
 
-Block::Block(Block *parent) : parent(parent) {
-}
-
-Block *Block::create(Context *ctx, ast::Block *parent) {
-    auto *node = new Block(parent);
-
-    node->loc = parse_location(ctx->loc);
-
-//    if (parent) parent->push(node);
-
-    return node;
+Block::Block(const string &location, Block *parent) : parent(parent) {
+    this->location = location;
 }
 
 llvm::Value *Block::codegen(Context *ctx) {

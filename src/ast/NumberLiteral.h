@@ -33,10 +33,8 @@ namespace silicon::ast {
     private:
         string value;
 
-        explicit NumberLiteral(string value);
-
     public:
-        static Node *create(Context *ctx, string value);
+        NumberLiteral(const string &location, string value);
 
         llvm::Value *codegen(Context *ctx) override;
 

@@ -31,10 +31,8 @@ namespace silicon::ast {
     private:
         Type *llvm_type;
 
-        explicit Null(Type *llvm_type);
-
     public:
-        static Node *create(Context *ctx, Type *llvm_type = nullptr);
+        Null(const string &location, Type *llvm_type);
 
         llvm::Value *codegen(Context *ctx) override;
 

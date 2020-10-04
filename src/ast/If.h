@@ -37,8 +37,6 @@ namespace silicon::ast {
 
         bool is_inline = false;
 
-        If(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements);
-
         llvm::Value *inlineCodegen(Context *ctx);
 
         llvm::Value *conditionCodegen(Context *ctx);
@@ -52,8 +50,7 @@ namespace silicon::ast {
         bool hasElse();
 
     public:
-        static If *
-        create(Context *ctx, Node *condition, vector<Node *> then_statements, vector<Node *> else_statements = {});
+        If(const string &location, Node *condition, vector<Node *> then_statements, vector<Node *> else_statements);
 
         llvm::Value *codegen(Context *ctx) override;
 

@@ -40,10 +40,8 @@ namespace silicon::ast {
 
         map<string, llvm::AllocaInst *> variables;
 
-        explicit Block(Block *parent = nullptr);
-
     public:
-        static Block *create(Context *ctx, Block *parent = nullptr);
+        Block(const string &location, Block *parent = nullptr);
 
         llvm::Value *codegen(Context *ctx) override;
 

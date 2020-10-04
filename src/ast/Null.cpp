@@ -24,18 +24,10 @@ using namespace ast;
 using namespace compiler;
 
 
-Null::Null(Type *llvm_type) : llvm_type(llvm_type) {
+Null::Null(const string &location, Type *llvm_type) : llvm_type(llvm_type) {
     if (!llvm_type) silicon_error("Argument <llvm_type> is required");
-}
 
-Node *Null::create(Context *ctx, Type *llvm_type) {
-    if (!llvm_type) llvm_type = ctx->type(nullptr);
-
-    auto *node = new Null(llvm_type);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+    this->location = location;
 }
 
 llvm::Value *Null::codegen(Context *ctx) {

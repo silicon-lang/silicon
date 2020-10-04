@@ -35,8 +35,6 @@ namespace silicon::ast {
         Node *definition, *condition, *stepper;
         vector<Node *> body;
 
-        For(Node *definition, Node *condition, Node *stepper, vector<Node *> body);
-
         llvm::Value *definitionCodegen(Context *ctx);
 
         llvm::Value *conditionCodegen(Context *ctx);
@@ -46,7 +44,7 @@ namespace silicon::ast {
         llvm::Value *bodyCodegen(Context *ctx);
 
     public:
-        static For *create(Context *ctx, Node *definition, Node *condition, Node *stepper, vector<Node *> body);
+        For(const string &location, Node *definition, Node *condition, Node *stepper, vector<Node *> body);
 
         llvm::Value *codegen(Context *ctx) override;
 

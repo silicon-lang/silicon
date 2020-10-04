@@ -24,15 +24,8 @@ using namespace ast;
 using namespace compiler;
 
 
-Return::Return(Node *value) : value(value) {
-}
-
-Return *Return::create(Context *ctx, Node *value) {
-    auto *node = new Return(value);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+Return::Return(const string &location, Node *value) : value(value) {
+    this->location = location;
 }
 
 llvm::ReturnInst *Return::codegen(Context *ctx) {

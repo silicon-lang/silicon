@@ -35,10 +35,8 @@ namespace silicon::ast {
         string callee;
         vector<Node *> args;
 
-        FunctionCall(string callee, vector<Node *> args);
-
     public:
-        static Node *create(Context *ctx, string callee, vector<Node *> args);
+        FunctionCall(const string &location, string callee, vector<Node *> args);
 
         llvm::Value *codegen(Context *ctx) override;
 

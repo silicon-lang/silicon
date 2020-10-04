@@ -24,15 +24,8 @@ using namespace ast;
 using namespace compiler;
 
 
-UnaryOperation::UnaryOperation(unary_operation_t op, Node *node, bool suffix) : op(op), node(node), suffix(suffix) {
-}
-
-Node *UnaryOperation::create(Context *ctx, unary_operation_t op, Node *node, bool suffix) {
-    auto *n = new UnaryOperation(op, node, suffix);
-
-    n->loc = parse_location(ctx->loc);
-
-    return n;
+UnaryOperation::UnaryOperation(const string &location, unary_operation_t op, Node *node, bool suffix) : op(op), node(node), suffix(suffix) {
+    this->location = location;
 }
 
 llvm::Value *UnaryOperation::codegen(Context *ctx) {

@@ -25,16 +25,10 @@ using namespace ast;
 using namespace compiler;
 
 
-Interface::Interface(string name, vector<pair<string, Type *>> properties) : name(MOVE(name)),
-                                                                             properties(MOVE(properties)) {
-}
-
-Interface *Interface::create(Context *ctx, string name, vector<pair<string, Type *>> properties) {
-    auto *node = new Interface(MOVE(name), MOVE(properties));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+Interface::Interface(const string &location, string name, vector<pair<string, Type *>> properties) : name(MOVE(name)),
+                                                                                                     properties(
+                                                                                                             MOVE(properties)) {
+    this->location = location;
 }
 
 llvm::Value *Interface::codegen(Context *ctx) {

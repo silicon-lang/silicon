@@ -22,6 +22,9 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
     
     using namespace compiler;
@@ -32,8 +35,6 @@ namespace silicon::ast {
         unary_operation_t op;
         Node *node;
 
-        UnaryOperation(unary_operation_t op, Node *node, bool suffix = false);
-
         llvm::Value *increment(Context *ctx);
 
         llvm::Value *decrement(Context *ctx);
@@ -43,7 +44,7 @@ namespace silicon::ast {
         llvm::Value *not_op(Context *ctx);
 
     public:
-        static Node *create(Context *ctx, unary_operation_t op, Node *node, bool suffix = false);
+        UnaryOperation(const string &location, unary_operation_t op, Node *node, bool suffix = false);
 
         llvm::Value *codegen(Context *ctx) override;
 

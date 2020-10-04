@@ -19,20 +19,14 @@
 #include "compiler/Context.h"
 
 
+using namespace std;
 using namespace silicon;
 using namespace ast;
 using namespace compiler;
 
 
-BooleanLiteral::BooleanLiteral(bool value) : value(value) {
-}
-
-Node *BooleanLiteral::create(Context *ctx, bool value) {
-    auto *node = new BooleanLiteral(value);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+BooleanLiteral::BooleanLiteral(const string &location, bool value) : value(value) {
+    this->location = location;
 }
 
 llvm::Value *BooleanLiteral::codegen(Context *ctx) {

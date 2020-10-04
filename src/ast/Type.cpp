@@ -25,35 +25,8 @@ using namespace ast;
 using namespace compiler;
 
 
-Type::Type(function<llvm::Type *()> llvm_type) : llvm_type(MOVE(llvm_type)) {
-}
-
-Type *Type::create(Context *ctx, llvm::Type *type) {
-    auto *node = new Type([type]() -> llvm::Type * {
-        return type;
-    });
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
-}
-
-Type *Type::create(Context *ctx, const string &name) {
-    string location = parse_location(ctx->loc);
-
-    auto *node = new Type([ctx, location, name]() -> llvm::Type * {
-        if (name.empty()) codegen_error(location, "TypeError: Type <" + name + "> not found.");
-
-        auto type = ctx->types.find(name);
-
-        if (type == ctx->types.end()) codegen_error(location, "TypeError: Type <" + name + "> not found.");
-
-        return type->second;
-    });
-
-    node->loc = location;
-
-    return node;
+Type::Type(const string &location, function<llvm::Type *(void)> llvm_type) : location(MOVE(location)),
+                                                                             llvm_type(MOVE(llvm_type)) {
 }
 
 llvm::Type *Type::codegen(Context *ctx) {
@@ -69,5 +42,5 @@ bool Type::type(node_t t) {
 }
 
 void Type::fail_codegen(const string &error) noexcept {
-    codegen_error(loc, error);
+    codegen_error(location, error);
 }

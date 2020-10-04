@@ -27,15 +27,9 @@ using namespace ast;
 using namespace compiler;
 
 
-Function::Function(Prototype *prototype, vector<Node *> body) : prototype(prototype), body(MOVE(body)) {
-}
-
-Function *Function::create(Context *ctx, Prototype *prototype, vector<Node *> body) {
-    auto *node = new Function(prototype, MOVE(body));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+Function::Function(const string &location, Prototype *prototype, vector<Node *> body) : prototype(prototype),
+                                                                                        body(MOVE(body)) {
+    this->location = location;
 }
 
 llvm::Function *Function::codegen(Context *ctx) {

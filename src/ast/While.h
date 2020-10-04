@@ -37,8 +37,6 @@ namespace silicon::ast {
 
         bool is_do_while = false;
 
-        While(Node *condition, vector<Node *> body);
-
         llvm::Value *conditionCodegen(Context *ctx);
 
         llvm::Value *bodyCodegen(Context *ctx);
@@ -46,7 +44,7 @@ namespace silicon::ast {
         bool hasBody();
 
     public:
-        static While *create(Context *ctx, Node *condition, vector<Node *> body);
+        While(const string &location, Node *condition, vector<Node *> body);
 
         llvm::Value *codegen(Context *ctx) override;
 

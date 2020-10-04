@@ -131,5 +131,7 @@ namespace silicon {
 
 }
 
+#define MOVE(V) move(V)
+
 
 #endif //SILICON_UTILS_H

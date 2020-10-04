@@ -22,6 +22,9 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
 
     using namespace compiler;
@@ -30,8 +33,6 @@ namespace silicon::ast {
     private:
         binary_operation_t op;
         Node *left, *right;
-
-        BinaryOperation(binary_operation_t op, Node *left, Node *right);
 
         value_pair_t *parse_pair(Context *ctx);
 
@@ -72,7 +73,7 @@ namespace silicon::ast {
         llvm::Value *gt(Context *ctx);
 
     public:
-        static Node *create(Context *ctx, binary_operation_t op, Node *left, Node *right);
+        BinaryOperation(const string& location, binary_operation_t op, Node *left, Node *right);
 
         llvm::Value *codegen(Context *ctx) override;
 

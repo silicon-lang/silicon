@@ -26,7 +26,9 @@ using namespace ast;
 using namespace compiler;
 
 
-StringLiteral::StringLiteral(string value) {
+StringLiteral::StringLiteral(const string &location, string value) {
+    this->location = location;
+
     value = replace_all(value, "\\t", "\t");
     value = replace_all(value, "\\v", "\v");
     value = replace_all(value, "\\0", "\0");
@@ -39,14 +41,6 @@ StringLiteral::StringLiteral(string value) {
     value = replace_all(value, "\\\\", "\\");
 
     this->value = value;
-}
-
-Node *StringLiteral::create(Context *ctx, string value) {
-    auto *node = new StringLiteral(MOVE(value));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
 }
 
 llvm::Value *StringLiteral::codegen(Context *ctx) {

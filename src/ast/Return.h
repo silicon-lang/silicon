@@ -31,10 +31,8 @@ namespace silicon::ast {
     private:
         Node *value;
 
-        explicit Return(Node *value = nullptr);
-
     public:
-        static Return *create(Context *ctx, Node *value = nullptr);
+        explicit Return(const string &location, Node *value = nullptr);
 
         llvm::ReturnInst *codegen(Context *ctx) override;
 

@@ -19,21 +19,16 @@
 #include "compiler/Context.h"
 
 
+using namespace std;
 using namespace silicon;
 using namespace ast;
 using namespace compiler;
 
 
-Cast::Cast(Node *value, Type *llvm_type) : value(value), llvm_type(llvm_type) {
+Cast::Cast(const string &location, Node *value, Type *llvm_type) : value(value), llvm_type(llvm_type) {
     if (!llvm_type) silicon_error("Argument <llvm_type> is required");
-}
 
-Node *Cast::create(Context *ctx, Node *value, Type *llvm_type) {
-    auto *node = new Cast(value, llvm_type);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+    this->location = location;
 }
 
 llvm::Value *Cast::codegen(Context *ctx) {

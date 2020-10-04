@@ -25,15 +25,8 @@ using namespace ast;
 using namespace compiler;
 
 
-Variable::Variable(string name, Node *context) : name(MOVE(name)), context(context) {
-}
-
-Node *Variable::create(Context *ctx, const string &name, Node *context) {
-    auto *node = new Variable(name, context);
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+Variable::Variable(const string &location, string name, Node *context) : name(MOVE(name)), context(context) {
+    this->location = location;
 }
 
 llvm::Value *Variable::codegen(Context *ctx) {

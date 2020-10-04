@@ -25,17 +25,9 @@ using namespace ast;
 using namespace compiler;
 
 
-For::For(Node *definition, Node *condition, Node *stepper, vector<Node *> body) : definition(definition),
-                                                                                  condition(condition),
-                                                                                  stepper(stepper), body(MOVE(body)) {
-}
-
-For *For::create(Context *ctx, Node *definition, Node *condition, Node *stepper, vector<Node *> body) {
-    auto *node = new For(definition, condition, stepper, MOVE(body));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+For::For(const string &location, Node *definition, Node *condition, Node *stepper, vector<Node *> body) : definition(
+        definition), condition(condition), stepper(stepper), body(MOVE(body)) {
+    this->location = location;
 }
 
 llvm::Value *For::codegen(Context *ctx) {

@@ -22,16 +22,16 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
 
     using namespace compiler;
 
     class Break : public Node {
-    private:
-        Break() = default;
-
     public:
-        static Break *create(Context *ctx);
+        explicit Break(const string &location);
 
         llvm::Value *codegen(Context *ctx) override;
 

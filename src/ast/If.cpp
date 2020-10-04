@@ -26,19 +26,9 @@ using namespace ast;
 using namespace compiler;
 
 
-If::If(Node *condition, vector<Node *> then_statements, vector<Node *> else_statements) : condition(condition),
-                                                                                          then_statements(
-                                                                                                  MOVE(then_statements)),
-                                                                                          else_statements(
-                                                                                                  MOVE(else_statements)) {
-}
-
-If *If::create(Context *ctx, Node *condition, vector<Node *> then_statements, vector<Node *> else_statements) {
-    auto *node = new If(condition, MOVE(then_statements), MOVE(else_statements));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+If::If(const string &location, Node *condition, vector<Node *> then_statements, vector<Node *> else_statements)
+        : condition(condition), then_statements(MOVE(then_statements)), else_statements(MOVE(else_statements)) {
+    this->location = location;
 }
 
 llvm::Value *If::codegen(Context *ctx) {

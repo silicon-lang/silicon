@@ -19,20 +19,14 @@
 #include "compiler/Context.h"
 
 
+using namespace std;
 using namespace silicon;
 using namespace ast;
 using namespace compiler;
 
 
-Continue::Continue() {
-}
-
-Continue *Continue::create(Context *ctx) {
-    auto *node = new Continue();
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+Continue::Continue(const string &location) {
+    this->location = location;
 }
 
 llvm::Value *Continue::codegen(Context *ctx) {

@@ -22,16 +22,16 @@
 #include "Node.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
 
     using namespace compiler;
 
     class Continue : public Node {
-    private:
-        Continue();
-
     public:
-        static Continue *create(Context *ctx);
+        explicit Continue(const string &location);
 
         llvm::Value *codegen(Context *ctx) override;
 

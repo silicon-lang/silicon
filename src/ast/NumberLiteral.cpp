@@ -25,18 +25,12 @@ using namespace ast;
 using namespace compiler;
 
 
-NumberLiteral::NumberLiteral(string value) {
+NumberLiteral::NumberLiteral(const string &location, string value) {
+    this->location = location;
+
     value = replace_all(value, "_", "");
 
     this->value = value;
-}
-
-Node *NumberLiteral::create(Context *ctx, string value) {
-    auto *node = new NumberLiteral(MOVE(value));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
 }
 
 llvm::Value *NumberLiteral::codegen(Context *ctx) {

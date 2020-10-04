@@ -33,15 +33,11 @@ namespace silicon::ast {
     private:
         function<llvm::Type *()> llvm_type;
 
-        explicit Type(function<llvm::Type *()> llvm_type);
-
     protected:
-        string loc;
+        string location;
 
     public:
-        static Type *create(Context *ctx, llvm::Type *type);
-
-        static Type *create(Context *ctx, const string &name);
+        Type(const string &location, function<llvm::Type *(void)> llvm_type);
 
         llvm::Type *codegen(Context *ctx);
 
@@ -54,8 +50,6 @@ namespace silicon::ast {
     };
 
 }
-
-#define MOVE(V) move(V)
 
 
 #endif //SILICON_TYPE_H

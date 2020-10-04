@@ -33,12 +33,10 @@ namespace silicon::ast {
     private:
         vector<Node *> body;
 
-        explicit Loop(vector<Node *> body);
-
         llvm::Value *bodyCodegen(Context *ctx);
 
     public:
-        static Loop *create(Context *ctx, vector<Node *> body);
+        Loop(const string &location, vector<Node *> body);
 
         llvm::Value *codegen(Context *ctx) override;
 

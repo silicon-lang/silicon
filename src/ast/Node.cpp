@@ -25,7 +25,7 @@ using namespace ast;
 
 
 void Node::fail_codegen(const string &error) noexcept {
-    codegen_error(loc, error);
+    codegen_error(location, error);
 }
 
 bool Node::type(node_t t) {

@@ -43,11 +43,8 @@ namespace silicon::ast {
 
         llvm::Function::LinkageTypes linkage = llvm::Function::PrivateLinkage;
 
-        Prototype(string name, vector<pair<string, Type *>> args, Type *return_type);
-
     public:
-        static Prototype *
-        create(Context *ctx, const string &name, vector<pair<string, Type *>> args, Type *return_type = nullptr);
+        Prototype(const string &location, string name, vector<pair<string, Type *>> args, Type *return_type);
 
         llvm::Function *codegen(Context *ctx) override;
 

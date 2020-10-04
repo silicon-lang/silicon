@@ -26,15 +26,8 @@ using namespace ast;
 using namespace compiler;
 
 
-While::While(Node *condition, vector<Node *> body) : condition(condition), body(MOVE(body)) {
-}
-
-While *While::create(compiler::Context *ctx, Node *condition, vector<Node *> body) {
-    auto *node = new While(condition, MOVE(body));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+While::While(const string &location, Node *condition, vector<Node *> body) : condition(condition), body(MOVE(body)) {
+    this->location = location;
 }
 
 llvm::Value *While::codegen(Context *ctx) {

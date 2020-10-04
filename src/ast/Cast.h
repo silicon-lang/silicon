@@ -23,6 +23,9 @@
 #include "Type.h"
 
 
+using namespace std;
+
+
 namespace silicon::ast {
 
     using namespace compiler;
@@ -32,10 +35,8 @@ namespace silicon::ast {
         Node *value;
         Type *llvm_type;
 
-        Cast(Node *value, Type *llvm_type);
-
     public:
-        static Node *create(Context *ctx, Node *value, Type *llvm_type);
+        Cast(const string &location, Node *value, Type *llvm_type);
 
         llvm::Value *codegen(Context *ctx) override;
 

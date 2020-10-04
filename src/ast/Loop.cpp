@@ -25,15 +25,8 @@ using namespace ast;
 using namespace compiler;
 
 
-Loop::Loop(vector<Node *> body) : body(MOVE(body)) {
-}
-
-Loop *Loop::create(Context *ctx, vector<Node *> body) {
-    auto *node = new Loop(MOVE(body));
-
-    node->loc = parse_location(ctx->loc);
-
-    return node;
+Loop::Loop(const string &location, vector<Node *> body) : body(MOVE(body)) {
+    this->location = location;
 }
 
 llvm::Value *Loop::codegen(Context *ctx) {
