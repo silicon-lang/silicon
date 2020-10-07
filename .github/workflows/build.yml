@@ -76,6 +76,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: silicon-linux
+          name: silicon-linux.tar.gz
           path: ${{runner.workspace}}/build/silicon.tar.gz
           if-no-files-found: error

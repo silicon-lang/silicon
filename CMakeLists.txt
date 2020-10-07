@@ -6,7 +6,23 @@ set(CMAKE_CXX_STANDARD 20)
 
 #------------------------- LLVM -------------------------
 
+SET(LLVM_INCLUDE_DOCS OFF)
+SET(LLVM_INCLUDE_BENCHMARKS OFF)
+SET(LLVM_ENABLE_BINDINGS OFF)
+set(LLVM_ENABLE_PROJECTS "lld" CACHE STRING "Enable LLVM projects" FORCE)
+
 add_subdirectory(llvm-project/llvm)
+
+get_directory_property(LLVM_VERSION DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION)
+get_directory_property(LLVM_TOOLS_BINARY_DIR DIRECTORY llvm-project/llvm DEFINITION LLVM_TOOLS_BINARY_DIR)
+
+set(LLVM_TABLEGEN_EXE "${LLVM_TOOLS_BINARY_DIR}/llvm-tblgen")
+
+if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(LLVM_TABLEGEN_EXE "${LLVM_TABLEGEN_EXE}.exe")
+endif()
+
+message(STATUS "Using LLVM ${LLVM_VERSION}")
 
 #------------------------- BISON -------------------------
 
@@ -55,8 +71,10 @@ configure_file(
 include_directories(
         src
         llvm-project/llvm/include
+        llvm-project/lld/include
         "${PROJECT_BINARY_DIR}"
         "${PROJECT_BINARY_DIR}/llvm-project/llvm/include"
+        "${PROJECT_BINARY_DIR}/llvm-project/lld/include"
 )
 
 set(SILICON_SRC
@@ -104,4 +122,13 @@ llvm_map_components_to_libnames(llvm_libs
         xcorecodegen
         )
 
-target_link_libraries(silicon ${llvm_libs})
+target_link_libraries(silicon
+        ${llvm_libs}
+        lldCore
+        lldCommon
+        lldCOFF
+        lldDriver
+        lldELF
+        lldMinGW
+        lldWasm
+        )
