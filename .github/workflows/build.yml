@@ -40,6 +40,14 @@ jobs:
              && make
              && sudo make install
 
+      - name: Download ccache
+        id: ccache
+        shell: cmake -P {0}
+        run: |
+          set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v3.7.7/${{ runner.os }}.tar.xz")
+          file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz SHOW_PROGRESS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
+
       - uses: actions/cache@v2
         with:
           path: .ccache
