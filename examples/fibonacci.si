@@ -3,7 +3,7 @@ extern fn printf(
   ...,
 ): i32;
 
-fn fibonacci_loop(x: i64) {
+fn fibonacci_loop(x: i64): i64 {
   let a: i64 = 1, b: i64 = 0, temp = a;
 
   while(x > 0) {

@@ -4,6 +4,8 @@ project(silicon)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 #------------------------- LLVM -------------------------
 
 SET(LLVM_INCLUDE_DOCS OFF)
@@ -14,23 +16,18 @@ set(LLVM_ENABLE_PROJECTS "lld" CACHE STRING "Enable LLVM projects" FORCE)
 add_subdirectory(llvm-project/llvm)
 
 get_directory_property(LLVM_VERSION DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION)
-get_directory_property(LLVM_TOOLS_BINARY_DIR DIRECTORY llvm-project/llvm DEFINITION LLVM_TOOLS_BINARY_DIR)
-
-set(LLVM_TABLEGEN_EXE "${LLVM_TOOLS_BINARY_DIR}/llvm-tblgen")
-
-if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-    set(LLVM_TABLEGEN_EXE "${LLVM_TABLEGEN_EXE}.exe")
-endif()
 
 message(STATUS "Using LLVM ${LLVM_VERSION}")
 
 #------------------------- BISON -------------------------
 
-file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/parser)
+set(SILICON_BINARY_DIR ${PROJECT_BINARY_DIR}/silicon-project)
+set(SILICON_PARSER_OUTPUT ${SILICON_BINARY_DIR}/parser)
+file(MAKE_DIRECTORY ${SILICON_PARSER_OUTPUT})
 
 set(SILICON_BISON_INPUT ${PROJECT_SOURCE_DIR}/src/parser/parser.y)
-set(SILICON_BISON_OUTPUT ${PROJECT_BINARY_DIR}/parser/parser.re)
-set(SILICON_BISON_HEADER ${PROJECT_BINARY_DIR}/parser/parser.h)
+set(SILICON_BISON_OUTPUT ${SILICON_PARSER_OUTPUT}/parser.re)
+set(SILICON_BISON_HEADER ${SILICON_PARSER_OUTPUT}/parser.h)
 
 FIND_PACKAGE(BISON 3.5 REQUIRED)
 
@@ -43,8 +40,7 @@ message(STATUS "Using Bison ${BISON_VERSION}")
 
 #------------------------- RE2C -------------------------
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
-set(SILICON_RE2C_OUTPUT ${PROJECT_BINARY_DIR}/parser/parser.cpp)
+set(SILICON_RE2C_OUTPUT ${SILICON_PARSER_OUTPUT}/parser.cpp)
 
 FIND_PACKAGE(RE2C 1.3 REQUIRED)
 
@@ -65,16 +61,15 @@ set(SILICON_VERSION "${SILICON_VERSION_MAJOR}.${SILICON_VERSION_MINOR}.${SILICON
 
 configure_file(
         "${PROJECT_SOURCE_DIR}/src/config.h.in"
-        "${PROJECT_BINARY_DIR}/config.h"
+        "${SILICON_BINARY_DIR}/config.h"
 )
 
 include_directories(
         src
         llvm-project/llvm/include
         llvm-project/lld/include
-        "${PROJECT_BINARY_DIR}"
+        "${SILICON_BINARY_DIR}"
         "${PROJECT_BINARY_DIR}/llvm-project/llvm/include"
-        "${PROJECT_BINARY_DIR}/llvm-project/lld/include"
 )
 
 set(SILICON_SRC
