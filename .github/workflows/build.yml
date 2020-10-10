@@ -43,7 +43,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: .ccache
-          key: ${{ runner.os }}-ccache-${{ env,BUILD_TYPE }}
+          key: ${{ runner.os }}-ccache-${{ env.BUILD_TYPE }}
           restore-keys: |
             ${{ runner.os }}-ccache-
 
