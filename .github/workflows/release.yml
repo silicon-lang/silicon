@@ -52,7 +52,6 @@ jobs:
           submodules: true
 
       - name: Install ccache
-        shell: cmake -P {0}
         run: sudo apt-get update
           && sudo apt-get install -y ccache
 
