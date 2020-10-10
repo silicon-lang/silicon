@@ -51,6 +51,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Install ccache
+        shell: cmake -P {0}
+        run: sudo apt-get update
+          && sudo apt-get install -y ccache
+
       - name: Install Bison
         run: wget http://ftp.gnu.org/gnu/bison/bison-3.5.4.tar.gz
           && tar -zxvf bison-3.5.4.tar.gz
@@ -67,14 +72,6 @@ jobs:
           && ./configure
           && make
           && sudo make install
-
-      - name: Download ccache
-        id: ccache
-        shell: cmake -P {0}
-        run: |
-          set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v3.7.7/${{ runner.os }}.tar.xz")
-          file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz SHOW_PROGRESS)
-          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
 
       - uses: actions/cache@v2
         with:
