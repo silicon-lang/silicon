@@ -23,10 +23,6 @@ jobs:
         with:
           submodules: true
 
-      - name: Install ccache
-        run: sudo apt-get update
-          && sudo apt-get install -y ccache
-
       - name: Install Bison
         run: wget http://ftp.gnu.org/gnu/bison/bison-3.5.4.tar.gz
              && tar -zxvf bison-3.5.4.tar.gz
@@ -44,13 +40,6 @@ jobs:
              && make
              && sudo make install
 
-      - uses: actions/cache@v2
-        with:
-          path: .ccache
-          key: ${{ runner.os }}-ccache-${{ env.BUILD_TYPE }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-
-
       - name: Create Build Environment
         # Some projects don't allow in-source building, so create a separate build directory
         # We'll use this as our working directory for all subsequent commands
@@ -64,7 +53,7 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLLVM_CCACHE_BUILD=ON
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
