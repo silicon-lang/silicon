@@ -48,6 +48,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Install Bison
         run: wget http://ftp.gnu.org/gnu/bison/bison-3.5.4.tar.gz
@@ -94,6 +96,11 @@ jobs:
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: ctest -C $BUILD_TYPE
 
+      - name: Compress Release Asset
+        working-directory: ${{runner.workspace}}/build
+        shell: bash
+        run: tar -czvf silicon.tar.gz silicon
+
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -101,6 +108,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }} # This pulls from the CREATE RELEASE step, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ${{ runner.workspace }}/build/silicon
-          asset_name: silicon-linux
-          asset_content_type: application/octet-stream
+          asset_path: ${{ runner.workspace }}/build/silicon.tar.gz
+          asset_name: silicon-linux.tar.gz
+          asset_content_type: application/x-gtar

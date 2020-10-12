@@ -1,28 +1,33 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(silicon VERSION 0.1.0)
+project(silicon)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 #------------------------- LLVM -------------------------
 
-FIND_PACKAGE(LLVM 9 REQUIRED)
+SET(LLVM_INCLUDE_DOCS OFF)
+SET(LLVM_INCLUDE_BENCHMARKS OFF)
+SET(LLVM_ENABLE_BINDINGS OFF)
+set(LLVM_ENABLE_PROJECTS "lld" CACHE STRING "Enable LLVM projects" FORCE)
 
-message(STATUS "Using LLVM ${LLVM_PACKAGE_VERSION}")
+add_subdirectory(llvm-project/llvm)
 
-include_directories(${LLVM_INCLUDE_DIRS})
+get_directory_property(LLVM_VERSION DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION)
 
-add_definitions(${LLVM_DEFINITIONS})
-
-link_directories(${LLVM_LIBRARY_DIRS})
+message(STATUS "Using LLVM ${LLVM_VERSION}")
 
 #------------------------- BISON -------------------------
 
-file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/parser)
+set(SILICON_BINARY_DIR ${PROJECT_BINARY_DIR}/silicon-project)
+set(SILICON_PARSER_OUTPUT ${SILICON_BINARY_DIR}/parser)
+file(MAKE_DIRECTORY ${SILICON_PARSER_OUTPUT})
 
 set(SILICON_BISON_INPUT ${PROJECT_SOURCE_DIR}/src/parser/parser.y)
-set(SILICON_BISON_OUTPUT ${PROJECT_BINARY_DIR}/parser/parser.re)
-set(SILICON_BISON_HEADER ${PROJECT_BINARY_DIR}/parser/parser.h)
+set(SILICON_BISON_OUTPUT ${SILICON_PARSER_OUTPUT}/parser.re)
+set(SILICON_BISON_HEADER ${SILICON_PARSER_OUTPUT}/parser.h)
 
 FIND_PACKAGE(BISON 3.5 REQUIRED)
 
@@ -35,8 +40,7 @@ message(STATUS "Using Bison ${BISON_VERSION}")
 
 #------------------------- RE2C -------------------------
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
-set(SILICON_RE2C_OUTPUT ${PROJECT_BINARY_DIR}/parser/parser.cpp)
+set(SILICON_RE2C_OUTPUT ${SILICON_PARSER_OUTPUT}/parser.cpp)
 
 FIND_PACKAGE(RE2C 1.3 REQUIRED)
 
@@ -57,56 +61,69 @@ set(SILICON_VERSION "${SILICON_VERSION_MAJOR}.${SILICON_VERSION_MINOR}.${SILICON
 
 configure_file(
         "${PROJECT_SOURCE_DIR}/src/config.h.in"
-        "${PROJECT_BINARY_DIR}/config.h"
+        "${SILICON_BINARY_DIR}/config.h"
 )
 
 include_directories(
         src
-        "${PROJECT_BINARY_DIR}"
+        llvm-project/llvm/include
+        llvm-project/lld/include
+        "${SILICON_BINARY_DIR}"
+        "${PROJECT_BINARY_DIR}/llvm-project/llvm/include"
 )
 
-add_executable(silicon
+set(SILICON_SRC
         src/main.cpp
         ${BISON_SILICON_OUTPUT_HEADER}
         ${SILICON_RE2C_OUTPUT}
-        src/utils/CLI11.hpp
-        src/utils.cpp src/utils.h
-        src/compiler/codegen.cpp src/compiler/codegen.h
-        src/compiler/Context.cpp src/compiler/Context.h
-        src/ast/Node.cpp src/ast/Node.h
-        src/ast/Type.cpp src/ast/Type.h
-        src/ast/Interface.cpp src/ast/Interface.h
-        src/ast/Block.cpp src/ast/Block.h
-        src/ast/Null.cpp src/ast/Null.h
-        src/ast/BooleanLiteral.cpp src/ast/BooleanLiteral.h
-        src/ast/NumberLiteral.cpp src/ast/NumberLiteral.h
-        src/ast/PlainObject.cpp src/ast/PlainObject.h
-        src/ast/StringLiteral.cpp src/ast/StringLiteral.h
-        src/ast/VariableDefinition.cpp src/ast/VariableDefinition.h
-        src/ast/Variable.cpp src/ast/Variable.h
-        src/ast/Prototype.cpp src/ast/Prototype.h
-        src/ast/Function.cpp src/ast/Function.h
-        src/ast/Return.cpp src/ast/Return.h
-        src/ast/FunctionCall.cpp src/ast/FunctionCall.h
-        src/ast/BinaryOperation.cpp src/ast/BinaryOperation.h
-        src/ast/UnaryOperation.cpp src/ast/UnaryOperation.h
-        src/ast/If.cpp src/ast/If.h
-        src/ast/Loop.cpp src/ast/Loop.h
-        src/ast/While.cpp src/ast/While.h
-        src/ast/For.cpp src/ast/For.h
-        src/ast/Break.cpp src/ast/Break.h
-        src/ast/Continue.cpp src/ast/Continue.h
-        src/ast/Cast.cpp src/ast/Cast.h
+        src/utils.cpp
+        src/compiler/codegen.cpp
+        src/compiler/Context.cpp
+        src/ast/Node.cpp
+        src/ast/Type.cpp
+        src/ast/Interface.cpp
+        src/ast/Block.cpp
+        src/ast/Null.cpp
+        src/ast/BooleanLiteral.cpp
+        src/ast/NumberLiteral.cpp
+        src/ast/PlainObject.cpp
+        src/ast/StringLiteral.cpp
+        src/ast/VariableDefinition.cpp
+        src/ast/Variable.cpp
+        src/ast/Prototype.cpp
+        src/ast/Function.cpp
+        src/ast/Return.cpp
+        src/ast/FunctionCall.cpp
+        src/ast/BinaryOperation.cpp
+        src/ast/UnaryOperation.cpp
+        src/ast/If.cpp
+        src/ast/Loop.cpp
+        src/ast/While.cpp
+        src/ast/For.cpp
+        src/ast/Break.cpp
+        src/ast/Continue.cpp
+        src/ast/Cast.cpp
         )
+
+add_executable(silicon ${SILICON_SRC})
 
 llvm_map_components_to_libnames(llvm_libs
         support core irreader passes xcoreinfo nvptxinfo
         aarch64asmparser amdgpuasmparser armasmparser bpfasmparser hexagonasmparser lanaiasmparser mipsasmparser
         msp430asmparser powerpcasmparser riscvasmparser sparcasmparser systemzasmparser webassemblyasmparser
-        x86asmparser avrasmparser
-        aarch64codegen amdgpucodegen armcodegen avrcodegen bpfcodegen hexagoncodegen lanaicodegen mipscodegen
+        x86asmparser
+        aarch64codegen amdgpucodegen armcodegen bpfcodegen hexagoncodegen lanaicodegen mipscodegen
         msp430codegen nvptxcodegen powerpccodegen riscvcodegen sparccodegen systemzcodegen webassemblycodegen x86codegen
         xcorecodegen
         )
 
-target_link_libraries(silicon -static ${llvm_libs})
+target_link_libraries(silicon
+        ${llvm_libs}
+        lldCore
+        lldCommon
+        lldCOFF
+        lldDriver
+        lldELF
+        lldMinGW
+        lldWasm
+        )
