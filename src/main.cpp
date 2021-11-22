@@ -1,5 +1,5 @@
 //
-//   Copyright 2020 Ardalan Amini
+//   Copyright 2021 Ardalan Amini
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@
 #include <string>
 #include "config.h"
 #include "utils/CLI11.hpp"
-#include "compiler/codegen.h"
+#include "silicon/CodeGen/codegen.h"
 
 
 using namespace std;
-using namespace silicon::compiler;
+using namespace silicon::codegen;
 
 
 void print_version() {
