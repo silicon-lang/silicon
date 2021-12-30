@@ -13,8 +13,7 @@ Silicon is a programming language highly inspired by JavaScript and more specifi
 ## Prerequisites
 
 - [LLVM](https://llvm.org) (v9) - [source](https://github.com/llvm/llvm-project)
-- [Bison](https://www.gnu.org/software/bison) (v3.5) - [source](http://git.savannah.gnu.org/cgit/bison.git)
-- [RE2C](https://re2c.org) (v1.3) - [source](https://github.com/skvadrik/re2c)
+- Silicon Parser (v0.3.0) - [source](https://github.com/silicon-lang/parser)
 
 ## Authors
 
