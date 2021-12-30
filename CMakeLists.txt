@@ -4,6 +4,14 @@ project(silicon)
 
 set(CMAKE_CXX_STANDARD 20)
 
+#------------------------- Silicon Parser -------------------------
+
+add_subdirectory(parser)
+
+get_directory_property(PARSER_VERSION DIRECTORY parser DEFINITION SiliconParser_VERSION)
+
+message(STATUS "Using Parser ${PARSER_VERSION}")
+
 #------------------------- LLVM -------------------------
 
 SET(LLVM_INCLUDE_DOCS OFF)
@@ -31,12 +39,13 @@ configure_file(
 
 include_directories(
         ${PROJECT_SOURCE_DIR}/include
-        ${PROJECT_SOURCE_DIR}/silicon-parser/include
         ${PROJECT_SOURCE_DIR}/src
         llvm-project/llvm/include
         llvm-project/lld/include
-        "${PROJECT_BINARY_DIR}"
-        "${PROJECT_BINARY_DIR}/llvm-project/llvm/include"
+        ${PROJECT_BINARY_DIR}
+        ${PROJECT_BINARY_DIR}/llvm-project/llvm/include
+        ${PROJECT_SOURCE_DIR}/parser/include
+        ${PROJECT_BINARY_DIR}/parser/include
 )
 
 add_executable(silicon
@@ -78,7 +87,7 @@ llvm_map_components_to_libnames(llvm_libs
         )
 
 target_link_libraries(silicon
-        ${PROJECT_SOURCE_DIR}/silicon-parser/lib/libSiliconParser.a
+        SiliconParser
         ${llvm_libs}
         lldCore
         lldCommon
