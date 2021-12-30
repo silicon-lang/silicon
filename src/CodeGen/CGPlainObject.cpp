@@ -43,7 +43,7 @@ Value *CGPlainObject::codegen(Context *ctx) {
 
     unsigned bits = type->getScalarSizeInBits();
 
-    if (bits > 0 && bits % 8 == 0) var->setAlignment(bits / 8);
+    if (bits > 0 && bits % 8 == 0) var->setAlignment(Align(bits / 8));
 
     map<string, Node *>::iterator it;
 

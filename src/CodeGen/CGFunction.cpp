@@ -15,7 +15,6 @@
 //
 
 
-#include "llvm/IR/Verifier.h"
 #include "silicon/CodeGen/CGFunction.h"
 #include "silicon/CodeGen/CGPrototype.h"
 
@@ -50,7 +49,7 @@ Value *CGFunction::codegen(Context *ctx) {
 
     // Record the function arguments in the NamedValues map.
     for (auto &Arg: function->args()) {
-        auto *alloca = ctx->alloc(Arg.getName(), Arg.getType());
+        auto *alloca = ctx->alloc(Arg.getName().str(), Arg.getType());
 
         ctx->store(&Arg, alloca);
     }
@@ -92,11 +91,6 @@ Value *CGFunction::codegen(Context *ctx) {
 //                )
 //                ->codegen(ctx);
 //    }
-
-    // Validate the generated code, checking for consistency.
-    verifyFunction(*function);
-
-    ctx->llvm_fpm->run(*function);
 
     return function;
 }

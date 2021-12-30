@@ -20,6 +20,7 @@
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm/IR/Verifier.h"
 #include "silicon/CodeGen/Context.h"
 #include "silicon/CodeGen/CGNode.h"
 #include "silicon/CodeGen/CGCodeBlock.h"
@@ -33,21 +34,26 @@ using namespace silicon::codegen;
 
 
 Context::Context(const string &library_name) : llvm_ir_builder(llvm_ctx) {
-    llvm_module = llvm::make_unique<Module>(library_name, llvm_ctx);
+    llvm_module = make_unique<Module>(library_name, llvm_ctx);
 
-    llvm_fpm = llvm::make_unique<legacy::FunctionPassManager>(llvm_module.get());
+    llvm_fpm = make_unique<legacy::FunctionPassManager>(llvm_module.get());
 
-    // Do simple "peephole" optimizations and bit-twiddling optzns.
-    llvm_fpm->add(createInstructionCombiningPass());
-    // Reassociate expressions.
-    llvm_fpm->add(createReassociatePass());
-    // Eliminate Common SubExpressions.
-    // TODO: this one seems to slow the executable!
+//    llvm_fpm->add(createEarlyCSEPass());
+//
+//    // Reassociate expressions.
+//    llvm_fpm->add(createReassociatePass());
+//
+//    llvm_fpm->add(createLICMPass());
+//    // Eliminate Common SubExpressions.
 //    llvm_fpm->add(createGVNPass());
-    // Simplify the control flow graph (deleting unreachable blocks, etc).
-    llvm_fpm->add(createCFGSimplificationPass());
-
-    llvm_fpm->doInitialization();
+//    // Do simple "peephole" optimizations and bit-twiddling optzns.
+//    llvm_fpm->add(createInstructionCombiningPass());
+//    // Simplify the control flow graph (deleting unreachable blocks, etc).
+//    llvm_fpm->add(createCFGSimplificationPass());
+//
+//    llvm_fpm->add(createVerifierPass());
+//
+//    llvm_fpm->doInitialization();
 
     // Types
 
@@ -66,6 +72,7 @@ Context::Context(const string &library_name) : llvm_ir_builder(llvm_ctx) {
     def_type("f16", float_type(16));
     def_type("f32", float_type(32));
     def_type("f64", float_type(64));
+    def_type("f128", float_type(128));
 }
 
 /* ------------------------- Blocks ------------------------- */
@@ -153,6 +160,8 @@ Type *Context::float_type(unsigned int bits) {
             return llvm_ir_builder.getFloatTy();
         case 64:
             return llvm_ir_builder.getDoubleTy();
+        case 128:
+            return Type::getFP128Ty(llvm_ctx);
         default:
             return nullptr;
             // TODO: fix
@@ -204,11 +213,13 @@ bool Context::compare_types(Type *type1, Type *type2) {
 
     if (type1->isIntegerTy()) return type2->isIntegerTy(type1->getIntegerBitWidth());
 
-    if (type1->isHalfTy()) return type2->isHalfTy(); // TODO: remove?!
+    if (type1->isHalfTy()) return type2->isHalfTy();
 
     if (type1->isFloatTy()) return type2->isFloatTy();
 
     if (type1->isDoubleTy()) return type2->isDoubleTy();
+
+    if (type1->isFP128Ty()) return type2->isFP128Ty();
 
     return false;
 }
@@ -242,7 +253,7 @@ Value *Context::cast_type(Value *value, Type *type) {
         if (valueT->isArrayTy()) return bool_lit(true);
     }
 
-    if (!CastInst::isCastable(valueT, type)) return nullptr;
+    if (!CastInst::isBitCastable(valueT, type)) return nullptr;
 
     return llvm_ir_builder.CreateCast(
             CastInst::getCastOpcode(
@@ -281,6 +292,8 @@ string Context::stringify_type(Type *type) {
     if (type->isFloatTy()) return "f32";
 
     if (type->isDoubleTy()) return "f64";
+
+    if (type->isFP128Ty()) return "f128";
 
     if (type->isPointerTy() && type->getPointerElementType()->isIntegerTy(8))
         return "string";
