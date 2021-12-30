@@ -38,7 +38,7 @@ Value *CGVariable::codegen(Context *ctx) {
 
     LoadInst *load = ctx->load(alloca, name);
 
-    unsigned alignment = alloca->getAlignment();
+    Align alignment = alloca->getAlign();
 
     if (alignment > 0) load->setAlignment(alignment);
 
@@ -68,6 +68,10 @@ Value *CGVariable::get_pointer(Context *ctx) {
     }
 
     uint64_t index = element_index(ctx);
+
+//    Value *pointer = dynamic_cast<CGVariable *>(context)->get_pointer(ctx);
+//
+//    return ctx->llvm_ir_builder.CreateStructGEP(pointer->getType(), pointer, index);
 
     return ctx->llvm_ir_builder.CreateStructGEP(dynamic_cast<CGVariable *>(context)->get_pointer(ctx), index);
 }

@@ -75,7 +75,7 @@ Value *CGCodeBlock::alloc(Context *ctx, const string &name, Type *type) {
 
     unsigned bits = type->getScalarSizeInBits();
 
-    if (bits > 0 && bits % 8 == 0) variables[name]->setAlignment(bits / 8);
+    if (bits > 0 && bits % 8 == 0) variables[name]->setAlignment(Align(bits / 8));
 
     return variables[name];
 }

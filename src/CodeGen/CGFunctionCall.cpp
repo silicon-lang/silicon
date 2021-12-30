@@ -38,7 +38,7 @@ Value *CGFunctionCall::codegen(Context *ctx) {
     llvm::Type *expected_type = ctx->expected_type;
 
     vector<string> argNames;
-    for (auto &arg: calleeFunc->args()) argNames.push_back(arg.getName());
+    for (auto &arg: calleeFunc->args()) argNames.push_back(arg.getName().str());
 
     bool is_variadic = calleeType->isVarArg();
     unsigned expected_args_count = calleeType->getNumParams();

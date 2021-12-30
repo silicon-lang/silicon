@@ -51,8 +51,10 @@ Value *CGPrototype::codegen(Context *ctx) {
 
     llvm::Function *function =
             llvm::Function::Create(function_type, linkage, name, ctx->llvm_module.get());
-    // Set names for all arguments.
 
+    function->setDSOLocal(true);
+
+    // Set names for all arguments.
     unsigned Idx = 0;
     for (auto &Arg: function->args()) Arg.setName(names[Idx++]);
 

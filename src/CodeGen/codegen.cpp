@@ -17,14 +17,24 @@
 
 #include <fstream>
 #include <iostream>
-#include <llvm/IR/Verifier.h>
-#include <llvm/IR/LegacyPassManager.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/TargetRegistry.h>
-#include <llvm/Support/FileSystem.h>
-#include <llvm/Target/TargetOptions.h>
-#include <llvm/Target/TargetMachine.h>
-#include <llvm/ADT/Triple.h>
+#include "llvm/IR/Verifier.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/PassManager.h"
+#include "llvm/Passes/PassBuilder.h"
+#include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/Transforms/IPO/InferFunctionAttrs.h"
+#include "llvm/Transforms/IPO/FunctionAttrs.h"
+#include "llvm/Transforms/IPO.h"
+#include "llvm/Transforms/Scalar/EarlyCSE.h"
+#include "llvm/Transforms/Scalar/LICM.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/TargetRegistry.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Host.h"
+#include "llvm/Target/TargetOptions.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/ADT/Triple.h"
 #include "silicon/CodeGen/CGNode.h"
 #include "silicon/CodeGen/CGType.h"
 #include "silicon/CodeGen/CGInterface.h"
@@ -91,7 +101,7 @@ Node *walker(Node *node) {
         case node_t::UNARY_OP:
             WALK_NODE(CGUnaryOperation, UnaryOperation)
         case node_t::LOOP:
-            WALK_NODE(CGLoop, Loop)
+            WALK_NODE(CGLoop, AST::Loop)
         case node_t::WHILE:
             WALK_NODE(CGWhile, While)
         case node_t::FOR:
@@ -133,6 +143,8 @@ void codegen::codegen(string input, string output, bool emit_llvm) {
 
     library->codegen(&ctx);
 
+//    ctx.llvm_fpm->doFinalization();
+
     verifyModule(*ctx.llvm_module);
 
     InitializeAllTargetInfos();
@@ -141,7 +153,7 @@ void codegen::codegen(string input, string output, bool emit_llvm) {
     InitializeAllAsmParsers();
     InitializeAllAsmPrinters();
 
-    auto TargetTriple = sys::getProcessTriple();
+    auto TargetTriple = sys::getDefaultTargetTriple();
     ctx.llvm_module->setTargetTriple(TargetTriple);
     auto TheTriple = Triple(TargetTriple);
 
@@ -163,17 +175,62 @@ void codegen::codegen(string input, string output, bool emit_llvm) {
     auto TheTargetMachine =
             Target->createTargetMachine(TargetTriple, CPU, FeaturesStr, opt, RM);
 
+//    errs() << TheTargetMachine->getTargetTriple().str();
+
     ctx.llvm_module->setDataLayout(TheTargetMachine->createDataLayout());
 
-    legacy::PassManager pass;
+    LoopAnalysisManager LAM;
+    FunctionAnalysisManager FAM;
+    CGSCCAnalysisManager CGAM;
+    ModuleAnalysisManager MAM;
+
+//    FunctionPassManager FPM;
+//
+//    FPM.addPass(EarlyCSEPass());
+
+    PassBuilder PB;
+
+    FAM.registerPass([&] { return PB.buildDefaultAAPipeline(); });
+
+    PB.registerLoopAnalyses(LAM);
+    PB.registerFunctionAnalyses(FAM);
+    PB.registerCGSCCAnalyses(CGAM);
+    PB.registerModuleAnalyses(MAM);
+    PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
+
+//    ModulePassManager MPM;
+//    ModulePassManager MPM = PB.buildPerModuleDefaultPipeline(PassBuilder::OptimizationLevel::O1, true);
+    ModulePassManager MPM = PB.buildO0DefaultPipeline(PassBuilder::OptimizationLevel::O0, true);
+
+//    MPM.addPass(createModuleToFunctionPassAdaptor(move(FPM)));
+
+    MPM.run(*ctx.llvm_module, MAM);
+
+//    mpm.addPass(createModuleToFunctionPassAdaptor(ctx.llvm_fpm));
+//    mpm.addPass(StripDeadPrototypesPass());
+//    mpm.addPass(InferFunctionAttrsPass());
+////    mpm.addPass(PostOrderFunctionAttrsPass());
+//    mpm.addPass(ReversePostOrderFunctionAttrsPass());
+
+    legacy::PassManager llvm_mpm;
+
+//    llvm_mpm.add(createStripDeadPrototypesPass());
+//
+//    llvm_mpm.add(createGlobalOptimizerPass());
+//
+//    llvm_mpm.add(createInferFunctionAttrsLegacyPass());
+//
+//    llvm_mpm.add(createPostOrderFunctionAttrsLegacyPass());
+//
+//    llvm_mpm.add(createReversePostOrderFunctionAttrsPass());
 
     if (emit_llvm) {
-        pass.run(*ctx.llvm_module);
+        llvm_mpm.run(*ctx.llvm_module);
 
         output += ".ll";
 
         error_code EC;
-        raw_fd_ostream dest(output, EC, sys::fs::F_None);
+        raw_fd_ostream dest(output, EC, sys::fs::OpenFlags::OF_None);
 
         if (EC) {
             errs() << "Could not open file: " << EC.message();
@@ -189,10 +246,10 @@ void codegen::codegen(string input, string output, bool emit_llvm) {
             output += ".o";
         }
 
-        auto FileType = TargetMachine::CGFT_ObjectFile;
+        auto FileType = CGFT_ObjectFile;
 
         error_code EC;
-        raw_fd_ostream dest(output, EC, sys::fs::F_None);
+        raw_fd_ostream dest(output, EC, sys::fs::OpenFlags::OF_None);
 
         if (EC) {
             errs() << "Could not open file: " << EC.message();
@@ -200,13 +257,13 @@ void codegen::codegen(string input, string output, bool emit_llvm) {
             exit(1);
         }
 
-        if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
+        if (TheTargetMachine->addPassesToEmitFile(llvm_mpm, dest, nullptr, FileType)) {
             errs() << "TheTargetMachine can't emit a file of this type";
 
             exit(1);
         }
 
-        pass.run(*ctx.llvm_module);
+        llvm_mpm.run(*ctx.llvm_module);
         dest.flush();
     }
 

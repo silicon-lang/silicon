@@ -197,7 +197,7 @@ Value *CGBinaryOperation::assign(Context *ctx) {
 
             StoreInst *store = ctx->store(rV, alloca);
 
-            unsigned alignment = alloca->getAlignment();
+            Align alignment = alloca->getAlign();
 
             if (alignment > 0) store->setAlignment(alignment);
 
@@ -224,7 +224,7 @@ Value *CGBinaryOperation::assign(Context *ctx) {
 
         StoreInst *store = ctx->store(rV, alloca);
 
-        unsigned alignment = alloca->getAlignment();
+        Align alignment = alloca->getAlign();
 
         if (alignment > 0) store->setAlignment(alignment);
 
@@ -613,7 +613,7 @@ Value *CGBinaryOperation::cast(Context *ctx) {
         if (t->isArrayTy()) return ctx->bool_lit(true);
     }
 
-    if (!llvm::CastInst::isCastable(t, llvm_t)) {
+    if (!CastInst::isBitCastable(t, llvm_t)) {
         fail(
                 "Error: Unsupported cast: <"
                 + ctx->stringify_type(t)
